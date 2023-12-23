@@ -1,0 +1,11 @@
+headers/connection help
+https://github.com/Xjph/CFNScrape/tree/master/CFNScrape
+
+
+TODO
+===
+- check if before launch or after today
+
+- create a cache to skip the request if the data exists
+- every url pulled, log it and log where I put the data
+- pickle(?) the responses so I can get data changing between days
