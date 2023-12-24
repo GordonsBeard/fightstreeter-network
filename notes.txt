@@ -4,6 +4,5 @@ https://github.com/Xjph/CFNScrape/tree/master/CFNScrape
 
 TODO
 ===
-- create a cache to skip the request if the data exists
 - every url pulled, log it and log where I put the data
-- pickle(?) the responses so I can get data changing between days
+- store data in a time format
