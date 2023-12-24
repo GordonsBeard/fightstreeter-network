@@ -15,6 +15,6 @@ URL_TOKEN:str = 'AAABBBCCCDDD'
 # You get this from the cookie the website stores. (use Fiddler)
 # Look for the "buckler_id" and "buckler_praise_date" values.
 
-BUCKLER_ID:str = 'okH4OHGYRUDiMTIzLWrchv2YjwESkOusG3HsOtAHw2CMXkZJFGcHPz4BEYssy1QR'
-BUCKLER_R_ID:str = ''
-BUCKLER_PRAISE_DATE:str = '1703310838092'
+BUCKLER_ID:str = 'AAABBBDDDCCCEEEFFFGGGHHHIIIJJJKKKLLLMMM'
+BUCKLER_R_ID:str = 'aaaaa-bbbbb-ccccc-dddd'
+BUCKLER_PRAISE_DATE:str = '111222333444'
