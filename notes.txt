@@ -1,6 +1,8 @@
 TODO
 ===
-- generalize the data storage/retreval
+- generalize the data storage/retreval/verify
+    -- finish this
+- make it clear the club data is for club owners only right now
 - every url pulled, log it and log where I put the data
 
 URLS
@@ -22,7 +24,7 @@ https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYE
 
 Club
 --
-https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/club.json?sid={PLAYER_ID}
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/club/{CLUB_ID}.json?clubid={CLUB_ID}
 
 
 History
