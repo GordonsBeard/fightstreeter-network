@@ -5,7 +5,7 @@ TODO
 
 URLS
 ===
-Overview
+Overview✔️
 --
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}.json?sid={PLAYER_ID}
 
@@ -27,8 +27,6 @@ https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYE
 
 History
 --
-Scrub's Stats (play.json):
-https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/play.json?sid={PLAYER_ID}
 
 Scrub's History (battlelog.json):
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/battlelog.json?sid={PLAYER_ID}

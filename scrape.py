@@ -43,12 +43,17 @@ class CFNStatsScraper:
     }
 
     def __init__(self, **kwargs) -> None:
-        self.player_id: str = (
-            kwargs["player_id"]
-            if "player_id" in kwargs
-            else cfn_secrets.DEFAULT_PLAYER_ID
-        )
-        self.date: datetime = kwargs["date"] if "date" in kwargs else datetime.now()
+        options: dict = {
+            "player_id": cfn_secrets.DEFAULT_PLAYER_ID,
+            "group_id": cfn_secrets.DEFAULT_CLUB_ID,
+            "date": datetime.now(),
+        }
+
+        options.update(kwargs)
+
+        self.player_id: str = options["player_id"]
+        self.group_id: str = options["group_id"]
+        self.date: datetime = options["date"]
 
     @property
     def profile_cache_dir(self) -> Path:
@@ -89,7 +94,6 @@ class CFNStatsScraper:
         if response.status_code != 200:
             sys.exit(f"Bad request! Status code: {response.status_code}")
 
-        # This is the full json file
         profile_json_data: dict = response.json()
 
         # Store it for cache purposes
@@ -97,8 +101,34 @@ class CFNStatsScraper:
 
         return profile_json_data
 
+    def _verify_profile_json(self, profile_json_data: dict) -> None:
+        """Does some sanity checks on the keys expected for profile data."""
+
+        if "pageProps" not in profile_json_data:
+            sys.exit("Data is missing root 'pageProps' element. Aborting.")
+
+        req_keys = ("fighter_banner_info", "play")
+        if not all(k in profile_json_data["pageProps"] for k in req_keys):
+            sys.exit("Data is missing a required stats key. Aborting.")
+
+        req_play_keys: list[str] = [
+            "base_info",
+            "battle_stats",
+            "character_league_infos",
+            "character_play_point_infos",
+            "character_win_rates",
+            "character_win_rates_by_rival_character",
+            "current_season_id",
+            "season_ids",
+        ]
+        if not all(k in profile_json_data["pageProps"]["play"] for k in req_play_keys):
+            sys.exit("Play data is incomplete, missing key. Aborting.")
+
     def _store_player_profile(self, player_stats: dict) -> None:
         """Store the player profile into the cache."""
+
+        # Run sanity check before continuing.
+        self._verify_profile_json(player_stats)
 
         with open(self.profile_cache_filename, "w", encoding="utf-8") as f:
             json.dump(player_stats, f, ensure_ascii=False, indent=4)
@@ -126,46 +156,23 @@ class CFNStatsScraper:
         with open(self.profile_cache_filename, "r", encoding="utf-8") as f:
             return json.loads(f.read())  # we got the goods
 
-    def do_shit(self) -> None:
-        """Display some stuff to see if the code is working."""
+    def sync_player_stats(self) -> None:
+        """Checks and verifies the cache for a player's stats on a given date."""
 
-        player_profile_json: dict = self._fetch_player_profile_json()
+        player_profile_data: dict = self._fetch_player_profile_json()
 
-        player_name: str = player_profile_json["pageProps"]["fighter_banner_info"][
+        player_name: str = player_profile_data["pageProps"]["fighter_banner_info"][
             "personal_info"
         ]["fighter_id"]
 
-        player_character_winrates: dict = player_profile_json["pageProps"]["play"][
-            "character_win_rates"
-        ]
-
-        player_profile: dict = {}
-
-        chars = ["DHALSIM", "ZANGIEF", "DEE JAY"]
-
-        for player in player_character_winrates:
-            if player["character_alpha"] in chars:
-                player_profile = player
-                print(
-                    f"{player_name} has used {player_profile['character_name']} "
-                    f"{player_profile['battle_count']} times this phase."
-                )
+        print(f"{player_name} stats updated for {self.date}")
 
 
 if __name__ == "__main__":
-    CFN_ID: str = cfn_secrets.DEFAULT_PLAYER_ID
-    date: datetime = datetime.today()
+    cfn_scraper = CFNStatsScraper(
+        player_id=cfn_secrets.DEFAULT_PLAYER_ID,
+        club_id=cfn_secrets.DEFAULT_CLUB_ID,
+        date=datetime.today(),
+    )
 
-    args = sys.argv[1:]
-    if len(args) == 2:
-        CFN_ID = args[0]
-        raw_date: str = args[1]
-        date = datetime.strptime(raw_date, "%Y-%m-%d")
-
-    if len(args) == 0:
-        print("Pass in CFN ID and date for specific user.")
-        print("ex: .\\scrape.py 3425126856 2023-12-22")
-        print("Default behavior: grabbing Scrub's data for today.")
-
-    cfn_scraper = CFNStatsScraper(player_id=CFN_ID, date=date)
-    cfn_scraper.do_shit()
+    cfn_scraper.sync_player_stats()
