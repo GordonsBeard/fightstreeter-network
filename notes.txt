@@ -12,12 +12,12 @@ Overview✔️
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}.json?sid={PLAYER_ID}
 
 
-Stats (play.json)
+Stats (play.json)✔️
 --
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/play.json?sid={PLAYER_ID}
 
 
-Avatar (avatar.json)
+Avatar (avatar.json)✔️
 --
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/avatar.json?sid={PLAYER_ID}
 

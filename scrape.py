@@ -2,7 +2,7 @@
 
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 
@@ -18,7 +18,11 @@ class Subject(Enum):
     STATS = 2
     AVATAR = 3
     CLUB = 4
-    HISTORY = 5
+    ALL_MATCHES = 5
+    RANKED_MATCHES = 6
+    CASUAL_MATCHES = 7
+    CUSTOM_MATCHES = 8
+    HUB_MATCHES = 9
 
 
 class CFNStatsScraper:
@@ -28,6 +32,32 @@ class CFNStatsScraper:
     _buckler_id = cfn_secrets.BUCKLER_ID
     _buckler_r_id = cfn_secrets.BUCKLER_R_ID
     _buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE
+
+    _charid_map: dict[int, str] = {
+        1: "",
+        2: "",
+        3: "",
+        4: "",
+        5: "",
+        6: "",
+        7: "",
+        8: "Dhalsim",
+        9: "",
+        10: "",
+        11: "",
+        12: "",
+        13: "",
+        14: "",
+        15: "",
+        16: "",
+        17: "",
+        18: "",
+        19: "",
+        20: "",
+        21: "",
+        22: "",
+        23: "",
+    }
 
     def __init__(self, date: datetime) -> None:
         self.date: datetime = date
@@ -60,13 +90,11 @@ class CFNStatsScraper:
     def _cache_dir(self, subject: Subject) -> Path:
         """Returns the path for the cached json."""
 
-        cache_dir: Path = Path(self.base_cache_dir)
-
         match subject:
-            case Subject.OVERVIEW:
-                return cache_dir / self.player_id
+            case Subject.OVERVIEW | Subject.STATS | Subject.AVATAR:
+                return Path(self.base_cache_dir / self.player_id)
             case Subject.CLUB:
-                return cache_dir / self.club_id
+                return Path(self.base_cache_dir / self.club_id)
             case _:
                 raise NotImplementedError(
                     f"{subject.name} not implemented in _cache_dir()"
@@ -83,6 +111,14 @@ class CFNStatsScraper:
                 )
             case Subject.CLUB:
                 return Path(self._cache_dir(Subject.CLUB) / f"{self.club_id}.json")
+            case Subject.STATS:
+                return Path(
+                    self._cache_dir(Subject.STATS) / f"{self.player_id}_play.json"
+                )
+            case Subject.AVATAR:
+                return Path(
+                    self._cache_dir(Subject.AVATAR) / f"{self.player_id}_avatar.json"
+                )
             case _:
                 raise NotImplementedError(
                     f"{subject.name} not implemented in _cache_filename()"
@@ -109,6 +145,24 @@ class CFNStatsScraper:
                     f"/{self._url_token}/en/club"
                     f"/{self.club_id}.json?clubid={self.club_id}"
                 )
+            case Subject.STATS:
+                if not self.player_id:
+                    sys.exit("Missing player_id, cannot build request url for data.")
+
+                return (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self._url_token}/en/profile"
+                    f"/{self.player_id}/play.json?sid={self.player_id}"
+                )
+            case Subject.AVATAR:
+                if not self.player_id:
+                    sys.exit("Missing player_id, cannot build request url for data.")
+
+                return (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self._url_token}/en/profile"
+                    f"/{self.player_id}/avatar.json?sid={self.player_id}"
+                )
             case _:
                 raise NotImplementedError(
                     f"{subject.name} not implemented in _get_req_url()"
@@ -120,7 +174,6 @@ class CFNStatsScraper:
         cached_data = self._load_cached_data(subject)
 
         if cached_data:
-            print(f"Cached {subject.name} json found.")
             return cached_data
 
         if self.date.date() < datetime.today().date():
@@ -179,15 +232,15 @@ class CFNStatsScraper:
                 f"{subject.name} json is missing root 'pageProps' element. Aborting."
             )
 
+        req_profile_keys: list[str] = ["fighter_banner_info", "play"]
+
         match subject:
             case Subject.OVERVIEW:
-                req_ov_keys: list[str] = ["fighter_banner_info", "play"]
-                if not all(k in json_data["pageProps"] for k in req_ov_keys):
+                if not all(k in json_data["pageProps"] for k in req_profile_keys):
                     sys.exit(
                         f"{subject.name} json is missing a required stats key. Aborting."
                     )
-
-                req_play_keys: list[str] = [
+                req_ov_keys: list[str] = [
                     "base_info",
                     "battle_stats",
                     "character_league_infos",
@@ -197,7 +250,7 @@ class CFNStatsScraper:
                     "current_season_id",
                     "season_ids",
                 ]
-                if not all(k in json_data["pageProps"]["play"] for k in req_play_keys):
+                if not all(k in json_data["pageProps"]["play"] for k in req_ov_keys):
                     sys.exit(
                         f"{subject.name} data is incomplete, missing keys in 'play' "
                         "section. Aborting."
@@ -211,6 +264,46 @@ class CFNStatsScraper:
                 if not all(k in json_data["pageProps"] for k in req_club_keys):
                     sys.exit(
                         f"{subject.name} json is missing a required stats key. Aborting."
+                    )
+            case Subject.STATS:
+                if not all(k in json_data["pageProps"] for k in req_profile_keys):
+                    sys.exit(
+                        f"{subject.name} json is missing a required stats key. Aborting."
+                    )
+                req_battle_keys: list[str] = [
+                    "base_info",
+                    "battle_stats",
+                    "character_league_infos",
+                    "character_play_point_infos",
+                    "character_win_rates",
+                    "character_win_rates_by_rival_character",
+                    "current_season_id",
+                    "season_ids",
+                ]
+                if not all(
+                    k in json_data["pageProps"]["play"] for k in req_battle_keys
+                ):
+                    sys.exit(
+                        f"{subject.name} json is missing a required play key. Aborting."
+                    )
+            case Subject.AVATAR:
+                req_av_keys: list[str] = ["avatar", "fighter_banner_info"]
+                if not all(k in json_data["pageProps"] for k in req_av_keys):
+                    sys.exit(
+                        f"{subject.name} json is missing a required avatar key. Aborting."
+                    )
+                req_av_props: list[str] = [
+                    "equiped_style",
+                    "equipments",
+                    "gender",
+                    "shisho_characters",
+                    "status",
+                    "style_list",
+                ]
+                if not all(k in json_data["pageProps"]["avatar"] for k in req_av_props):
+                    sys.exit(
+                        f"{subject.name} json is missing a required avatar properties. "
+                        "Aborting."
                     )
             case _:
                 raise NotImplementedError(
@@ -246,23 +339,45 @@ class CFNStatsScraper:
         with open(self._cache_filename(subject), "r", encoding="utf-8") as f:
             return json.loads(f.read())
 
-    def sync_player_stats(self, player_id: str) -> None:
-        """Checks and verifies the cache for a player's stats."""
+    def sync_player_overview(self, player_id: str) -> None:
+        """Checks and verifies the cache for a player's overview."""
 
+        print(f"Syncing player overview for ID: {player_id}")
         if not player_id:
             sys.exit("player_id required!")
 
         self.player_id = player_id
         player_overview_data: dict = self._fetch_json(Subject.OVERVIEW)
 
-        player_name: str = player_overview_data["pageProps"]["fighter_banner_info"][
+        player_name: dict = player_overview_data["pageProps"]["fighter_banner_info"][
             "personal_info"
         ]["fighter_id"]
 
-        print(f"{player_name} stats updated for {self.date}")
+        current_char_id: int = player_overview_data["pageProps"]["fighter_banner_info"][
+            "favorite_character_id"
+        ]
 
-    def sync_club_stats(self, club_id: str) -> None:
+        current_char: str = self._charid_map[current_char_id]
+
+        current_rank: str = player_overview_data["pageProps"]["fighter_banner_info"][
+            "favorite_character_league_info"
+        ]["league_rank_info"]["league_rank_name"]
+
+        current_lp: str = player_overview_data["pageProps"]["fighter_banner_info"][
+            "favorite_character_league_info"
+        ]["league_point"]
+
+        print(
+            f"{player_name} overview updated for {self.date}"
+            "\n"
+            f"Current character: {current_char} ({current_rank} {current_lp} LP)."
+        )
+        print()
+
+    def sync_club_info(self, club_id: str) -> None:
         """Checks and verifies the cache for a club's stats."""
+
+        print(f"Syncing club overview for ID: {club_id}")
 
         if not club_id:
             sys.exit("club_id required!")
@@ -273,10 +388,62 @@ class CFNStatsScraper:
         club_name = club_data["pageProps"]["circle_base_info"]["name"]
 
         print(f"{club_name} stats updated for {self.date}")
+        print()
+
+    def sync_player_stats(self, player_id: str) -> None:
+        """Checks and verifies the cache for a player's stats."""
+
+        if not player_id:
+            sys.exit("player_id required!")
+
+        print(f"Syncing player stats for ID: {player_id}")
+
+        self.player_id = player_id
+        stats_data: dict = self._fetch_json(Subject.STATS)
+
+        playtimes = stats_data["pageProps"]["play"]["base_info"][
+            "content_play_time_list"
+        ]
+
+        [extreme_playtime] = [
+            timedelta(seconds=x["play_time"])
+            for x in playtimes
+            if x["content_type_name"] == "Extreme"
+        ]
+
+        player_name: str = stats_data["pageProps"]["fighter_banner_info"][
+            "personal_info"
+        ]["fighter_id"]
+
+        print(f"{player_name} has played {extreme_playtime} of Extreme battles.")
+        print(f"{player_name} stats updated for {self.date}")
+        print()
+
+    def sync_player_avatar(self, player_id: str) -> None:
+        """Checks and verifies the cache for a player's avatar."""
+
+        if not player_id:
+            sys.exit("player_id required!")
+
+        print(f"Syncing player avatar stats for {player_id}")
+
+        self.player_id = player_id
+        avatar_data: dict = self._fetch_json(Subject.AVATAR)
+
+        avatar_level: str = avatar_data["pageProps"]["avatar"]["status"]["level"]
+
+        player_name: str = avatar_data["pageProps"]["fighter_banner_info"][
+            "personal_info"
+        ]["fighter_id"]
+
+        print(f"{player_name}'s level {avatar_level} avatar updated for {self.date}")
+        print()
 
 
 if __name__ == "__main__":
     cfn_scraper = CFNStatsScraper(datetime.now())
+    print()
+    cfn_scraper.sync_player_overview(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
+    cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
     cfn_scraper.sync_player_stats(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
-
-    cfn_scraper.sync_club_stats(club_id=cfn_secrets.DEFAULT_CLUB_ID)
+    cfn_scraper.sync_player_avatar(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
