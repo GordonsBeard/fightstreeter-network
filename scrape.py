@@ -3,11 +3,22 @@
 import json
 import sys
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 
 import requests
 
 import cfn_secrets
+
+
+class Subject(Enum):
+    """Subject of the data scraper's data scraping."""
+
+    OVERVIEW = 1
+    STATS = 2
+    AVATAR = 3
+    CLUB = 4
+    HISTORY = 5
 
 
 class CFNStatsScraper:
@@ -16,7 +27,7 @@ class CFNStatsScraper:
     _HOSTNAME: str = "www.streetfighter.com"
     _CFN_ROOT: str = f"https://{_HOSTNAME}/6/buckler/"
     _PROFILE_URL: str = _CFN_ROOT + "en/profile/{player_id}"
-    _PLAYER_PROFILE_URL: str = (
+    _PLAYER_OVERVIEW_URL: str = (
         _CFN_ROOT + "/_next/data/{url_token}/en"
         "/profile/{player_id}.json?sid={player_id}"
     )
@@ -42,35 +53,38 @@ class CFNStatsScraper:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
     }
 
-    def __init__(self, **kwargs) -> None:
-        options: dict = {
-            "player_id": cfn_secrets.DEFAULT_PLAYER_ID,
-            "group_id": cfn_secrets.DEFAULT_CLUB_ID,
-            "date": datetime.now(),
-        }
-
-        options.update(kwargs)
-
-        self.player_id: str = options["player_id"]
-        self.group_id: str = options["group_id"]
-        self.date: datetime = options["date"]
+    def __init__(self, date: datetime) -> None:
+        self._player_id: str = ""
+        self.date: datetime = date
 
     @property
-    def profile_cache_dir(self) -> Path:
-        """Returns the path for the player's profile json cache."""
+    def player_id(self) -> str:
+        """Player's CFN ID"""
+        return self._player_id
+
+    @player_id.setter
+    def player_id(self, player_id) -> None:
+        """Setter for Player's CFN ID"""
+        self._player_id = player_id
+
+    #
+
+    @property
+    def overview_cache_dir(self) -> Path:
+        """Returns the path for the player's overview json cache."""
 
         return Path(
             f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}/{self.player_id}"
         )
 
     @property
-    def profile_cache_filename(self):
-        """Returns the filename for the player's cached profile data."""
+    def overview_cache_filename(self):
+        """Returns the filename for the player's cached overview data."""
 
-        return Path(self.profile_cache_dir / f"{self.player_id}_profile.json")
+        return Path(self.overview_cache_dir / f"{self.player_id}_overview.json")
 
-    def _fetch_player_profile_json(self) -> dict:
-        """Grabs the basic profile data for the user."""
+    def _fetch_player_overview_json(self) -> dict:
+        """Grabs the user overview data."""
 
         cached_data = self._load_cached_data()
 
@@ -83,7 +97,7 @@ class CFNStatsScraper:
 
         print("Making request for new data.")
         response: requests.Response = requests.get(
-            self._PLAYER_PROFILE_URL.format(
+            self._PLAYER_OVERVIEW_URL.format(
                 url_token=cfn_secrets.URL_TOKEN, player_id=self.player_id
             ),
             timeout=5,
@@ -94,21 +108,21 @@ class CFNStatsScraper:
         if response.status_code != 200:
             sys.exit(f"Bad request! Status code: {response.status_code}")
 
-        profile_json_data: dict = response.json()
+        overview_json_data: dict = response.json()
 
         # Store it for cache purposes
-        self._store_player_profile(profile_json_data)
+        self._store_player_overview(overview_json_data)
 
-        return profile_json_data
+        return overview_json_data
 
-    def _verify_profile_json(self, profile_json_data: dict) -> None:
-        """Does some sanity checks on the keys expected for profile data."""
+    def _verify_overview_json(self, overview_json_data: dict) -> None:
+        """Does some sanity checks on the keys expected for overview data."""
 
-        if "pageProps" not in profile_json_data:
+        if "pageProps" not in overview_json_data:
             sys.exit("Data is missing root 'pageProps' element. Aborting.")
 
         req_keys = ("fighter_banner_info", "play")
-        if not all(k in profile_json_data["pageProps"] for k in req_keys):
+        if not all(k in overview_json_data["pageProps"] for k in req_keys):
             sys.exit("Data is missing a required stats key. Aborting.")
 
         req_play_keys: list[str] = [
@@ -121,16 +135,16 @@ class CFNStatsScraper:
             "current_season_id",
             "season_ids",
         ]
-        if not all(k in profile_json_data["pageProps"]["play"] for k in req_play_keys):
+        if not all(k in overview_json_data["pageProps"]["play"] for k in req_play_keys):
             sys.exit("Play data is incomplete, missing key. Aborting.")
 
-    def _store_player_profile(self, player_stats: dict) -> None:
-        """Store the player profile into the cache."""
+    def _store_player_overview(self, player_stats: dict) -> None:
+        """Store the player overview into the cache."""
 
         # Run sanity check before continuing.
-        self._verify_profile_json(player_stats)
+        self._verify_overview_json(player_stats)
 
-        with open(self.profile_cache_filename, "w", encoding="utf-8") as f:
+        with open(self.overview_cache_filename, "w", encoding="utf-8") as f:
             json.dump(player_stats, f, ensure_ascii=False, indent=4)
 
         print("Stored player data.")
@@ -138,30 +152,31 @@ class CFNStatsScraper:
     def _load_cached_data(self) -> dict:
         """Fetch the already scraped json data."""
 
-        if not Path.exists(self.profile_cache_dir):
-            print(f"Player stats directory {self.profile_cache_dir} missing.")
+        if not Path.exists(self.overview_cache_dir):
+            print(f"Player stats directory {self.overview_cache_dir} missing.")
 
             if self.date.date() < datetime.today().date():
                 print("Date requested is before today. Cannot build cache.")
                 return {}
 
             print("Creating folder.")
-            Path.mkdir(self.profile_cache_dir, parents=True, exist_ok=True)
+            Path.mkdir(self.overview_cache_dir, parents=True, exist_ok=True)
             return {}  # missing the directory, we won't have the cache
 
-        if not Path.is_file(self.profile_cache_filename):
+        if not Path.is_file(self.overview_cache_filename):
             print("Missing player_data.json file!")
             return {}  # we have the stats for the day, but not for this user
 
-        with open(self.profile_cache_filename, "r", encoding="utf-8") as f:
+        with open(self.overview_cache_filename, "r", encoding="utf-8") as f:
             return json.loads(f.read())  # we got the goods
 
-    def sync_player_stats(self) -> None:
+    def sync_player_stats(self, player_id) -> None:
         """Checks and verifies the cache for a player's stats on a given date."""
 
-        player_profile_data: dict = self._fetch_player_profile_json()
+        self.player_id = player_id
+        player_overview_data: dict = self._fetch_player_overview_json()
 
-        player_name: str = player_profile_data["pageProps"]["fighter_banner_info"][
+        player_name: str = player_overview_data["pageProps"]["fighter_banner_info"][
             "personal_info"
         ]["fighter_id"]
 
@@ -169,10 +184,6 @@ class CFNStatsScraper:
 
 
 if __name__ == "__main__":
-    cfn_scraper = CFNStatsScraper(
-        player_id=cfn_secrets.DEFAULT_PLAYER_ID,
-        club_id=cfn_secrets.DEFAULT_CLUB_ID,
-        date=datetime.today(),
-    )
+    cfn_scraper = CFNStatsScraper(datetime.now())
 
-    cfn_scraper.sync_player_stats()
+    cfn_scraper.sync_player_stats(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
