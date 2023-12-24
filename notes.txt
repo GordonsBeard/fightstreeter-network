@@ -22,7 +22,7 @@ Avatar (avatar.json)
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/avatar.json?sid={PLAYER_ID}
 
 
-Club
+Club✔️
 --
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/club/{CLUB_ID}.json?clubid={CLUB_ID}
 

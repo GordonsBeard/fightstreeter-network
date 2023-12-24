@@ -24,45 +24,17 @@ class Subject(Enum):
 class CFNStatsScraper:
     """Object that grabs the data from the website"""
 
-    _HOSTNAME: str = "www.streetfighter.com"
-    _CFN_ROOT: str = f"https://{_HOSTNAME}/6/buckler/"
-    _PROFILE_URL: str = _CFN_ROOT + "en/profile/{player_id}"
-    _PLAYER_OVERVIEW_URL: str = (
-        _CFN_ROOT + "/_next/data/{url_token}/en"
-        "/profile/{player_id}.json?sid={player_id}"
-    )
-    _CLUB_URL: str = (
-        _CFN_ROOT + "/_next/data/{url_token}/en" "/club/{club_id}.json?sid={club_id}"
-    )
-
-    _cookies: dict[str, str] = {
-        "buckler_id": cfn_secrets.BUCKLER_ID,
-        "buckler_r_id": cfn_secrets.BUCKLER_R_ID,
-        "buckler_praise_date": cfn_secrets.BUCKLER_PRAISE_DATE,
-    }
-
-    _headers: dict[str, str] = {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "en-US,en,q=0.9",
-        "Cache-Content": "no-cache",
-        "Connection": "keep-alive",
-        "Host": _HOSTNAME,
-        "Pragma": "no-cache",
-        "Referer": f"{_CFN_ROOT}profile/{cfn_secrets.DEFAULT_PLAYER_ID}/play",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
-    }
-
     def __init__(self, date: datetime) -> None:
+        self.date: datetime = date
         self._player_id: str = ""
         self._club_id: str = ""
-        self.date: datetime = date
         self.base_cache_dir: Path = Path(
             f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
         )
+        self.url_token: str = cfn_secrets.URL_TOKEN
+        self.buckler_id = cfn_secrets.BUCKLER_ID
+        self.buckler_r_id = cfn_secrets.BUCKLER_R_ID
+        self.buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE
 
     @property
     def player_id(self) -> str:
@@ -87,13 +59,15 @@ class CFNStatsScraper:
     def _cache_dir(self, subject: Subject) -> Path:
         """Returns the path for the cached json."""
 
+        cache_dir: Path = Path(self.base_cache_dir)
+
         match subject:
             case Subject.OVERVIEW:
-                return Path(self.base_cache_dir / self.player_id)
+                return cache_dir / self.player_id
             case Subject.CLUB:
-                return Path(self.base_cache_dir / self.club_id)
-
-        return Path()  # todo this isn't good
+                return cache_dir / self.club_id
+            case _:
+                raise NotImplementedError()
 
     def _cache_filename(self, subject: Subject) -> Path:
         """Returns the filename for the cached json."""
@@ -106,184 +80,163 @@ class CFNStatsScraper:
                 )
             case Subject.CLUB:
                 return Path(self._cache_dir(Subject.CLUB) / f"{self.club_id}.json")
+            case _:
+                raise NotImplementedError()
 
-        return Path()  # todo this isn't good
+    def _get_req_url(self, subject: Subject) -> str:
+        """Returns the request URL for a given subject."""
 
-    @property
-    def overview_cache_dir(self) -> Path:
-        """Returns the path for the player's overview json cache."""
+        url: str = ""
 
-        return self._cache_dir(Subject.OVERVIEW)
+        match subject:
+            case Subject.OVERVIEW:
+                if not self.player_id:
+                    sys.exit("Missing player_id, cannot build request url for data.")
 
-    @property
-    def overview_cache_filename(self):
-        """Returns the filename for the player's cached overview data."""
+                url = (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self.url_token}/en/profile"
+                    f"/{self.player_id}.json?sid={self.player_id}"
+                )
+            case Subject.CLUB:
+                if not self.club_id:
+                    sys.exit("Missing club_id, cannot build reqeuest url for data.")
 
-        return self._cache_filename(Subject.OVERVIEW)
+                url = (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self.url_token}/en/club"
+                    f"/{self.club_id}.json?clubid={self.club_id}"
+                )
 
-    @property
-    def club_cache_dir(self) -> Path:
-        """Returns the path for the club's json cache."""
+        return url
 
-        return self._cache_dir(Subject.CLUB)
+    def _fetch_json(self, subject: Subject) -> dict:
+        """Grabs the json object for the request subject. Cache or HTTP hit."""
 
-    @property
-    def club_cache_filename(self):
-        """Returns the filename for the club's cached data."""
-
-        return self._cache_filename(Subject.CLUB)
-
-    def _fetch_player_overview_json(self) -> dict:
-        """Grabs the user overview data."""
-
-        cached_data = self._load_profile_cached_data()
+        cached_data = self._load_cached_data(subject)
 
         if cached_data:
-            print("Cached profile overview data found.")
+            print(f"Cached {subject.name} json found.")
             return cached_data
 
         if self.date.date() < datetime.today().date():
             sys.exit("Cannot request new data from a time before today.")
+
+        cookies: dict[str, str] = {
+            "buckler_id": self.buckler_id,
+            "buckler_r_id": self.buckler_r_id,
+            "buckler_praise_date": self.buckler_praise_date,
+        }
+
+        headers: dict[str, str] = {
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en-US,en,q=0.9",
+            "Cache-Content": "no-cache",
+            "Connection": "keep-alive",
+            "Host": "www.streetfighter.com",
+            "Pragma": "no-cache",
+            "Referer": f"https://www.streetfighter.com/6/buckler/profile/{cfn_secrets.DEFAULT_PLAYER_ID}/play",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
+        }
 
         print("Making request for new data.")
+
         response: requests.Response = requests.get(
-            self._PLAYER_OVERVIEW_URL.format(
-                url_token=cfn_secrets.URL_TOKEN, player_id=self.player_id
-            ),
+            self._get_req_url(subject),
             timeout=5,
-            headers=self._headers,
-            cookies=self._cookies,
+            headers=headers,
+            cookies=cookies,
         )
 
         if response.status_code != 200:
+            if response.status_code == 403:
+                print("You probably need to log in again and update the secrets.")
             sys.exit(f"Bad request! Status code: {response.status_code}")
 
-        overview_json_data: dict = response.json()
+        json_data: dict = response.json()
 
         # Store it for cache purposes
-        self._store_player_overview(overview_json_data)
+        self._store_json(json_data, subject)
 
-        return overview_json_data
+        return json_data
 
-    def _fetch_club_json(self) -> dict:
-        """Grabs the club's data."""
+    def _verify_json(self, json_data: dict, subject: Subject) -> None:
+        """Does sanity checks on the keys expected in the json data."""
 
-        cached_data = self._load_club_cached_data()
+        if not json_data:
+            sys.exit(f"{subject.name} json is empty. Aborting.")
 
-        if cached_data:
-            print("Cached club data found.")
-            return cached_data
+        if "pageProps" not in json_data:
+            sys.exit(
+                f"{subject.name} json is missing root 'pageProps' element. Aborting."
+            )
 
-        if self.date.date() < datetime.today().date():
-            sys.exit("Cannot request new data from a time before today.")
+        match subject:
+            case Subject.OVERVIEW:
+                req_ov_keys: list[str] = ["fighter_banner_info", "play"]
+                if not all(k in json_data["pageProps"] for k in req_ov_keys):
+                    sys.exit(
+                        f"{subject.name} json is missing a required stats key. Aborting."
+                    )
 
-        print("Making request for new club data.")
-        response: requests.Response = requests.get(
-            self._CLUB_URL.format(
-                url_token=cfn_secrets.URL_TOKEN, club_id=self.club_id
-            ),
-            timeout=5,
-            headers=self._headers,
-            cookies=self._cookies,
-        )
+                req_play_keys: list[str] = [
+                    "base_info",
+                    "battle_stats",
+                    "character_league_infos",
+                    "character_play_point_infos",
+                    "character_win_rates",
+                    "character_win_rates_by_rival_character",
+                    "current_season_id",
+                    "season_ids",
+                ]
+                if not all(k in json_data["pageProps"]["play"] for k in req_play_keys):
+                    sys.exit(
+                        f"{subject.name} data is incomplete, missing keys in 'play' "
+                        "section. Aborting."
+                    )
+            case Subject.CLUB:
+                req_club_keys: list[str] = [
+                    "circle_base_info",
+                    "circle_member_list",
+                    "circle_timeline_list",
+                ]
+                if not all(k in json_data["pageProps"] for k in req_club_keys):
+                    sys.exit(
+                        f"{subject.name} json is missing a required stats key. Aborting."
+                    )
 
-        if response.status_code != 200:
-            sys.exit(f"Bad request! Status code: {response.status_code}")
-
-        club_json_data: dict = response.json()
-
-        # Store it for cache purposes
-        self._store_club_data(club_json_data)
-
-        return club_json_data
-
-    def _verify_overview_json(self, overview_json_data: dict) -> None:
-        """Does some sanity checks on the keys expected for overview data."""
-
-        if "pageProps" not in overview_json_data:
-            sys.exit("Data is missing root 'pageProps' element. Aborting.")
-
-        req_keys = ("fighter_banner_info", "play")
-        if not all(k in overview_json_data["pageProps"] for k in req_keys):
-            sys.exit("Data is missing a required stats key. Aborting.")
-
-        req_play_keys: list[str] = [
-            "base_info",
-            "battle_stats",
-            "character_league_infos",
-            "character_play_point_infos",
-            "character_win_rates",
-            "character_win_rates_by_rival_character",
-            "current_season_id",
-            "season_ids",
-        ]
-        if not all(k in overview_json_data["pageProps"]["play"] for k in req_play_keys):
-            sys.exit("Play data is incomplete, missing key. Aborting.")
-
-    def _store_player_overview(self, player_stats: dict) -> None:
-        """Store the player overview into the cache."""
+    def _store_json(self, json_data: dict, subject: Subject) -> None:
+        """Store the json into the cache."""
 
         # Run sanity check before continuing.
-        self._verify_overview_json(player_stats)
+        self._verify_json(json_data, subject)
 
-        with open(self.overview_cache_filename, "w", encoding="utf-8") as f:
-            json.dump(player_stats, f, ensure_ascii=False, indent=4)
+        Path.mkdir(self._cache_dir(subject), parents=True, exist_ok=True)
 
-        print("Stored player data.")
+        with open(self._cache_filename(subject), "w", encoding="utf-8") as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)
 
-    def _store_club_data(self, club_stats: dict) -> None:
-        """Store the club stats into the cache."""
+        print(f"Stored {subject.name} json data into cache.")
 
-        # Run sanity check before continuing.
-        # todo
-        # self._verify_overview_json(club_stats)
+    def _load_cached_data(self, subject: Subject) -> dict:
+        """Fetches the already scraped data."""
 
-        with open(self.club_cache_filename, "w", encoding="utf-8") as f:
-            json.dump(club_stats, f, ensure_ascii=False, indent=4)
+        # No stats for the day.
+        if not Path.exists(self._cache_dir(subject)):
+            print(f"Directory for {subject.name} missing.")
+            return {}
 
-        print("Stored club data.")
+        # These specific json is missing.
+        if not Path.is_file(self._cache_filename(subject)):
+            print(f"Missing {subject.name} json file!")
+            return {}
 
-    def _load_profile_cached_data(self) -> dict:
-        """Fetch the already scraped player overview json."""
-
-        if not Path.exists(self.overview_cache_dir):
-            print(f"Player stats directory {self.overview_cache_dir} missing.")
-
-            if self.date.date() < datetime.today().date():
-                print("Date requested is before today. Cannot build cache.")
-                return {}
-
-            print("Creating user folder.")
-            Path.mkdir(self.overview_cache_dir, parents=True, exist_ok=True)
-            return {}  # missing the directory, we won't have the cache
-
-        if not Path.is_file(self.overview_cache_filename):
-            print("Missing <player_id>_overview.json file!")
-            return {}  # we have the stats for the day, but not for this user
-
-        with open(self.overview_cache_filename, "r", encoding="utf-8") as f:
-            return json.loads(f.read())  # we got the goods
-
-    def _load_club_cached_data(self) -> dict:
-        """Fetch the already scraped group json."""
-
-        if not Path.exists(self.club_cache_dir):
-            print(f"Club stats directory {self.club_cache_dir} missing.")
-
-            if self.date.date() < datetime.today().date():
-                print("Date requested is before today. Cannot build cache.")
-                return {}
-
-            print("Creating club folder.")
-            Path.mkdir(self.club_cache_dir, parents=True, exist_ok=True)
-            return {}  # missing the directory, we won't have the cache
-
-        if not Path.is_file(self.club_cache_filename):
-            print("Missing <club_id>.json file!")
-            return {}  # we have the stats for the day, but not for this club
-
-        with open(self.club_cache_filename, "r", encoding="utf-8") as f:
-            return json.loads(f.read())  # we got the goods
+        with open(self._cache_filename(Subject.OVERVIEW), "r", encoding="utf-8") as f:
+            return json.loads(f.read())
 
     def sync_player_stats(self, player_id: str) -> None:
         """Checks and verifies the cache for a player's stats."""
@@ -292,7 +245,7 @@ class CFNStatsScraper:
             sys.exit("player_id required!")
 
         self.player_id = player_id
-        player_overview_data: dict = self._fetch_player_overview_json()
+        player_overview_data: dict = self._fetch_json(Subject.OVERVIEW)
 
         player_name: str = player_overview_data["pageProps"]["fighter_banner_info"][
             "personal_info"
@@ -307,7 +260,7 @@ class CFNStatsScraper:
             sys.exit("club_id required!")
 
         self.club_id = club_id
-        club_data: dict = self._fetch_club_json()
+        club_data: dict = self._fetch_json(Subject.CLUB)
 
         club_name = club_data["pageProps"]["circle_base_info"]["name"]
 
