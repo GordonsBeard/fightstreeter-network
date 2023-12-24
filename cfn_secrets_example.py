@@ -2,13 +2,14 @@
    Rename file to 'cfn_secrets.py'
 """
 
-# URL_TOKEN & PLAYER_ID:
+DEFAULT_PLAYER_ID:str = '3425126856' # Scrub's CFN
+DEFAULT_CLUB_ID:str = 'c984cc7ce8cd44b9a209e984a73d0c9e' # FunnyAnimals
+
+# URL_TOKEN:
 # Go to profile and click "stats" to get the following URL (use Fiddler):
 # https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN_HERE}/en/profile/{PLAYER_ID_HERE}/play.json?sid={PLAYER_ID_HERE}
 
 URL_TOKEN:str = 'AAABBBCCCDDD'
-DEFAULT_PLAYER_ID:str = '3425126856' # Scrub's CFN
-DEFAULT_CLUB_ID:str = 'c984cc7ce8cd44b9a209e984a73d0c9e' # FunnyAnimals
 
 # BUCKLER_ID & BUCKLER_R_ID & PRAISE_DATE
 # You get this from the cookie the website stores. (use Fiddler)
