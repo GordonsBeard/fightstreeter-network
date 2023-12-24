@@ -67,7 +67,9 @@ class CFNStatsScraper:
             case Subject.CLUB:
                 return cache_dir / self.club_id
             case _:
-                raise NotImplementedError()
+                raise NotImplementedError(
+                    f"{subject.name} not implemented in _cache_dir()"
+                )
 
     def _cache_filename(self, subject: Subject) -> Path:
         """Returns the filename for the cached json."""
@@ -81,7 +83,9 @@ class CFNStatsScraper:
             case Subject.CLUB:
                 return Path(self._cache_dir(Subject.CLUB) / f"{self.club_id}.json")
             case _:
-                raise NotImplementedError()
+                raise NotImplementedError(
+                    f"{subject.name} not implemented in _cache_filename()"
+                )
 
     def _get_req_url(self, subject: Subject) -> str:
         """Returns the request URL for a given subject."""
@@ -105,7 +109,9 @@ class CFNStatsScraper:
                     f"/{self.club_id}.json?clubid={self.club_id}"
                 )
             case _:
-                raise NotImplementedError()
+                raise NotImplementedError(
+                    f"{subject.name} not implemented in _get_req_url()"
+                )
 
     def _fetch_json(self, subject: Subject) -> dict:
         """Grabs the json object for the request subject. Cache or HTTP hit."""
@@ -206,7 +212,9 @@ class CFNStatsScraper:
                         f"{subject.name} json is missing a required stats key. Aborting."
                     )
             case _:
-                raise NotImplementedError()
+                raise NotImplementedError(
+                    f"{subject.name} not implemented in _verify_json()"
+                )
 
     def _store_json(self, json_data: dict, subject: Subject) -> None:
         """Store the json into the cache."""
