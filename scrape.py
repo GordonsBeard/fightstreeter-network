@@ -24,6 +24,11 @@ class Subject(Enum):
 class CFNStatsScraper:
     """Object that grabs the data from the website"""
 
+    _url_token: str = cfn_secrets.URL_TOKEN
+    _buckler_id = cfn_secrets.BUCKLER_ID
+    _buckler_r_id = cfn_secrets.BUCKLER_R_ID
+    _buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE
+
     def __init__(self, date: datetime) -> None:
         self.date: datetime = date
         self._player_id: str = ""
@@ -31,10 +36,6 @@ class CFNStatsScraper:
         self.base_cache_dir: Path = Path(
             f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
         )
-        self.url_token: str = cfn_secrets.URL_TOKEN
-        self.buckler_id = cfn_secrets.BUCKLER_ID
-        self.buckler_r_id = cfn_secrets.BUCKLER_R_ID
-        self.buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE
 
     @property
     def player_id(self) -> str:
@@ -96,7 +97,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self.url_token}/en/profile"
+                    f"/{self._url_token}/en/profile"
                     f"/{self.player_id}.json?sid={self.player_id}"
                 )
             case Subject.CLUB:
@@ -105,7 +106,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self.url_token}/en/club"
+                    f"/{self._url_token}/en/club"
                     f"/{self.club_id}.json?clubid={self.club_id}"
                 )
             case _:
@@ -126,9 +127,9 @@ class CFNStatsScraper:
             sys.exit("Cannot request new data from a time before today.")
 
         cookies: dict[str, str] = {
-            "buckler_id": self.buckler_id,
-            "buckler_r_id": self.buckler_r_id,
-            "buckler_praise_date": self.buckler_praise_date,
+            "buckler_id": self._buckler_id,
+            "buckler_r_id": self._buckler_r_id,
+            "buckler_praise_date": self._buckler_praise_date,
         }
 
         headers: dict[str, str] = {
