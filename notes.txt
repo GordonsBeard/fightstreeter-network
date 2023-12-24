@@ -1,7 +1,7 @@
 TODO
 ===
+- generalize the data storage/retreval
 - every url pulled, log it and log where I put the data
-- store data in a time format
 
 URLS
 ===
