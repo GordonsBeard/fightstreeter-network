@@ -55,7 +55,7 @@ class CFNStatsScraper:
         """Returns the path for the player's profile json cache."""
 
         return Path(
-            f"player_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}/{self.player_id}"
+            f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}/{self.player_id}"
         )
 
     @property
