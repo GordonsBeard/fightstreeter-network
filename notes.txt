@@ -1,8 +1,51 @@
-headers/connection help
-https://github.com/Xjph/CFNScrape/tree/master/CFNScrape
-
-
 TODO
 ===
 - every url pulled, log it and log where I put the data
 - store data in a time format
+
+URLS
+===
+Overview
+--
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}.json?sid={PLAYER_ID}
+
+
+Stats (play.json)
+--
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/play.json?sid={PLAYER_ID}
+
+
+Avatar (avatar.json)
+--
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/avatar.json?sid={PLAYER_ID}
+
+
+Club
+--
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/club.json?sid={PLAYER_ID}
+
+
+History
+--
+Scrub's Stats (play.json):
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/play.json?sid={PLAYER_ID}
+
+Scrub's History (battlelog.json):
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/battlelog.json?sid={PLAYER_ID}
+
+Scrub's Ranked History (battlelog/rank.json):
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/battlelog/rank.json?sid={PLAYER_ID}
+
+Scrub's Casual History (battlelog/casual.json):
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/battlelog/casual.json?sid={PLAYER_ID}
+
+Scrub's Custom Room History (battlelog/custom.json)
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/battlelog/custom.json?sid={PLAYER_ID}
+
+Scrub's Battle Hub Match (battlelog/hub.json)
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}/battlelog/hub.json?sid={PLAYER_ID}
+
+
+FunnyAnimals Club
+--
+https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/club/c984cc7ce8cd44b9a209e984a73d0c9e.json?clubid=c984cc7ce8cd44b9a209e984a73d0c9e

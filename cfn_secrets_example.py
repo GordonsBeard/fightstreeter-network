@@ -8,6 +8,7 @@
 
 URL_TOKEN:str = 'AAABBBCCCDDD'
 DEFAULT_PLAYER_ID:str = '3425126856' # Scrub's CFN
+DEFAULT_CLUB_ID:str = 'c984cc7ce8cd44b9a209e984a73d0c9e' # FunnyAnimals
 
 # BUCKLER_ID & BUCKLER_R_ID & PRAISE_DATE
 # You get this from the cookie the website stores. (use Fiddler)
