@@ -85,15 +85,12 @@ class CFNStatsScraper:
 
     def _get_req_url(self, subject: Subject) -> str:
         """Returns the request URL for a given subject."""
-
-        url: str = ""
-
         match subject:
             case Subject.OVERVIEW:
                 if not self.player_id:
                     sys.exit("Missing player_id, cannot build request url for data.")
 
-                url = (
+                return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
                     f"/{self.url_token}/en/profile"
                     f"/{self.player_id}.json?sid={self.player_id}"
@@ -102,13 +99,13 @@ class CFNStatsScraper:
                 if not self.club_id:
                     sys.exit("Missing club_id, cannot build reqeuest url for data.")
 
-                url = (
+                return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
                     f"/{self.url_token}/en/club"
                     f"/{self.club_id}.json?clubid={self.club_id}"
                 )
-
-        return url
+            case _:
+                raise NotImplementedError()
 
     def _fetch_json(self, subject: Subject) -> dict:
         """Grabs the json object for the request subject. Cache or HTTP hit."""
@@ -208,6 +205,8 @@ class CFNStatsScraper:
                     sys.exit(
                         f"{subject.name} json is missing a required stats key. Aborting."
                     )
+            case _:
+                raise NotImplementedError()
 
     def _store_json(self, json_data: dict, subject: Subject) -> None:
         """Store the json into the cache."""
@@ -235,7 +234,7 @@ class CFNStatsScraper:
             print(f"Missing {subject.name} json file!")
             return {}
 
-        with open(self._cache_filename(Subject.OVERVIEW), "r", encoding="utf-8") as f:
+        with open(self._cache_filename(subject), "r", encoding="utf-8") as f:
             return json.loads(f.read())
 
     def sync_player_stats(self, player_id: str) -> None:
