@@ -1,9 +1,10 @@
 """Module providing for the scraping of CFN for player stats"""
 
+import cfn_secrets
 import json
 import os.path
 import requests
-import cfn_secrets
+import sys
 
 class CFNStatsScraper:
     """Object that grabs the data from the website"""
@@ -46,6 +47,7 @@ class CFNStatsScraper:
         """Grabs the basic profile data for the user."""
 
         if self._check_if_stats_exist():
+            print("Cached data found.")
             return self._load_cached_data()
 
         print("Making request for new data!")
@@ -58,6 +60,9 @@ class CFNStatsScraper:
             headers=self._headers,
             cookies=self._cookies
             )
+
+        if response.status_code != 200:
+            sys.exit(f'Bad request! Status code: {response.status_code}')
 
         # This is the full json file
         profile_json_data:dict = response.json()
