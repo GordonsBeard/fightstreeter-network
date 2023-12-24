@@ -2,4 +2,4 @@ cfn_secrets.py
 __pycache__/*.*
 **.pyc
 .vscode/*.*
-player_stats/*.json
+player_stats/**/*.json
