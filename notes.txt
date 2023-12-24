@@ -49,3 +49,9 @@ https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYE
 FunnyAnimals Club
 --
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/club/c984cc7ce8cd44b9a209e984a73d0c9e.json?clubid=c984cc7ce8cd44b9a209e984a73d0c9e
+
+
+Player IDs
+===
+3781805743 - Auxy
+3425126856 - Scrub

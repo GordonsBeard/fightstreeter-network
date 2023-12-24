@@ -44,9 +44,9 @@ class CFNStatsScraper:
 
     def __init__(self, **kwargs) -> None:
         self.player_id: str = (
-            cfn_secrets.DEFAULT_PLAYER_ID
-            if "player_id" not in kwargs
-            else kwargs["player_id"]
+            kwargs["player_id"]
+            if "player_id" in kwargs
+            else cfn_secrets.DEFAULT_PLAYER_ID
         )
         self.date: datetime = kwargs["date"] if "date" in kwargs else datetime.now()
 
@@ -73,8 +73,10 @@ class CFNStatsScraper:
             print("Cached data found.")
             return cached_data
 
-        print("Making request for new data.")
+        if self.date.date() < datetime.today().date():
+            sys.exit("Cannot request new data from a time before today.")
 
+        print("Making request for new data.")
         response: requests.Response = requests.get(
             self._PLAYER_PROFILE_URL.format(
                 url_token=cfn_secrets.URL_TOKEN, player_id=self.player_id
@@ -107,7 +109,13 @@ class CFNStatsScraper:
         """Fetch the already scraped json data."""
 
         if not Path.exists(self.profile_cache_dir):
-            print(f"Player stats directory {self.profile_cache_dir} missing, creating.")
+            print(f"Player stats directory {self.profile_cache_dir} missing.")
+
+            if self.date.date() < datetime.today().date():
+                print("Date requested is before today. Cannot build cache.")
+                return {}
+
+            print("Creating folder.")
             Path.mkdir(self.profile_cache_dir, parents=True, exist_ok=True)
             return {}  # missing the directory, we won't have the cache
 
@@ -145,11 +153,14 @@ class CFNStatsScraper:
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    if len(args) == 1:
-        CFN_ID = args[0]
-    else:
-        CFN_ID = cfn_secrets.DEFAULT_PLAYER_ID
+    CFN_ID: str = cfn_secrets.DEFAULT_PLAYER_ID
+    date: datetime = datetime.today()
 
-    cfn_scraper = CFNStatsScraper(player_id=CFN_ID)
+    args = sys.argv[1:]
+    if len(args) == 2:
+        CFN_ID = args[0]
+        raw_date: str = args[1]
+        date = datetime.strptime(raw_date, "%Y-%m-%d")
+
+    cfn_scraper = CFNStatsScraper(player_id=CFN_ID, date=date)
     cfn_scraper.do_shit()
