@@ -162,5 +162,10 @@ if __name__ == "__main__":
         raw_date: str = args[1]
         date = datetime.strptime(raw_date, "%Y-%m-%d")
 
+    if len(args) == 0:
+        print("Pass in CFN ID and date for specific user.")
+        print("ex: .\\scrape.py 3425126856 2023-12-22")
+        print("Default behavior: grabbing Scrub's data for today.")
+
     cfn_scraper = CFNStatsScraper(player_id=CFN_ID, date=date)
     cfn_scraper.do_shit()
