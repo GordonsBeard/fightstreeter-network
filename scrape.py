@@ -91,7 +91,16 @@ class CFNStatsScraper:
         """Returns the path for the cached json."""
 
         match subject:
-            case Subject.OVERVIEW | Subject.STATS | Subject.AVATAR:
+            case (
+                Subject.OVERVIEW
+                | Subject.STATS
+                | Subject.AVATAR
+                | Subject.ALL_MATCHES
+                | Subject.RANKED_MATCHES
+                | Subject.CASUAL_MATCHES
+                | Subject.CUSTOM_MATCHES
+                | Subject.HUB_MATCHES
+            ):
                 return Path(self.base_cache_dir / self.player_id)
             case Subject.CLUB:
                 return Path(self.base_cache_dir / self.club_id)
@@ -118,6 +127,31 @@ class CFNStatsScraper:
             case Subject.AVATAR:
                 return Path(
                     self._cache_dir(Subject.AVATAR) / f"{self.player_id}_avatar.json"
+                )
+            case Subject.ALL_MATCHES:
+                return Path(
+                    self._cache_dir(Subject.ALL_MATCHES)
+                    / f"{self.player_id}_battlelog.json"
+                )
+            case Subject.RANKED_MATCHES:
+                return Path(
+                    self._cache_dir(Subject.RANKED_MATCHES)
+                    / f"{self.player_id}_battlelog_rank.json"
+                )
+            case Subject.CASUAL_MATCHES:
+                return Path(
+                    self._cache_dir(Subject.CASUAL_MATCHES)
+                    / f"{self.player_id}_battlelog_casual.json"
+                )
+            case Subject.CUSTOM_MATCHES:
+                return Path(
+                    self._cache_dir(Subject.CUSTOM_MATCHES)
+                    / f"{self.player_id}_battlelog_custom.json"
+                )
+            case Subject.HUB_MATCHES:
+                return Path(
+                    self._cache_dir(Subject.HUB_MATCHES)
+                    / f"{self.player_id}_battlelog_hub.json"
                 )
             case _:
                 raise NotImplementedError(
@@ -162,6 +196,51 @@ class CFNStatsScraper:
                     "https://www.streetfighter.com/6/buckler/_next/data"
                     f"/{self._url_token}/en/profile"
                     f"/{self.player_id}/avatar.json?sid={self.player_id}"
+                )
+            case Subject.ALL_MATCHES:
+                if not self.player_id:
+                    sys.exit("Missing player_id, cannot build request url for matches.")
+
+                return (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self._url_token}/en/profile"
+                    f"/{self.player_id}/battlelog.json?sid={self.player_id}"
+                )
+            case Subject.RANKED_MATCHES:
+                if not self.player_id:
+                    sys.exit("Missing player_id, cannot build request url for matches.")
+
+                return (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self._url_token}/en/profile"
+                    f"/{self.player_id}/battlelog/rank.json?sid={self.player_id}"
+                )
+            case Subject.CASUAL_MATCHES:
+                if not self.player_id:
+                    sys.exit("Missing player_id, cannot build request url for matches.")
+
+                return (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self._url_token}/en/profile"
+                    f"/{self.player_id}/battlelog/casual.json?sid={self.player_id}"
+                )
+            case Subject.CUSTOM_MATCHES:
+                if not self.player_id:
+                    sys.exit("Missing player_id, cannot build request url for matches.")
+
+                return (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self._url_token}/en/profile"
+                    f"/{self.player_id}/battlelog/custom.json?sid={self.player_id}"
+                )
+            case Subject.HUB_MATCHES:
+                if not self.player_id:
+                    sys.exit("Missing player_id, cannot build request url for matches.")
+
+                return (
+                    "https://www.streetfighter.com/6/buckler/_next/data"
+                    f"/{self._url_token}/en/profile"
+                    f"/{self.player_id}/battlelog/hub.json?sid={self.player_id}"
                 )
             case _:
                 raise NotImplementedError(
@@ -305,6 +384,18 @@ class CFNStatsScraper:
                         f"{subject.name} json is missing a required avatar properties. "
                         "Aborting."
                     )
+            case (
+                Subject.ALL_MATCHES
+                | Subject.RANKED_MATCHES
+                | Subject.CASUAL_MATCHES
+                | Subject.CUSTOM_MATCHES
+                | Subject.HUB_MATCHES
+            ):
+                if "replay_list" not in json_data["pageProps"]:
+                    sys.exit(
+                        f"{subject.name} json is missing replay_list property. "
+                        "Aborting."
+                    )
             case _:
                 raise NotImplementedError(
                     f"{subject.name} not implemented in _verify_json()"
@@ -439,6 +530,23 @@ class CFNStatsScraper:
         print(f"{player_name}'s level {avatar_level} avatar updated for {self.date}")
         print()
 
+    def sync_battlelog_all(self, player_id: str) -> None:
+        """Checks and verifies the cache for the player's battlelog/history (all matches)."""
+
+        if not player_id:
+            sys.exit("player_id required!")
+
+        print(f"Syncing player battlelog (all matches) for {player_id}")
+
+        self.player_id = player_id
+        battlelog_dict: dict = self._fetch_json(Subject.ALL_MATCHES)
+
+        player_name: str = battlelog_dict["pageProps"]["fighter_banner_info"][
+            "personal_info"
+        ]["fighter_id"]
+
+        print(f"{player_name} match history pulled for ALL_MATCHES.")
+
 
 if __name__ == "__main__":
     cfn_scraper = CFNStatsScraper(datetime.now())
@@ -447,3 +555,4 @@ if __name__ == "__main__":
     cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
     cfn_scraper.sync_player_stats(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
     cfn_scraper.sync_player_avatar(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
+    cfn_scraper.sync_battlelog_all(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
