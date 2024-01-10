@@ -1,9 +1,21 @@
 TODO
 ===
-- generalize the data storage/retreval/verify
-    -- finish this
+- I'm only getting page 1 of the data from the battlelog.
+    - I will not know how many pages of matches to get unless I look at the match ID
+        or match date and then stop fetching once I see that's there.
+
+        This combines the scraper and the parser together. There is no way to ensure
+        that I can get all the matches since the last time I fetched without storing some
+        kind of data about the matches.
 - make it clear the club data is for club owners only right now
 - every url pulled, log it and log where I put the data
+- this is multiple projects:
+    - Scraper
+        - ONLY downloads the raw .json files
+    - Parser (load the cache)
+        - reads the json
+        - puts into database
+    - Website (reads the database)
 
 URLS
 ===
@@ -27,7 +39,7 @@ Club✔️
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/club/{CLUB_ID}.json?clubid={CLUB_ID}
 
 
-History
+History✔️
 --
 
 Scrub's History (battlelog.json):
@@ -55,3 +67,4 @@ Player IDs
 ===
 3781805743 - Auxy
 3425126856 - Scrub
+2251667984 - Geight
