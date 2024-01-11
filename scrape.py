@@ -2,6 +2,7 @@
 
 import json
 import sys
+import time
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
@@ -34,7 +35,7 @@ class CFNStatsScraper:
     _buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE
 
     _charid_map: dict[int, str] = {
-        1: "",
+        1: "Ryu",
         2: "",
         3: "",
         4: "",
@@ -42,16 +43,16 @@ class CFNStatsScraper:
         6: "",
         7: "",
         8: "Dhalsim",
-        9: "",
-        10: "",
+        9: "Cammy",
+        10: "Ken",
         11: "Dee Jay",
-        12: "",
+        12: "Lily",
         13: "",
         14: "",
-        15: "",
-        16: "",
-        17: "",
-        18: "",
+        15: "Blanka",
+        16: "Juri",
+        17: "Marisa",
+        18: "Guile",
         19: "",
         20: "E. Honda",
         21: "",
@@ -63,6 +64,7 @@ class CFNStatsScraper:
         self.date: datetime = date
         self._player_id: str = ""
         self._club_id: str = ""
+        self._page_no: int = 1
         self.base_cache_dir: Path = Path(
             f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
         )
@@ -86,6 +88,16 @@ class CFNStatsScraper:
     def club_id(self, club_id: str) -> None:
         """Setter for club's CFN ID."""
         self._club_id = club_id
+
+    @property
+    def page_number(self) -> int:
+        """Current page number of battlelog to fetch."""
+        return self._page_no
+
+    @page_number.setter
+    def page_number(self, page_num: int) -> None:
+        """Setter for battlelog page number."""
+        self._page_no = page_num
 
     def _cache_dir(self, subject: Subject) -> Path:
         """Returns the path for the cached json."""
@@ -131,27 +143,27 @@ class CFNStatsScraper:
             case Subject.ALL_MATCHES:
                 return Path(
                     self._cache_dir(Subject.ALL_MATCHES)
-                    / f"{self.player_id}_battlelog.json"
+                    / f"{self.player_id}_battlelog_{self.page_number:02d}.json"
                 )
             case Subject.RANKED_MATCHES:
                 return Path(
                     self._cache_dir(Subject.RANKED_MATCHES)
-                    / f"{self.player_id}_battlelog_rank.json"
+                    / f"{self.player_id}_battlelog_rank_{self.page_number:02d}.json"
                 )
             case Subject.CASUAL_MATCHES:
                 return Path(
                     self._cache_dir(Subject.CASUAL_MATCHES)
-                    / f"{self.player_id}_battlelog_casual.json"
+                    / f"{self.player_id}_battlelog_casual_{self.page_number:02d}.json"
                 )
             case Subject.CUSTOM_MATCHES:
                 return Path(
                     self._cache_dir(Subject.CUSTOM_MATCHES)
-                    / f"{self.player_id}_battlelog_custom.json"
+                    / f"{self.player_id}_battlelog_custom_{self.page_number:02d}.json"
                 )
             case Subject.HUB_MATCHES:
                 return Path(
                     self._cache_dir(Subject.HUB_MATCHES)
-                    / f"{self.player_id}_battlelog_hub.json"
+                    / f"{self.player_id}_battlelog_hub_{self.page_number:02d}.json"
                 )
             case _:
                 raise NotImplementedError(
@@ -204,7 +216,7 @@ class CFNStatsScraper:
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
                     f"/{self._url_token}/en/profile"
-                    f"/{self.player_id}/battlelog.json?sid={self.player_id}"
+                    f"/{self.player_id}/battlelog.json?page={self.page_number}&sid={self.player_id}"
                 )
             case Subject.RANKED_MATCHES:
                 if not self.player_id:
@@ -213,7 +225,7 @@ class CFNStatsScraper:
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
                     f"/{self._url_token}/en/profile"
-                    f"/{self.player_id}/battlelog/rank.json?sid={self.player_id}"
+                    f"/{self.player_id}/battlelog/rank.json?page={self.page_number}&sid={self.player_id}"
                 )
             case Subject.CASUAL_MATCHES:
                 if not self.player_id:
@@ -222,7 +234,7 @@ class CFNStatsScraper:
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
                     f"/{self._url_token}/en/profile"
-                    f"/{self.player_id}/battlelog/casual.json?sid={self.player_id}"
+                    f"/{self.player_id}/battlelog/casual.json?page={self.page_number}&sid={self.player_id}"
                 )
             case Subject.CUSTOM_MATCHES:
                 if not self.player_id:
@@ -231,7 +243,7 @@ class CFNStatsScraper:
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
                     f"/{self._url_token}/en/profile"
-                    f"/{self.player_id}/battlelog/custom.json?sid={self.player_id}"
+                    f"/{self.player_id}/battlelog/custom.json?page={self.page_number}&sid={self.player_id}"
                 )
             case Subject.HUB_MATCHES:
                 if not self.player_id:
@@ -240,7 +252,7 @@ class CFNStatsScraper:
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
                     f"/{self._url_token}/en/profile"
-                    f"/{self.player_id}/battlelog/hub.json?sid={self.player_id}"
+                    f"/{self.player_id}/battlelog/hub.json?page={self.page_number}&sid={self.player_id}"
                 )
             case _:
                 raise NotImplementedError(
@@ -300,7 +312,7 @@ class CFNStatsScraper:
 
         return json_data
 
-    def _verify_json(self, json_data: dict, subject: Subject) -> None:
+    def _verify_json(self, json_data: dict, subject: Subject) -> bool:
         """Does sanity checks on the keys expected in the json data."""
 
         if not json_data:
@@ -396,16 +408,28 @@ class CFNStatsScraper:
                         f"{subject.name} json is missing replay_list property. "
                         "Aborting."
                     )
+                if len(json_data["pageProps"]["replay_list"]) == 0:
+                    print(f"Page {self.page_number} of stats empty. Not downloading.")
+                    return False
             case _:
                 raise NotImplementedError(
                     f"{subject.name} not implemented in _verify_json()"
                 )
 
+        return True
+
+    def _mark_data_as_cached(self, json_data: dict) -> dict:
+        json_data["cached"] = True
+        return json_data
+
     def _store_json(self, json_data: dict, subject: Subject) -> None:
         """Store the json into the cache."""
 
         # Run sanity check before continuing.
-        self._verify_json(json_data, subject)
+        if not self._verify_json(json_data, subject):
+            return
+
+        json_data = self._mark_data_as_cached(json_data)
 
         Path.mkdir(self._cache_dir(subject), parents=True, exist_ok=True)
 
@@ -530,29 +554,70 @@ class CFNStatsScraper:
         print(f"{player_name}'s level {avatar_level} avatar updated for {self.date}")
         print()
 
-    def sync_battlelog_all(self, player_id: str) -> None:
+    def sync_battlelog(
+        self, player_id: str, match_type: Subject, all_matches: bool = False
+    ) -> None:
         """Checks and verifies the cache for the player's battlelog/history (all matches)."""
 
         if not player_id:
             sys.exit("player_id required!")
 
-        print(f"Syncing player battlelog (all matches) for {player_id}")
+        if match_type not in [
+            Subject.ALL_MATCHES,
+            Subject.RANKED_MATCHES,
+            Subject.CASUAL_MATCHES,
+            Subject.CUSTOM_MATCHES,
+            Subject.HUB_MATCHES,
+        ]:
+            sys.exit(
+                "Incorrect match type specified! "
+                "Must be of type ALL_MATCHES, RANKED_MATCHES, CASUAL_MATCHES, CUSTOM_MATCHES, or HUB_MATCHES!"
+            )
+
+        print(f"Syncing player battlelog ({match_type.name}) for {player_id}.")
 
         self.player_id = player_id
-        battlelog_dict: dict = self._fetch_json(Subject.ALL_MATCHES)
 
-        player_name: str = battlelog_dict["pageProps"]["fighter_banner_info"][
+        stop_on_page: int = 10 if all_matches else 1
+        self.page_number = 1
+
+        battlelog_collection: list[dict] = []
+
+        while self.page_number <= stop_on_page:
+            print(f"Fetching page {self.page_number} of matches.")
+            battlog_dict: dict = self._fetch_json(match_type)
+            battlelog_collection.append(battlog_dict)
+
+            if len(battlog_dict["pageProps"]["replay_list"]) <= 0:
+                break
+            if self.page_number != stop_on_page and not battlog_dict["cached"]:
+                time.sleep(3)
+            self.page_number += 1
+
+        player_name: str = battlelog_collection[0]["pageProps"]["fighter_banner_info"][
             "personal_info"
         ]["fighter_id"]
 
-        print(f"{player_name} match history pulled for ALL_MATCHES.")
+        print(f"{player_name} match history pulled for {match_type.name}")
 
 
 if __name__ == "__main__":
     cfn_scraper = CFNStatsScraper(datetime.now())
     print()
-    cfn_scraper.sync_player_overview(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
-    cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
-    cfn_scraper.sync_player_stats(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
-    cfn_scraper.sync_player_avatar(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
-    cfn_scraper.sync_battlelog_all(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
+    # cfn_scraper.sync_player_overview(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
+    # cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
+    # cfn_scraper.sync_player_stats(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
+    # cfn_scraper.sync_player_avatar(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
+
+    for match_type in [
+        Subject.ALL_MATCHES,
+        Subject.RANKED_MATCHES,
+        Subject.CASUAL_MATCHES,
+        Subject.CUSTOM_MATCHES,
+        Subject.HUB_MATCHES,
+    ]:
+        cfn_scraper.sync_battlelog(
+            player_id="2251667984",
+            match_type=match_type,
+            all_matches=True,
+        )
