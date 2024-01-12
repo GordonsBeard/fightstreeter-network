@@ -1,8 +1,12 @@
+NOTES
+===
+sync_battlelog takes the playersID, the Subject type, and all_matches.
+    - all_matches = True: grab all 10 pages regardless of database
+    - all_matches = False: only grab the pages that do not have matches from today
 TODO
 ===
-- Right now the battlelog scraper can get all 10 pages, or just 1 page.
-    The long term idea is to get all the matches visible today, but that will involve
-    looking through the individual matches. This is a TODO for later. Before publish.
+ - ALL MATCHES gets as many pages as it can
+        - Default behavior is get as many pages for matches that happened TODAY.
 - make it clear the club data is for club owners only right now
 - every url pulled, log it and log where I put the data
 - this is multiple projects:

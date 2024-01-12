@@ -65,6 +65,8 @@ class CFNStatsScraper:
         self._player_id: str = ""
         self._club_id: str = ""
         self._page_no: int = 1
+        self._full_battlelog: bool = False
+        self._no_more_fetch: bool = False
         self.base_cache_dir: Path = Path(
             f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
         )
@@ -411,6 +413,28 @@ class CFNStatsScraper:
                 if len(json_data["pageProps"]["replay_list"]) == 0:
                     print(f"Page {self.page_number} of stats empty. Not downloading.")
                     return False
+
+                if not self._full_battlelog:
+                    print("Check for dates of matches here.")
+
+                    matches: list[dict] = json_data["pageProps"]["replay_list"]
+                    yesterday_count: int = 0
+
+                    for match in matches:
+                        today: datetime = datetime.now().replace(
+                            hour=0, minute=0, second=0, microsecond=0
+                        )
+                        match_time = datetime.fromtimestamp(match["uploaded_at"])
+                        match_happened_today: bool = match_time > today
+
+                        if not match_happened_today:
+                            print("Match from yesterday.")
+                            yesterday_count += 1
+
+                    if yesterday_count == len(matches) and not self._full_battlelog:
+                        print("All matches were from yesterday, no need to store.")
+                        self._no_more_fetch = True
+                        return False
             case _:
                 raise NotImplementedError(
                     f"{subject.name} not implemented in _verify_json()"
@@ -418,18 +442,12 @@ class CFNStatsScraper:
 
         return True
 
-    def _mark_data_as_cached(self, json_data: dict) -> dict:
-        json_data["cached"] = True
-        return json_data
-
     def _store_json(self, json_data: dict, subject: Subject) -> None:
         """Store the json into the cache."""
 
         # Run sanity check before continuing.
         if not self._verify_json(json_data, subject):
             return
-
-        json_data = self._mark_data_as_cached(json_data)
 
         Path.mkdir(self._cache_dir(subject), parents=True, exist_ok=True)
 
@@ -555,14 +573,14 @@ class CFNStatsScraper:
         print()
 
     def sync_battlelog(
-        self, player_id: str, match_type: Subject, all_matches: bool = False
+        self, player_id: str, subject_type: Subject, all_matches: bool = False
     ) -> None:
         """Checks and verifies the cache for the player's battlelog/history (all matches)."""
 
         if not player_id:
             sys.exit("player_id required!")
 
-        if match_type not in [
+        if subject_type not in [
             Subject.ALL_MATCHES,
             Subject.RANKED_MATCHES,
             Subject.CASUAL_MATCHES,
@@ -574,31 +592,36 @@ class CFNStatsScraper:
                 "Must be of type ALL_MATCHES, RANKED_MATCHES, CASUAL_MATCHES, CUSTOM_MATCHES, or HUB_MATCHES!"
             )
 
-        print(f"Syncing player battlelog ({match_type.name}) for {player_id}.")
+        print(f"Syncing player battlelog ({subject_type.name}) for {player_id}.")
 
         self.player_id = player_id
 
-        stop_on_page: int = 10 if all_matches else 1
+        self._full_battlelog = all_matches
         self.page_number = 1
 
         battlelog_collection: list[dict] = []
 
-        while self.page_number <= stop_on_page:
+        while self.page_number <= 10:
             print(f"Fetching page {self.page_number} of matches.")
-            battlog_dict: dict = self._fetch_json(match_type)
+            battlog_dict: dict = self._fetch_json(subject_type)
             battlelog_collection.append(battlog_dict)
 
             if len(battlog_dict["pageProps"]["replay_list"]) <= 0:
                 break
-            if self.page_number != stop_on_page and not battlog_dict["cached"]:
-                time.sleep(3)
+
+            if self._no_more_fetch and not self._full_battlelog:
+                self._no_more_fetch = False
+                break
+
+            if self.page_number != 10:
+                time.sleep(2.5)  # todo, we dont need to sleep if it's cached data
             self.page_number += 1
 
         player_name: str = battlelog_collection[0]["pageProps"]["fighter_banner_info"][
             "personal_info"
         ]["fighter_id"]
 
-        print(f"{player_name} match history pulled for {match_type.name}")
+        print(f"{player_name} match history pulled for {subject_type.name}")
 
 
 if __name__ == "__main__":
@@ -608,16 +631,20 @@ if __name__ == "__main__":
     # cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
     # cfn_scraper.sync_player_stats(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
     # cfn_scraper.sync_player_avatar(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
-
-    for match_type in [
-        Subject.ALL_MATCHES,
-        Subject.RANKED_MATCHES,
-        Subject.CASUAL_MATCHES,
-        Subject.CUSTOM_MATCHES,
-        Subject.HUB_MATCHES,
-    ]:
-        cfn_scraper.sync_battlelog(
-            player_id="2251667984",
-            match_type=match_type,
-            all_matches=True,
-        )
+    cfn_scraper.sync_battlelog(
+        player_id="2251667984",
+        subject_type=Subject.RANKED_MATCHES,
+        all_matches=False,
+    )
+    # for match_type in [
+    #     Subject.ALL_MATCHES,
+    #     Subject.RANKED_MATCHES,
+    #     Subject.CASUAL_MATCHES,
+    #     Subject.CUSTOM_MATCHES,
+    #     Subject.HUB_MATCHES,
+    # ]:
+    #     cfn_scraper.sync_battlelog(
+    #         player_id="2251667984",
+    #         subject_type=match_type,
+    #         all_matches=False,
+    #     )
