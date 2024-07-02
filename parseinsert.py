@@ -6,8 +6,6 @@ import os
 import sqlite3
 from pathlib import Path
 
-import cfn_secrets
-
 # Historical Trend Table:
 #     PLAYER_ID - CHAR_ID - DATE - LP - MR
 
@@ -214,10 +212,9 @@ def update_todays_data():
 
 
 def update_member_list(club_id, req_date: datetime.datetime = todays_datetime):
+    """Updates the club_members database with people loaded from FunnyAnimals"""
     club_data_location = Path(
-        f"cfn_stats/{str(req_date.year)}/{str(req_date.month)}/{str(req_date.day)}/"
-        f"{club_id}/"
-        f"{club_id}.json"
+        f"cfn_stats/{str(req_date.year)}/{str(req_date.month)}/{str(req_date.day)}/{club_id}/{club_id}.json"
     )
 
     member_list = []
@@ -225,21 +222,22 @@ def update_member_list(club_id, req_date: datetime.datetime = todays_datetime):
     try:
         with open(club_data_location, "r", encoding="utf-8") as f:
             club_data: dict = json.loads(f.read())
-
-            club_name = club_data["pageProps"]["circle_base_info"]["name"]
             club_members = club_data["pageProps"]["circle_member_list"]
 
             for member in club_members:
-                name: str = member["fighter_banner_info"]["personal_info"]["fighter_id"]
-                mem_id: int = member["fighter_banner_info"]["personal_info"]["short_id"]
-                join_timestamp: int = member["joined_at"]
-                join_date: datetime.datetime = datetime.datetime.fromtimestamp(
-                    join_timestamp
-                )
-                position: int = member["position"]
-                member_list.append((name, str(mem_id), join_date, position))
 
-            print(f"{club_name} stats updated for {req_date}")
+                member_list.append(
+                    (
+                        member["fighter_banner_info"]["personal_info"]["fighter_id"],
+                        str(member["fighter_banner_info"]["personal_info"]["short_id"]),
+                        datetime.datetime.fromtimestamp(int(member["joined_at"])),
+                        member["position"],
+                    )
+                )
+
+            print(
+                f"{club_data['pageProps']['circle_base_info']['name']} stats updated for {req_date}"
+            )
         print()
     except FileNotFoundError:
         print(f"No club overview for {club_id} on {req_date}!")
@@ -248,11 +246,10 @@ def update_member_list(club_id, req_date: datetime.datetime = todays_datetime):
     try:
         with sqlite3.connect("cfn-stats.db") as conn:
             cursor = conn.cursor()
-            insert_query = """INSERT INTO club_members VALUES (?, ?, ?, ?, ?);"""
 
             for player_name, player_id, join_date, position in member_list:
                 cursor.execute(
-                    insert_query,
+                    """INSERT INTO club_members VALUES (?, ?, ?, ?, ?);""",
                     (club_id, player_name, player_id, join_date, position),
                 )
 
