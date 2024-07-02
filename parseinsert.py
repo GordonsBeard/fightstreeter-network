@@ -6,35 +6,37 @@ import os
 import sqlite3
 from pathlib import Path
 
+import cfn_secrets
+
 # Historical Trend Table:
 #     PLAYER_ID - CHAR_ID - DATE - LP - MR
 
-date = datetime.datetime.now()
+todays_datetime = datetime.datetime.now()
 
 charid_map: dict[int, str] = {
     1: "Ryu",
-    2: "2",
-    3: "3",
-    4: "4",
+    2: "Luke",
+    3: "Kimberly",
+    4: "Chun-Li",
     5: "Manon",
     6: "Zangief",
-    7: "7",
+    7: "JP",
     8: "Dhalsim",
     9: "Cammy",
     10: "Ken",
     11: "Dee Jay",
     12: "Lily",
-    13: "13",
+    13: "A.K.I.",
     14: "Rashid",
     15: "Blanka",
     16: "Juri",
     17: "Marisa",
     18: "Guile",
-    19: "19",
+    19: "Ed",
     20: "E. Honda",
-    21: "21",
-    22: "22",
-    23: "23",
+    21: "Jamie",
+    22: "Akuma",
+    23: "M. Bison",
 }
 
 historical_dates: list[tuple[int, int, int]] = [
@@ -47,6 +49,7 @@ historical_dates: list[tuple[int, int, int]] = [
 
 
 class RecordedLP:
+    """The thing we return to record LP"""
 
     def __init__(self, player_id, char_id, date_stats, lp, mr) -> None:
         self.player_id: str = player_id
@@ -70,8 +73,8 @@ def create_initial_database(filename):
             conn.close()
 
 
-def create_ranking_table():
-    """creates the ranking history table"""
+def create_tables():
+    """creates the tables"""
 
     sql_statements = [
         """CREATE TABLE IF NOT EXISTS ranking (
@@ -80,7 +83,14 @@ def create_ranking_table():
             char_id TEXT NOT NULL,
             lp TEXT NOT NULL,
             mr TEXT,
-            unique(player_id, char_id, date));"""
+            unique(player_id, char_id, date));""",
+        """CREATE TABLE IF NOT EXISTS club_members (
+            club_id TEXT NOT NULL,
+            player_name TEXT NOT NULL,
+            player_id TEXT NOT NULL,
+            joined_at TEXT NOT NULL,
+            position TEXT NOT NULL,
+            unique(club_id, player_id));""",
     ]
 
     try:
@@ -120,7 +130,9 @@ def insert_data(record: RecordedLP):
         print(e)
 
 
-def load_player_overview_data(player_id: str, req_date: datetime.datetime = date):
+def load_player_overview_data(
+    player_id: str, req_date: datetime.datetime = todays_datetime
+):
     """Loads the player's data and inserts it into the db"""
     overview_location = Path(
         f"cfn_stats/{str(req_date.year)}/{str(req_date.month)}/{str(req_date.day)}/"
@@ -187,20 +199,75 @@ def fill_out_historical_data():
 def update_todays_data():
     """Update the database with todays data."""
 
-    player_ids = os.listdir(f"cfn_stats/{date.year}/{date.month}/{date.day}")
+    player_ids = os.listdir(
+        f"cfn_stats/{todays_datetime.year}/{todays_datetime.month}/{todays_datetime.day}"
+    )
 
     for player in player_ids:
         if len(player) == 10:
             data_to_insert = load_player_overview_data(
-                player, datetime.datetime(date.year, date.month, date.day)
+                player,
+                datetime.datetime(
+                    todays_datetime.year, todays_datetime.month, todays_datetime.day
+                ),
             )
 
             if data_to_insert:
                 insert_data(data_to_insert)
 
 
+def update_member_list(club_id, req_date: datetime.datetime = todays_datetime):
+    club_data_location = Path(
+        f"cfn_stats/{str(req_date.year)}/{str(req_date.month)}/{str(req_date.day)}/"
+        f"{club_id}/"
+        f"{club_id}.json"
+    )
+
+    member_list = []
+
+    try:
+        with open(club_data_location, "r", encoding="utf-8") as f:
+            club_data: dict = json.loads(f.read())
+
+            club_name = club_data["pageProps"]["circle_base_info"]["name"]
+            club_members = club_data["pageProps"]["circle_member_list"]
+
+            for member in club_members:
+                name: str = member["fighter_banner_info"]["personal_info"]["fighter_id"]
+                mem_id: int = member["fighter_banner_info"]["personal_info"]["short_id"]
+                join_timestamp: int = member["joined_at"]
+                join_date: datetime.datetime = datetime.datetime.fromtimestamp(
+                    join_timestamp
+                )
+                position: int = member["position"]
+                member_list.append((name, str(mem_id), join_date, position))
+
+            print(f"{club_name} stats updated for {req_date}")
+        print()
+    except FileNotFoundError:
+        print(f"No club overview for {club_id} on {req_date}!")
+        return
+
+    try:
+        with sqlite3.connect("cfn-stats.db") as conn:
+            cursor = conn.cursor()
+            insert_query = """INSERT INTO club_members VALUES (?, ?, ?, ?, ?);"""
+
+            for player_name, player_id, join_date, position in member_list:
+                cursor.execute(
+                    insert_query,
+                    (club_id, player_name, player_id, join_date, position),
+                )
+
+            conn.commit()
+            cursor.close()
+    except sqlite3.Error as e:
+        print(e)
+
+
 if __name__ == "__main__":
     create_initial_database("cfn-stats.db")
-    create_ranking_table()
-    fill_out_historical_data()
-    update_todays_data()
+    create_tables()
+    # fill_out_historical_data()
+    # update_todays_data()
+    # update_member_list(cfn_secrets.DEFAULT_CLUB_ID)

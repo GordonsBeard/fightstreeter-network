@@ -36,29 +36,28 @@ class CFNStatsScraper:
 
     _charid_map: dict[int, str] = {
         1: "Ryu",
-        2: "2",
-        3: "3",
-        4: "4",
+        2: "Luke",
+        3: "Kimberly",
+        4: "Chun-Li",
         5: "Manon",
         6: "Zangief",
-        7: "7",
+        7: "JP",
         8: "Dhalsim",
         9: "Cammy",
         10: "Ken",
         11: "Dee Jay",
         12: "Lily",
-        13: "13",
+        13: "A.K.I.",
         14: "Rashid",
         15: "Blanka",
         16: "Juri",
         17: "Marisa",
         18: "Guile",
-        19: "19",
+        19: "Ed",
         20: "E. Honda",
-        21: "21",
-        22: "22",
-        23: "23",
-        24: "24",
+        21: "Jamie",
+        22: "Akuma",
+        23: "M. Bison",
     }
 
     def __init__(self, date: datetime) -> None:
@@ -628,10 +627,10 @@ class CFNStatsScraper:
 if __name__ == "__main__":
     cfn_scraper = CFNStatsScraper(datetime.now())
     print()
-    cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
-    cfn_scraper.sync_player_overview(player_id="3425126856")
-    cfn_scraper.sync_player_stats(player_id="3425126856")
-    cfn_scraper.sync_player_avatar(player_id="3425126856")
+    # cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
+    # cfn_scraper.sync_player_overview(player_id="3425126856")
+    # cfn_scraper.sync_player_stats(player_id="3425126856")
+    # cfn_scraper.sync_player_avatar(player_id="3425126856")
     # for match_type in [
     #     Subject.ALL_MATCHES,
     #     Subject.RANKED_MATCHES,
