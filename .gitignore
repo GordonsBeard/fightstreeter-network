@@ -3,3 +3,6 @@ __pycache__/*.*
 **.pyc
 .vscode/*.*
 cfn_stats/**/*.json
+env
+output.html
+*.db

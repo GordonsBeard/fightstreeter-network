@@ -36,28 +36,29 @@ class CFNStatsScraper:
 
     _charid_map: dict[int, str] = {
         1: "Ryu",
-        2: "",
-        3: "",
-        4: "",
-        5: "",
-        6: "",
-        7: "",
+        2: "2",
+        3: "3",
+        4: "4",
+        5: "Manon",
+        6: "Zangief",
+        7: "7",
         8: "Dhalsim",
         9: "Cammy",
         10: "Ken",
         11: "Dee Jay",
         12: "Lily",
-        13: "",
-        14: "",
+        13: "13",
+        14: "Rashid",
         15: "Blanka",
         16: "Juri",
         17: "Marisa",
         18: "Guile",
-        19: "",
+        19: "19",
         20: "E. Honda",
-        21: "",
-        22: "",
-        23: "",
+        21: "21",
+        22: "22",
+        23: "23",
+        24: "24",
     }
 
     def __init__(self, date: datetime) -> None:
@@ -627,15 +628,10 @@ class CFNStatsScraper:
 if __name__ == "__main__":
     cfn_scraper = CFNStatsScraper(datetime.now())
     print()
-    # cfn_scraper.sync_player_overview(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
-    # cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
-    # cfn_scraper.sync_player_stats(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
-    # cfn_scraper.sync_player_avatar(player_id=cfn_secrets.DEFAULT_PLAYER_ID)
-    cfn_scraper.sync_battlelog(
-        player_id="2251667984",
-        subject_type=Subject.RANKED_MATCHES,
-        all_matches=False,
-    )
+    cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
+    cfn_scraper.sync_player_overview(player_id="3425126856")
+    cfn_scraper.sync_player_stats(player_id="3425126856")
+    cfn_scraper.sync_player_avatar(player_id="3425126856")
     # for match_type in [
     #     Subject.ALL_MATCHES,
     #     Subject.RANKED_MATCHES,
@@ -644,7 +640,7 @@ if __name__ == "__main__":
     #     Subject.HUB_MATCHES,
     # ]:
     #     cfn_scraper.sync_battlelog(
-    #         player_id="2251667984",
+    #         player_id="3425126856",
     #         subject_type=match_type,
-    #         all_matches=False,
+    #         all_matches=True,
     #     )
