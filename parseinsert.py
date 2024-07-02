@@ -36,7 +36,14 @@ charid_map: dict[int, str] = {
     20: "E. Honda",
     21: "Jamie",
     22: "Akuma",
-    23: "M. Bison",
+    23: "23",
+    24: "24",
+    25: "25",
+    26: "M. Bison",
+    27: "27",
+    28: "28",
+    29: "29",
+    30: "30",
 }
 
 historical_dates: list[tuple[int, int, int]] = [
@@ -45,6 +52,7 @@ historical_dates: list[tuple[int, int, int]] = [
     (2024, 1, 12),
     (2024, 5, 13),
     (2024, 5, 20),
+    (2024, 6, 10),
 ]
 
 
@@ -140,43 +148,32 @@ def load_player_overview_data(
         f"{player_id}_overview.json"
     )
 
+    record_list = []
+
     try:
         with open(overview_location, "r", encoding="utf-8") as f:
             player_data: dict = json.loads(f.read())
 
-            player_name: dict = player_data["pageProps"]["fighter_banner_info"][
-                "personal_info"
-            ]["fighter_id"]
-
-            current_char_id: int = player_data["pageProps"]["fighter_banner_info"][
-                "favorite_character_id"
+            player_chars: dict = player_data["pageProps"]["play"][
+                "character_league_infos"
             ]
 
-            current_char: str = charid_map[current_char_id]
+            for char in player_chars:
+                if char["league_info"]["league_point"] != -1:
+                    record_list.append(
+                        RecordedLP(
+                            player_id,
+                            char["character_id"],
+                            req_date,
+                            char["league_info"]["league_point"],
+                            char["league_info"]["master_rating"],
+                        )
+                    )
 
-            current_rank: str = player_data["pageProps"]["fighter_banner_info"][
-                "favorite_character_league_info"
-            ]["league_rank_info"]["league_rank_name"]
-
-            current_lp: str = player_data["pageProps"]["fighter_banner_info"][
-                "favorite_character_league_info"
-            ]["league_point"]
-
-            print(
-                f"{player_name} overview for {req_date}"
-                "\n"
-                f"Current character: {current_char} ({current_rank} {current_lp} LP)."
-            )
-            print()
     except FileNotFoundError:
         print(f"No player overview for {player_id} on {req_date}!")
-        return
 
-    player_record: RecordedLP = RecordedLP(
-        player_id, current_char_id, req_date, current_lp, None
-    )
-
-    return player_record
+    return record_list
 
 
 def fill_out_historical_data():
@@ -192,28 +189,28 @@ def fill_out_historical_data():
                     player, datetime.datetime(hist_date[0], hist_date[1], hist_date[2])
                 )
 
-                if data_to_insert:
-                    insert_data(data_to_insert)
+                for record in data_to_insert:
+                    insert_data(record)
 
 
 def update_todays_data():
-    """Update the database with todays data."""
+    """Update the database with todays overview data."""
 
-    player_ids = os.listdir(
+    directories = os.listdir(
         f"cfn_stats/{todays_datetime.year}/{todays_datetime.month}/{todays_datetime.day}"
     )
 
-    for player in player_ids:
-        if len(player) == 10:
+    for dir_name in directories:
+        if len(dir_name) == 10:
             data_to_insert = load_player_overview_data(
-                player,
+                dir_name,
                 datetime.datetime(
                     todays_datetime.year, todays_datetime.month, todays_datetime.day
                 ),
             )
 
-            if data_to_insert:
-                insert_data(data_to_insert)
+            for record in data_to_insert:
+                insert_data(record)
 
 
 def update_member_list(club_id, req_date: datetime.datetime = todays_datetime):
@@ -266,8 +263,8 @@ def update_member_list(club_id, req_date: datetime.datetime = todays_datetime):
 
 
 if __name__ == "__main__":
-    create_initial_database("cfn-stats.db")
-    create_tables()
-    # fill_out_historical_data()
+    # create_initial_database("cfn-stats.db")
+    # create_tables()
+    fill_out_historical_data()
     # update_todays_data()
     # update_member_list(cfn_secrets.DEFAULT_CLUB_ID)

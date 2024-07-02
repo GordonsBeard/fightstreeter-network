@@ -57,7 +57,14 @@ class CFNStatsScraper:
         20: "E. Honda",
         21: "Jamie",
         22: "Akuma",
-        23: "M. Bison",
+        23: "23",
+        24: "24",
+        25: "25",
+        26: "M. Bison",
+        27: "27",
+        28: "28",
+        29: "29",
+        30: "30",
     }
 
     def __init__(self, date: datetime) -> None:
@@ -628,9 +635,9 @@ if __name__ == "__main__":
     cfn_scraper = CFNStatsScraper(datetime.now())
     print()
     # cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
-    # cfn_scraper.sync_player_overview(player_id="3425126856")
-    # cfn_scraper.sync_player_stats(player_id="3425126856")
-    # cfn_scraper.sync_player_avatar(player_id="3425126856")
+    # cfn_scraper.sync_player_overview()
+    # cfn_scraper.sync_player_stats() DONT NEED
+    # cfn_scraper.sync_player_avatar()
     # for match_type in [
     #     Subject.ALL_MATCHES,
     #     Subject.RANKED_MATCHES,
@@ -643,3 +650,8 @@ if __name__ == "__main__":
     #         subject_type=match_type,
     #         all_matches=True,
     #     )
+
+    for player in cfn_secrets.FUNNY_ANIMALS:
+        cfn_scraper.sync_player_overview(player_id=player)
+        cfn_scraper.sync_player_stats(player_id=player)
+        cfn_scraper.sync_player_avatar(player_id=player)
