@@ -1,0 +1,25 @@
+body {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+li {
+    margin-left: 1em;
+    padding: 4px;
+}
+
+member-list {
+    margin-inline: 10%;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+
+    > a {
+        padding: 10px 6px;
+        text-decoration: none;
+    }
+
+    > a:hover {
+        padding: 10px 6px;
+        text-decoration: underline;
+    }
+}

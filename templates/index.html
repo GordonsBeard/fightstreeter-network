@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Index</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        Here are the members:
+        <member-list>
+        {% for name, id in member_list %}
+            <a href="/u/{{id}}/{{name}}">{{name}}</a>
+        {% endfor %}
+        </member-list>
+    </body>
+</html>

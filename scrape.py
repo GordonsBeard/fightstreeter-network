@@ -30,9 +30,11 @@ class CFNStatsScraper:
     """Object that grabs the data from the website"""
 
     _url_token: str = cfn_secrets.URL_TOKEN
-    _buckler_id = cfn_secrets.BUCKLER_ID
-    _buckler_r_id = cfn_secrets.BUCKLER_R_ID
-    _buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE
+    _buckler_id = cfn_secrets.BUCKLER_ID.replace("buckler_id=", "")
+    _buckler_r_id = cfn_secrets.BUCKLER_R_ID.replace("buckler_r_id=", "")
+    _buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE.replace(
+        "buckler_praise_date=", ""
+    )
 
     _charid_map: dict[int, str] = {
         1: "Ryu",
@@ -653,5 +655,3 @@ if __name__ == "__main__":
 
     for player in cfn_secrets.FUNNY_ANIMALS:
         cfn_scraper.sync_player_overview(player_id=player)
-        cfn_scraper.sync_player_stats(player_id=player)
-        cfn_scraper.sync_player_avatar(player_id=player)

@@ -49,8 +49,8 @@ historical_dates: list[tuple[int, int, int]] = [
     (2024, 1, 10),
     (2024, 1, 12),
     (2024, 5, 13),
-    (2024, 5, 20),
-    (2024, 6, 10),
+    (2024, 5, 20),  # fake
+    (2024, 6, 10),  # fake
 ]
 
 
@@ -262,6 +262,6 @@ def update_member_list(club_id, req_date: datetime.datetime = todays_datetime):
 if __name__ == "__main__":
     # create_initial_database("cfn-stats.db")
     # create_tables()
-    fill_out_historical_data()
-    # update_todays_data()
+    # fill_out_historical_data()
+    update_todays_data()
     # update_member_list(cfn_secrets.DEFAULT_CLUB_ID)

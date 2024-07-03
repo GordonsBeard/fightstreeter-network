@@ -7,12 +7,14 @@ TODO
 ===
  - ALL MATCHES gets as many pages as it can
         - Default behavior is get as many pages for matches that happened TODAY.
+        - There is a limit of 100 matches recorded a day, may not be possible.
+            - Mark data as possibly incomplete
 - make it clear the club data is for club owners only right now
 - every url pulled, log it and log where I put the data
 - this is multiple projects:
     - Scraper
         - ONLY downloads the raw .json files
-    - Parser (load the cache)
+    - Parser/Inserter (load the cache)
         - reads the json
         - puts into database
     - Website (reads the database)
@@ -23,6 +25,8 @@ Overview✔️
 --
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/profile/{PLAYER_ID}.json?sid={PLAYER_ID}
 
+https://www.streetfighter.com/6/buckler/_next/data/QOXJZnnSO_NuZmCDkVjpc/en.json
+https://www.streetfighter.com/6/buckler/_next/data/QOXJZnnSO_NuZmCDkVjpc/en/profile/3425126856.json?sid=3425126856
 
 Stats (play.json)✔️
 --
@@ -72,3 +76,8 @@ Player IDs
 
 FunnyAnimals crew
 ['1005019466', '1005115021', '1074687961', '1462060153', '1774348616', '1818343673', '1994931079', '2172475021', '2220983103', '2251667984', '2312128654', '2380532183', '2531364579', '2703886514', '2881725645', '3215587216', '3240817600', '3425126856', '3444486243', '3452142911', '3469051697', '3585459087', '3712336197', '3781805743', '4010969238', '4249556471']
+
+uh oh thoughts
+===
+Is the scraper way too complicated? 
+    - Looking up filename/paths shouldn't be this hard
