@@ -1,8 +1,25 @@
 NOTES
 ===
+
+Club stats:
+"circle_platform_id": 7
+"tag1": {"tag_name": "#Looking to Improve"}
+"tag2": {"tag_name": "#Just For Funsies"}
+"tag3": {"tag_name": ""}
+"purpose_text": "None",
+            "leader": {
+                "fighter_id": "Scrub",
+                "platform_id": 5,
+                "short_id": 3425126856,
+                "platform_name": "Steam",
+                "platform_tool_name": "steam"
+            },
+"name": "FunnyAnimals",
+
+
 sync_battlelog takes the playersID, the Subject type, and all_matches.
     - all_matches = True: grab all 10 pages regardless of database
-    - all_matches = False: only grab the pages that do not have matches from today
+    - (unimplemented) all_matches = False: only grab the pages that do not have matches from today
 TODO
 ===
  - ALL MATCHES gets as many pages as it can

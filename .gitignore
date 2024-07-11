@@ -6,3 +6,5 @@ cfn_stats/**/*.json
 env
 output.html
 *.db
+static/style.css
+static/style.css.map

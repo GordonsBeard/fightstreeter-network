@@ -10,6 +10,7 @@ from pathlib import Path
 import requests
 
 import cfn_secrets
+from constants import charid_map
 
 
 class Subject(Enum):
@@ -35,39 +36,6 @@ class CFNStatsScraper:
     _buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE.replace(
         "buckler_praise_date=", ""
     )
-
-    _charid_map: dict[int, str] = {
-        1: "Ryu",
-        2: "Luke",
-        3: "Kimberly",
-        4: "Chun-Li",
-        5: "Manon",
-        6: "Zangief",
-        7: "JP",
-        8: "Dhalsim",
-        9: "Cammy",
-        10: "Ken",
-        11: "Dee Jay",
-        12: "Lily",
-        13: "A.K.I.",
-        14: "Rashid",
-        15: "Blanka",
-        16: "Juri",
-        17: "Marisa",
-        18: "Guile",
-        19: "Ed",
-        20: "E. Honda",
-        21: "Jamie",
-        22: "Akuma",
-        23: "23",
-        24: "24",
-        25: "25",
-        26: "M. Bison",
-        27: "27",
-        28: "28",
-        29: "29",
-        30: "30",
-    }
 
     def __init__(self, date: datetime) -> None:
         self.date: datetime = date
@@ -312,8 +280,7 @@ class CFNStatsScraper:
         )
 
         if response.status_code != 200:
-            if response.status_code == 403:
-                print("You probably need to log in again and update the secrets.")
+            print(f"Url attempted: {response.url}")
             sys.exit(f"Bad request! Status code: {response.status_code}")
 
         json_data: dict = response.json()
@@ -495,11 +462,13 @@ class CFNStatsScraper:
             "personal_info"
         ]["fighter_id"]
 
-        current_char_id: int = player_overview_data["pageProps"]["fighter_banner_info"][
-            "favorite_character_id"
-        ]
+        current_char_id: str = str(
+            player_overview_data["pageProps"]["fighter_banner_info"][
+                "favorite_character_id"
+            ]
+        )
 
-        current_char: str = self._charid_map[current_char_id]
+        current_char = charid_map[current_char_id]
 
         current_rank: str = player_overview_data["pageProps"]["fighter_banner_info"][
             "favorite_character_league_info"
@@ -636,7 +605,7 @@ class CFNStatsScraper:
 if __name__ == "__main__":
     cfn_scraper = CFNStatsScraper(datetime.now())
     print()
-    # cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
+    cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
     # cfn_scraper.sync_player_overview()
     # cfn_scraper.sync_player_stats() DONT NEED
     # cfn_scraper.sync_player_avatar()

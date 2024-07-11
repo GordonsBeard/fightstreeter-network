@@ -1,0 +1,53 @@
+body {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+    .container {
+        display: flex;
+        justify-content: center;
+    }
+}
+
+li {
+    margin-left: 1em;
+    padding: 4px;
+}
+
+member-list {
+    display: grid;
+    grid-template-columns: repeat(5, 125px);
+    padding-top: 12px;
+
+    member {
+        height: 155px;
+        width: 125px;
+        background-image: url("character_box.png");
+        background-position: center;
+        background-repeat: no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+
+        a {
+            color: white;
+            font-weight: 600;
+            padding: 10px 6px;
+            text-decoration: none;
+            font-size: small;
+
+            &:hover {
+                padding: 10px 6px;
+                text-decoration: underline;
+            }
+
+            &:after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                display: flex;
+                z-index: 1;
+            }
+        }
+    }
+}

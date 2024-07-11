@@ -3,9 +3,12 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <title>Player LP History</title>
     </head>
     <body>
-        I don't have data on "{{player_id}}".
+        <p>I don't have data on "{{player_id}}".</p>
+        <p>They do not exist in the database or do not have any recent ranked matches.</p>
     </body>
 </html>

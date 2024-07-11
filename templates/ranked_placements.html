@@ -5,15 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <title>Player Ranking Points History</title>
+        <title>Club Leaderboard</title>
     </head>
     <body>
         {% if lp_fig %}
             {{ lp_fig|safe }}
         {% endif %}
         <br />
-        {% if mr_fig %}
-            {{ mr_fig|safe }}
-        {% endif %}
     </body>
 </html>
