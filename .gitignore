@@ -1,10 +1,11 @@
-cfn_secrets.py
 __pycache__/*.*
 **.pyc
 .vscode/*.*
-cfn_stats/**/*.json
 env
-output.html
 *.db
+
+cfn_secrets.py
+cfn_stats/
+
 static/style.css
 static/style.css.map
