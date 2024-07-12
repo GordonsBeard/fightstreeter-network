@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 
 # import jinja2
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+import plotly.express as px  # type: ignore[import-untyped]
+import plotly.graph_objects as go  # type: ignore[import-untyped]
 import pytz
 from flask import Flask, render_template
 
