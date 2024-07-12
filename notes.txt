@@ -1,40 +1,18 @@
 NOTES
 ===
-
-Club stats:
-"circle_platform_id": 7
-"tag1": {"tag_name": "#Looking to Improve"}
-"tag2": {"tag_name": "#Just For Funsies"}
-"tag3": {"tag_name": ""}
-"purpose_text": "None",
-            "leader": {
-                "fighter_id": "Scrub",
-                "platform_id": 5,
-                "short_id": 3425126856,
-                "platform_name": "Steam",
-                "platform_tool_name": "steam"
-            },
-"name": "FunnyAnimals",
-
-
 sync_battlelog takes the playersID, the Subject type, and all_matches.
     - all_matches = True: grab all 10 pages regardless of database
     - (unimplemented) all_matches = False: only grab the pages that do not have matches from today
+
 TODO
 ===
  - ALL MATCHES gets as many pages as it can
         - Default behavior is get as many pages for matches that happened TODAY.
-        - There is a limit of 100 matches recorded a day, may not be possible.
-            - Mark data as possibly incomplete
-- make it clear the club data is for club owners only right now
+        - There is a limit of 100 matches recorded a day, may not be possible to track all matches.
+            - Mark data as possibly incomplete?
+
 - every url pulled, log it and log where I put the data
-- this is multiple projects:
-    - Scraper
-        - ONLY downloads the raw .json files
-    - Parser/Inserter (load the cache)
-        - reads the json
-        - puts into database
-    - Website (reads the database)
+
 
 URLS
 ===
@@ -84,17 +62,6 @@ FunnyAnimals Club
 https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN}/en/club/c984cc7ce8cd44b9a209e984a73d0c9e.json?clubid=c984cc7ce8cd44b9a209e984a73d0c9e
 
 
-Player IDs
-===
-3781805743 - Auxy
-3425126856 - Scrub
-2251667984 - Geight
-2703886514 - Sable
-
-FunnyAnimals crew
-['1005019466', '1005115021', '1074687961', '1462060153', '1774348616', '1818343673', '1994931079', '2172475021', '2220983103', '2251667984', '2312128654', '2380532183', '2531364579', '2703886514', '2881725645', '3215587216', '3240817600', '3425126856', '3444486243', '3452142911', '3469051697', '3585459087', '3712336197', '3781805743', '4010969238', '4249556471']
-
-uh oh thoughts
 ===
 Is the scraper way too complicated? 
     - Looking up filename/paths shouldn't be this hard

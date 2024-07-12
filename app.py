@@ -2,16 +2,15 @@
 
 import sqlite3
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 # import jinja2
 import pandas as pd
 import plotly.express as px  # type: ignore[import-untyped]
 import plotly.graph_objects as go  # type: ignore[import-untyped]
-import pytz
 from flask import Flask, render_template
 
-from cfn_secrets import FUNNY_ANIMALS
-from constants import charid_map, league_ranks
+from constants import FUNNY_ANIMALS, charid_map, league_ranks
 
 app = Flask(__name__)
 
@@ -52,7 +51,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
     df["char_id"] = df["char_id"].replace(charid_map)
 
     last_30_days = pd.to_datetime(
-        datetime.now(tz=pytz.timezone("America/Los_Angeles")) - timedelta(days=30)
+        datetime.now(tz=ZoneInfo("America/Los_Angeles")) - timedelta(days=30)
     )
 
     df["date"] = pd.to_datetime(df["date"])

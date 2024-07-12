@@ -6,11 +6,12 @@ import time
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import requests
 
 import cfn_secrets
-from constants import charid_map
+from constants import FUNNY_ANIMALS, charid_map
 
 
 class Subject(Enum):
@@ -398,17 +399,23 @@ class CFNStatsScraper:
 
                     for match in matches:
                         today: datetime = datetime.now().replace(
-                            hour=0, minute=0, second=0, microsecond=0
+                            hour=0,
+                            minute=0,
+                            second=0,
+                            microsecond=0,
+                            tzinfo=ZoneInfo("America/Los_Angeles"),
                         )
-                        match_time = datetime.fromtimestamp(match["uploaded_at"])
+                        match_time = datetime.fromtimestamp(
+                            match["uploaded_at"], tz=ZoneInfo("UTC")
+                        )
                         match_happened_today: bool = match_time > today
 
                         if not match_happened_today:
-                            print("Match from yesterday.")
+                            # print("Match didn't happen today.")
                             yesterday_count += 1
 
                     if yesterday_count == len(matches) and not self._full_battlelog:
-                        print("All matches were from yesterday, no need to store.")
+                        # print("All matches were from yesterday, no need to store.")
                         self._no_more_fetch = True
                         return False
             case _:
@@ -437,12 +444,12 @@ class CFNStatsScraper:
 
         # No stats for the day.
         if not Path.exists(self._cache_dir(subject)):
-            print(f"Directory for {subject.name} missing.")
+            # print(f"Directory for {subject.name} missing.")
             return {}
 
         # These specific json is missing.
         if not Path.is_file(self._cache_filename(subject)):
-            print(f"Missing {subject.name} json file!")
+            # print(f"Missing {subject.name} json file!")
             return {}
 
         with open(self._cache_filename(subject), "r", encoding="utf-8") as f:
@@ -451,7 +458,7 @@ class CFNStatsScraper:
     def sync_player_overview(self, player_id: str) -> None:
         """Checks and verifies the cache for a player's overview."""
 
-        print(f"Syncing player overview for ID: {player_id}")
+        # print(f"Syncing player overview for ID: {player_id}")
         if not player_id:
             sys.exit("player_id required!")
 
@@ -488,7 +495,7 @@ class CFNStatsScraper:
     def sync_club_info(self, club_id: str) -> None:
         """Checks and verifies the cache for a club's stats."""
 
-        print(f"Syncing club overview for ID: {club_id}")
+        # print(f"Syncing club overview for ID: {club_id}")
 
         if not club_id:
             sys.exit("club_id required!")
@@ -507,7 +514,7 @@ class CFNStatsScraper:
         if not player_id:
             sys.exit("player_id required!")
 
-        print(f"Syncing player stats for ID: {player_id}")
+        # print(f"Syncing player stats for ID: {player_id}")
 
         self.player_id = player_id
         stats_data: dict = self._fetch_json(Subject.STATS)
@@ -536,7 +543,7 @@ class CFNStatsScraper:
         if not player_id:
             sys.exit("player_id required!")
 
-        print(f"Syncing player avatar stats for {player_id}")
+        # print(f"Syncing player avatar stats for {player_id}")
 
         self.player_id = player_id
         avatar_data: dict = self._fetch_json(Subject.AVATAR)
@@ -570,7 +577,7 @@ class CFNStatsScraper:
                 "Must be of type ALL_MATCHES, RANKED_MATCHES, CASUAL_MATCHES, CUSTOM_MATCHES, or HUB_MATCHES!"
             )
 
-        print(f"Syncing player battlelog ({subject_type.name}) for {player_id}.")
+        # print(f"Syncing player battlelog ({subject_type.name}) for {player_id}.")
 
         self.player_id = player_id
 
@@ -580,7 +587,7 @@ class CFNStatsScraper:
         battlelog_collection: list[dict] = []
 
         while self.page_number <= 10:
-            print(f"Fetching page {self.page_number} of matches.")
+            # print(f"Fetching page {self.page_number} of matches.")
             battlog_dict: dict = self._fetch_json(subject_type)
             battlelog_collection.append(battlog_dict)
 
@@ -605,22 +612,21 @@ class CFNStatsScraper:
 if __name__ == "__main__":
     cfn_scraper = CFNStatsScraper(datetime.now())
     print()
-    cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
-    # cfn_scraper.sync_player_overview()
     # cfn_scraper.sync_player_stats() DONT NEED
-    # cfn_scraper.sync_player_avatar()
-    # for match_type in [
-    #     Subject.ALL_MATCHES,
-    #     Subject.RANKED_MATCHES,
-    #     Subject.CASUAL_MATCHES,
-    #     Subject.CUSTOM_MATCHES,
-    #     Subject.HUB_MATCHES,
-    # ]:
-    #     cfn_scraper.sync_battlelog(
-    #         player_id="3425126856",
-    #         subject_type=match_type,
-    #         all_matches=True,
-    #     )
 
-    for player in cfn_secrets.FUNNY_ANIMALS:
+    cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
+    for player in FUNNY_ANIMALS:
         cfn_scraper.sync_player_overview(player_id=player)
+        cfn_scraper.sync_player_avatar(player)
+        for match_type in [
+            Subject.ALL_MATCHES,
+            Subject.RANKED_MATCHES,
+            Subject.CASUAL_MATCHES,
+            Subject.CUSTOM_MATCHES,
+            Subject.HUB_MATCHES,
+        ]:
+            cfn_scraper.sync_battlelog(
+                player_id=player,
+                subject_type=match_type,
+                all_matches=False,
+            )
