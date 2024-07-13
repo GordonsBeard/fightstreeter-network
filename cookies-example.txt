@@ -1,0 +1,7 @@
+# these are the only values you need (values below are gibberish but in right format)
+# importing a bigger cookies.txt isn't bad but isn't needed
+# save the real file as cookies.txt and delete/ignore this one
+
+www.streetfighter.com	FALSE	/	TRUE	1722793029	buckler_id	mxHFlJIFSDmJwD6td-eg3FSVoQR-bzKkWvO6813SF9Xvd7vA322fUdfVmRqg
+www.streetfighter.com	FALSE	/	TRUE	1722793029	buckler_r_id	612faee5-eda6-e337-cbb4-3ba33baea3ae
+www.streetfighter.com	FALSE	/	FALSE	1720992914	buckler_praise_date	8111866772642
