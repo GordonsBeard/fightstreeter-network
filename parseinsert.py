@@ -466,7 +466,7 @@ def update_member_list(club_id, req_date: datetime.datetime = now_datetime) -> N
 
 
 if __name__ == "__main__":
-    create_tables()
-    update_member_list("c984cc7ce8cd44b9a209e984a73d0c9e")
-    rebuild_database_from_local()
+    # create_tables()
+    # update_member_list("c984cc7ce8cd44b9a209e984a73d0c9e")
+    # rebuild_database_from_local()
     update_stats_for_date(now_datetime)
