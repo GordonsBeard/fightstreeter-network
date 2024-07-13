@@ -6,6 +6,7 @@ env
 
 cfn_secrets.py
 cfn_stats/
+notes/
 
 static/style.css
 static/style.css.map
