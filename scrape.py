@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 import requests
 
 import cfn_secrets
+import cookieread
 from constants import FUNNY_ANIMALS, charid_map
 
 
@@ -32,11 +33,9 @@ class CFNStatsScraper:
     """Object that grabs the data from the website"""
 
     _url_token: str = cfn_secrets.URL_TOKEN
-    _buckler_id = cfn_secrets.BUCKLER_ID.replace("buckler_id=", "")
-    _buckler_r_id = cfn_secrets.BUCKLER_R_ID.replace("buckler_r_id=", "")
-    _buckler_praise_date = cfn_secrets.BUCKLER_PRAISE_DATE.replace(
-        "buckler_praise_date=", ""
-    )
+    _buckler_id = cookieread.BUCKLER_ID
+    _buckler_r_id = cookieread.BUCKLER_R_ID
+    _buckler_praise_date = cookieread.BUCKLER_PRAISE_DATE
 
     def __init__(self, date: datetime) -> None:
         self.date: datetime = date
