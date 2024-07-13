@@ -3,7 +3,7 @@
 import json
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -388,7 +388,7 @@ class CFNStatsScraper:
                         "Aborting."
                     )
                 if len(json_data["pageProps"]["replay_list"]) == 0:
-                    print(f"Page {self.page_number} of stats empty. Not downloading.")
+                    print(f"Page {self.page_number} of matches empty. Not downloading.")
                     return False
 
                 if not self._full_battlelog:
@@ -508,34 +508,28 @@ class CFNStatsScraper:
         print(f"{club_name} stats updated for {self.date}")
         print()
 
-    def sync_player_stats(self, player_id: str) -> None:
-        """Checks and verifies the cache for a player's stats."""
+    # def sync_player_stats(self, player_id: str) -> None:
+    #     """Checks and verifies the cache for a player's stats."""
 
-        if not player_id:
-            sys.exit("player_id required!")
+    #     if not player_id:
+    #         sys.exit("player_id required!")
 
-        # print(f"Syncing player stats for ID: {player_id}")
+    #     # print(f"Syncing player stats for ID: {player_id}")
 
-        self.player_id = player_id
-        stats_data: dict = self._fetch_json(Subject.STATS)
+    #     self.player_id = player_id
+    #     stats_data: dict = self._fetch_json(Subject.STATS)
 
-        playtimes = stats_data["pageProps"]["play"]["base_info"][
-            "content_play_time_list"
-        ]
+    #     playtimes = stats_data["pageProps"]["play"]["base_info"][
+    #         "content_play_time_list"
+    #     ]
 
-        [extreme_playtime] = [
-            timedelta(seconds=x["play_time"])
-            for x in playtimes
-            if x["content_type_name"] == "Extreme"
-        ]
+    #     player_name: str = stats_data["pageProps"]["fighter_banner_info"][
+    #         "personal_info"
+    #     ]["fighter_id"]
 
-        player_name: str = stats_data["pageProps"]["fighter_banner_info"][
-            "personal_info"
-        ]["fighter_id"]
-
-        print(f"{player_name} has played {extreme_playtime} of Extreme battles.")
-        print(f"{player_name} stats updated for {self.date}")
-        print()
+    #     print(f"{player_name} has played {extreme_playtime} of Extreme battles.")
+    #     print(f"{player_name} stats updated for {self.date}")
+    #     print()
 
     def sync_player_avatar(self, player_id: str) -> None:
         """Checks and verifies the cache for a player's avatar."""
