@@ -3,14 +3,18 @@
 import dataclasses
 import datetime
 import json
+import logging
 import os
 import sqlite3
+import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
 
 historical_dates: list[datetime.datetime] = [
+    datetime.datetime(2024, 7, 12, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
+    datetime.datetime(2024, 7, 11, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 10, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 9, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 8, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
@@ -25,6 +29,10 @@ historical_dates: list[datetime.datetime] = [
     # datetime.datetime(2024, 1, 10, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     # datetime.datetime(2023, 12, 24, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
 ]
+
+logging.basicConfig()
+logger = logging.getLogger("cfn-stats-scrape")
+logger.setLevel(logging.INFO)
 
 
 @dataclasses.dataclass
@@ -76,10 +84,10 @@ class HistoricStats:
     title_plate: str
 
 
-def create_tables():
+def create_tables(debug_flag: bool):
     """creates the tables"""
 
-    print("Creating tables: ", end="")
+    logger.debug("Creating tables")
 
     sql_statements = [
         """CREATE TABLE IF NOT EXISTS club_members (
@@ -129,24 +137,36 @@ def create_tables():
             unique(date, player_id));""",
     ]
 
+    table_name: str = "cfn-stats.db"
+
+    if debug_flag:
+        table_name = "cfn-stats-debug.db"
+        logger.debug("Running in debug mode, creating debug table.")
+
     try:
-        with sqlite3.connect("cfn-stats.db") as conn:
+        with sqlite3.connect(table_name) as conn:
             cursor = conn.cursor()
             for statement in sql_statements:
                 cursor.execute(statement)
 
             conn.commit()
     except sqlite3.Error as e:
-        print(e)
+        logger.error(e)
 
-    print("[SUCCESS]")
+    logger.debug("Tables successfully created. [SUCCESS]")
 
 
-def insert_rankings_into_db(record: RecordedLP) -> None:
+def insert_rankings_into_db(record: RecordedLP, debug_flag: bool) -> None:
     """Takes the RecordedLP object and inserts it into the ranking table."""
 
+    table_name = "cfn-stats.db"
+
+    if debug_flag:
+        logger.debug("In debug mode, using debug db.")
+        table_name = "cfn-stats-debug.db"
+
     try:
-        with sqlite3.connect("cfn-stats.db") as conn:
+        with sqlite3.connect(table_name) as conn:
             cursor = conn.cursor()
 
             insert_query = """INSERT INTO ranking VALUES (?, ?, ?, ?, ?);"""
@@ -165,14 +185,20 @@ def insert_rankings_into_db(record: RecordedLP) -> None:
             conn.commit()
             cursor.close()
     except sqlite3.Error as e:
-        print(e)
+        logger.error(e)
 
 
-def insert_historic_stats_into_db(record: HistoricStats) -> None:
+def insert_historic_stats_into_db(record: HistoricStats, debug_flag: bool) -> None:
     """Takes the HistoricalStats object and inserts it into the historic_stats table."""
 
+    table_name = "cfn-stats.db"
+
+    if debug_flag:
+        logger.debug("In debug mode, using debug db.")
+        table_name = "cfn-stats-debug.db"
+
     try:
-        with sqlite3.connect("cfn-stats.db") as conn:
+        with sqlite3.connect(table_name) as conn:
             cursor = conn.cursor()
 
             insert_query = """INSERT INTO historic_stats VALUES (?, ?, ?, ?, ?, ?, ?, \
@@ -211,7 +237,7 @@ def insert_historic_stats_into_db(record: HistoricStats) -> None:
             conn.commit()
             cursor.close()
     except sqlite3.Error as e:
-        print(e)
+        logger.error(e)
 
 
 def load_player_overview_json(player_id: str, req_date: datetime.datetime) -> dict:
@@ -229,7 +255,7 @@ def load_player_overview_json(player_id: str, req_date: datetime.datetime) -> di
         with open(overview_location, "r", encoding="utf-8") as f:
             player_dict = json.loads(f.read())
     except FileNotFoundError:
-        print(f"No player overview for {player_id} on {req_date}!")
+        logger.error("No player overview for %s on %s!", player_id, req_date)
 
     return player_dict
 
@@ -361,16 +387,16 @@ def build_historic_data(
     ]
 
 
-def rebuild_database_from_local() -> None:
+def rebuild_database_from_local(debug_flag: bool) -> None:
     """Update the database with the select few days in the past."""
 
-    print(f"Attempting {len(historical_dates)} days of past data.")
+    logger.debug("Attempting %d days of past data.", len(historical_dates))
 
     for hist_date in historical_dates:
-        update_stats_for_date(hist_date)
+        update_stats_for_date(hist_date, debug_flag)
 
 
-def update_stats_for_date(req_date: datetime.datetime) -> None:
+def update_stats_for_date(req_date: datetime.datetime, debug_flag: bool) -> None:
     """Update the database with todays overview data."""
 
     player_stat_dirs = os.listdir(
@@ -378,13 +404,15 @@ def update_stats_for_date(req_date: datetime.datetime) -> None:
     )
 
     if len(player_stat_dirs) == 0:
-        print(f"There's no data for today {req_date.strftime('%b %d %Y')}! [ERROR]")
+        logger.warning("There's no data for today %s!", req_date.strftime("%b %d %Y"))
         return
 
     all_player_json: dict[str, dict] = {}
 
     for player_id in player_stat_dirs:
+        logger.debug("Going through player_id: %s", player_id)
         if len(player_id) != 10:
+            logger.debug("Not a player: %s", player_id)
             continue
 
         # This is the object we calculate stats on
@@ -394,23 +422,24 @@ def update_stats_for_date(req_date: datetime.datetime) -> None:
         # Gather each player's LP/MR for the date
         ranking_rows = build_rankings_data(player_data_dict, player_id, req_date)
         for rank_row in ranking_rows:
-            insert_rankings_into_db(rank_row)
+            insert_rankings_into_db(rank_row, debug_flag)
 
         # Gather player's HistoricStats for the date
         historic_rows = build_historic_data(player_data_dict, player_id, req_date)
         for hist_row in historic_rows:
-            insert_historic_stats_into_db(hist_row)
+            insert_historic_stats_into_db(hist_row, debug_flag)
 
-    print(
-        f"Data (possibly) inserted to db for: {req_date.strftime('%b %d %Y')}. [SUCCESS]"
+    logger.info(
+        "Data (possibly) inserted to db for: %s. [SUCCESS]",
+        req_date.strftime("%b %d %Y"),
     )
 
 
-def update_member_list(club_id, req_date: datetime.datetime = now_datetime) -> None:
+def update_member_list(club_id, debug_flag: bool) -> None:
     """Updates the club_members database with people loaded from FunnyAnimals"""
 
     club_data_location = Path(
-        f"cfn_stats/{str(req_date.year)}/{str(req_date.month)}/{str(req_date.day)}/{club_id}/{club_id}.json"
+        f"cfn_stats/{str(now_datetime.year)}/{str(now_datetime.month)}/{str(now_datetime.day)}/{club_id}/{club_id}.json"
     )
 
     # Initialize the club members and put Shay first because he's not in the club
@@ -444,11 +473,16 @@ def update_member_list(club_id, req_date: datetime.datetime = now_datetime) -> N
                     )
                 )
     except FileNotFoundError:
-        print(f"No club overview for {club_id} on {req_date}! [ERROR]")
+        logger.error("No club overview for %s on %s!", club_id, req_date)
         return
 
+    table_name = "cfn-stats.db"
+    if debug_flag:
+        logger.debug("Running in debug mode, using debug db.")
+        table_name = "cfn-stats-debug.db"
+
     try:
-        with sqlite3.connect("cfn-stats.db") as conn:
+        with sqlite3.connect(table_name) as conn:
             cursor = conn.cursor()
 
             for player_name, player_id, join_date, position in member_list:
@@ -460,13 +494,35 @@ def update_member_list(club_id, req_date: datetime.datetime = now_datetime) -> N
             conn.commit()
             cursor.close()
     except sqlite3.Error as e:
-        print(e)
+        logger.error(e)
 
-    print("Updating member list: [SUCCESS]")
+    logger.info("Updating member list: [SUCCESS]")
 
 
 if __name__ == "__main__":
-    # create_tables()
-    # update_member_list("c984cc7ce8cd44b9a209e984a73d0c9e")
-    # rebuild_database_from_local()
-    update_stats_for_date(now_datetime)
+    if len(sys.argv) == 1:
+        print("No arguments supplied!")
+        print("-debug -new -club -hist -daily")
+
+    DEBUG_FLAG = False
+
+    if "-debug" in sys.argv[1:]:
+        DEBUG_FLAG = True
+        logger.setLevel(logging.DEBUG)
+        logger.debug("***** ***** DEBUG ENABLED will not enter SQL to database.")
+
+    if "-new" in sys.argv[1:]:
+        logger.debug("**** CREATING NEW TABLES")
+        create_tables(debug_flag=DEBUG_FLAG)
+
+    if "-club" in sys.argv[1:]:
+        logger.debug("**** UPDATING CLUB INFO")
+        update_member_list("c984cc7ce8cd44b9a209e984a73d0c9e", debug_flag=DEBUG_FLAG)
+
+    if "-hist" in sys.argv[1:]:
+        logger.debug("**** REBUILDING PAST DATA")
+        rebuild_database_from_local(debug_flag=DEBUG_FLAG)
+
+    if "-daily" in sys.argv[1:]:
+        logger.debug("**** DAILY RUN")
+        update_stats_for_date(now_datetime, debug_flag=DEBUG_FLAG)
