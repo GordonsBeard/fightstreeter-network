@@ -1,6 +1,7 @@
 """Module providing for the scraping of CFN for player stats"""
 
 import json
+import logging
 import sys
 import time
 from datetime import datetime
@@ -11,7 +12,7 @@ from zoneinfo import ZoneInfo
 import requests
 
 import cfn_secrets
-from constants import FUNNY_ANIMALS, charid_map
+from constants import FUNNY_ANIMALS
 
 
 class Subject(Enum):
@@ -38,16 +39,25 @@ class CFNStatsScraper:
         "buckler_praise_date=", ""
     )
 
-    def __init__(self, date: datetime) -> None:
+    def __init__(self, date: datetime, debug_flag: bool) -> None:
+        self.debug: bool = debug_flag
         self.date: datetime = date
         self._player_id: str = ""
         self._club_id: str = ""
         self._page_no: int = 1
         self._full_battlelog: bool = False
         self._no_more_fetch: bool = False
-        self.base_cache_dir: Path = Path(
+
+        base_cache_dir: str = (
             f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
+            if not debug_flag
+            else f"cfn_stats/mock/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
         )
+
+        self.base_cache_dir: Path = Path(base_cache_dir)
+
+        if debug_flag:
+            logging.basicConfig(level=logging.DEBUG)
 
     @property
     def player_id(self) -> str:
@@ -245,10 +255,14 @@ class CFNStatsScraper:
         cached_data = self._load_cached_data(subject)
 
         if cached_data:
+            logging.debug("Cached data found.")
             return cached_data
 
         if self.date.date() < datetime.today().date():
-            sys.exit("Cannot request new data from a time before today.")
+            logging.error(
+                "[ERROR] Cannot request new data from a time before today! Halting."
+            )
+            sys.exit()
 
         cookies: dict[str, str] = {
             "buckler_id": self._buckler_id,
@@ -271,7 +285,7 @@ class CFNStatsScraper:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
         }
 
-        print("Making request for new data.")
+        logging.debug("Making request for new data.")
 
         response: requests.Response = requests.get(
             self._get_req_url(subject),
@@ -280,9 +294,11 @@ class CFNStatsScraper:
             cookies=cookies,
         )
 
+        logging.debug(f"Url attempted: {response.url}")
+
         if response.status_code != 200:
-            print(f"Url attempted: {response.url}")
-            sys.exit(f"Bad request! Status code: {response.status_code}")
+            logging.error("Bad request! Status code: %d", response.status_code)
+            sys.exit("")
 
         json_data: dict = response.json()
 
@@ -295,21 +311,25 @@ class CFNStatsScraper:
         """Does sanity checks on the keys expected in the json data."""
 
         if not json_data:
-            sys.exit(f"{subject.name} json is empty. Aborting.")
+            logging.error("%s json is empty. Aborting.", subject.name)
+            sys.exit()
 
         if "pageProps" not in json_data:
-            sys.exit(
-                f"{subject.name} json is missing root 'pageProps' element. Aborting."
+            logging.error(
+                "%s json is missing root 'pageProps' element. Aborting.", subject.name
             )
+            sys.exit()
 
         req_profile_keys: list[str] = ["fighter_banner_info", "play"]
 
         match subject:
             case Subject.OVERVIEW:
                 if not all(k in json_data["pageProps"] for k in req_profile_keys):
-                    sys.exit(
-                        f"{subject.name} json is missing a required stats key. Aborting."
+                    logging.error(
+                        "%s json is missing a required stats key. Aborting.",
+                        subject.name,
                     )
+                    sys.exit()
                 req_ov_keys: list[str] = [
                     "base_info",
                     "battle_stats",
@@ -332,14 +352,18 @@ class CFNStatsScraper:
                     "circle_timeline_list",
                 ]
                 if not all(k in json_data["pageProps"] for k in req_club_keys):
-                    sys.exit(
-                        f"{subject.name} json is missing a required stats key. Aborting."
+                    logging.error(
+                        "%s json is missing a required stats key. Aborting.",
+                        subject.name,
                     )
+                    sys.exit()
             case Subject.STATS:
                 if not all(k in json_data["pageProps"] for k in req_profile_keys):
-                    sys.exit(
-                        f"{subject.name} json is missing a required stats key. Aborting."
+                    logging.error(
+                        "%s json is missing a required stats key. Aborting.",
+                        subject.name,
                     )
+                    sys.exit()
                 req_battle_keys: list[str] = [
                     "base_info",
                     "battle_stats",
@@ -359,9 +383,11 @@ class CFNStatsScraper:
             case Subject.AVATAR:
                 req_av_keys: list[str] = ["avatar", "fighter_banner_info"]
                 if not all(k in json_data["pageProps"] for k in req_av_keys):
-                    sys.exit(
-                        f"{subject.name} json is missing a required avatar key. Aborting."
+                    logging.error(
+                        "%s json is missing a required avatar key. Aborting.",
+                        subject.name,
                     )
+                    sys.exit()
                 req_av_props: list[str] = [
                     "equiped_style",
                     "equipments",
@@ -371,10 +397,11 @@ class CFNStatsScraper:
                     "style_list",
                 ]
                 if not all(k in json_data["pageProps"]["avatar"] for k in req_av_props):
-                    sys.exit(
-                        f"{subject.name} json is missing a required avatar properties. "
-                        "Aborting."
+                    logging.error(
+                        "%s json is missing a required avatar properties. Halting.",
+                        subject.name,
                     )
+                    sys.exit()
             case (
                 Subject.ALL_MATCHES
                 | Subject.RANKED_MATCHES
@@ -383,16 +410,19 @@ class CFNStatsScraper:
                 | Subject.HUB_MATCHES
             ):
                 if "replay_list" not in json_data["pageProps"]:
-                    sys.exit(
-                        f"{subject.name} json is missing replay_list property. "
-                        "Aborting."
+                    logging.error(
+                        "%s json is missing replay_list property. Halting.",
+                        subject.name,
                     )
+                    sys.exit()
                 if len(json_data["pageProps"]["replay_list"]) == 0:
-                    print(f"Page {self.page_number} of matches empty. Not downloading.")
+                    logging.debug(
+                        "Page %d of matches empty. Not downloading.", self.page_number
+                    )
                     return False
 
                 if not self._full_battlelog:
-                    print("Check for dates of matches here.")
+                    # Check for dates of matches here
 
                     matches: list[dict] = json_data["pageProps"]["replay_list"]
                     yesterday_count: int = 0
@@ -411,11 +441,12 @@ class CFNStatsScraper:
                         match_happened_today: bool = match_time > today
 
                         if not match_happened_today:
-                            # print("Match didn't happen today.")
                             yesterday_count += 1
 
                     if yesterday_count == len(matches) and not self._full_battlelog:
-                        # print("All matches were from yesterday, no need to store.")
+                        logging.debug(
+                            "All matches were from yesterday, no need to store."
+                        )
                         self._no_more_fetch = True
                         return False
             case _:
@@ -437,19 +468,19 @@ class CFNStatsScraper:
         with open(self._cache_filename(subject), "w", encoding="utf-8") as f:
             json.dump(json_data, f, ensure_ascii=False, indent=4)
 
-        print(f"Stored {subject.name} json data into cache.")
+        logging.debug("Stored %s json data into cache.", subject.name)
 
     def _load_cached_data(self, subject: Subject) -> dict:
         """Fetches the already scraped data."""
 
         # No stats for the day.
         if not Path.exists(self._cache_dir(subject)):
-            # print(f"Directory for {subject.name} missing.")
+            logging.debug("Directory for %s missing.", subject.name)
             return {}
 
         # These specific json is missing.
         if not Path.is_file(self._cache_filename(subject)):
-            # print(f"Missing {subject.name} json file!")
+            logging.debug("Missing %s json file!", subject.name)
             return {}
 
         with open(self._cache_filename(subject), "r", encoding="utf-8") as f:
@@ -457,56 +488,30 @@ class CFNStatsScraper:
 
     def sync_player_overview(self, player_id: str) -> None:
         """Checks and verifies the cache for a player's overview."""
-
-        # print(f"Syncing player overview for ID: {player_id}")
         if not player_id:
-            sys.exit("player_id required!")
+            logging.error("[ERROR] player_id required! Halting.")
+            sys.exit()
+
+        logging.debug("Syncing overview .json for ID: %s.", player_id)
 
         self.player_id = player_id
-        player_overview_data: dict = self._fetch_json(Subject.OVERVIEW)
+        self._fetch_json(Subject.OVERVIEW)
 
-        player_name: dict = player_overview_data["pageProps"]["fighter_banner_info"][
-            "personal_info"
-        ]["fighter_id"]
-
-        current_char_id: str = str(
-            player_overview_data["pageProps"]["fighter_banner_info"][
-                "favorite_character_id"
-            ]
-        )
-
-        current_char = charid_map[current_char_id]
-
-        current_rank: str = player_overview_data["pageProps"]["fighter_banner_info"][
-            "favorite_character_league_info"
-        ]["league_rank_info"]["league_rank_name"]
-
-        current_lp: str = player_overview_data["pageProps"]["fighter_banner_info"][
-            "favorite_character_league_info"
-        ]["league_point"]
-
-        print(
-            f"{player_name} overview updated for {self.date}"
-            "\n"
-            f"Current character: {current_char} ({current_rank} {current_lp} LP)."
-        )
-        print()
+        logging.info("Overview .json downloaded for player_id: %s.", player_id)
 
     def sync_club_info(self, club_id: str) -> None:
         """Checks and verifies the cache for a club's stats."""
 
-        # print(f"Syncing club overview for ID: {club_id}")
+        logging.debug("Syncing club overview for ID: %s", club_id)
 
         if not club_id:
-            sys.exit("club_id required!")
+            logging.error("[ERROR] club_id required! Halting.")
+            sys.exit()
 
         self.club_id = club_id
-        club_data: dict = self._fetch_json(Subject.CLUB)
+        self._fetch_json(Subject.CLUB)
 
-        club_name = club_data["pageProps"]["circle_base_info"]["name"]
-
-        print(f"{club_name} stats updated for {self.date}")
-        print()
+        logging.info("Club stats updated for club_id: %s.", club_id)
 
     # def sync_player_stats(self, player_id: str) -> None:
     #     """Checks and verifies the cache for a player's stats."""
@@ -535,21 +540,15 @@ class CFNStatsScraper:
         """Checks and verifies the cache for a player's avatar."""
 
         if not player_id:
-            sys.exit("player_id required!")
+            logging.error("[ERROR] player_id required! Halting.")
+            sys.exit()
 
-        # print(f"Syncing player avatar stats for {player_id}")
+        logging.debug("Syncing player avatar stats for %s", player_id)
 
         self.player_id = player_id
-        avatar_data: dict = self._fetch_json(Subject.AVATAR)
+        self._fetch_json(Subject.AVATAR)
 
-        avatar_level: str = avatar_data["pageProps"]["avatar"]["status"]["level"]
-
-        player_name: str = avatar_data["pageProps"]["fighter_banner_info"][
-            "personal_info"
-        ]["fighter_id"]
-
-        print(f"{player_name}'s level {avatar_level} avatar updated for {self.date}")
-        print()
+        logging.debug("Avatar updated for player_id: %s", player_id)
 
     def sync_battlelog(
         self, player_id: str, subject_type: Subject, all_matches: bool = False
@@ -557,7 +556,8 @@ class CFNStatsScraper:
         """Checks and verifies the cache for the player's battlelog/history (all matches)."""
 
         if not player_id:
-            sys.exit("player_id required!")
+            logging.error("[ERROR] player_id required! Halting.")
+            sys.exit()
 
         if subject_type not in [
             Subject.ALL_MATCHES,
@@ -566,10 +566,12 @@ class CFNStatsScraper:
             Subject.CUSTOM_MATCHES,
             Subject.HUB_MATCHES,
         ]:
-            sys.exit(
-                "Incorrect match type specified! "
-                "Must be of type ALL_MATCHES, RANKED_MATCHES, CASUAL_MATCHES, CUSTOM_MATCHES, or HUB_MATCHES!"
+
+            logging.error(
+                "Incorrect match type specified! must be: (ALL_MATCHES, RANKED_MATCHES,\
+                      CASUAL_MATCHES, CUSTOM_MATCHES, or HUB_MATCHES)"
             )
+            sys.exit()
 
         # print(f"Syncing player battlelog ({subject_type.name}) for {player_id}.")
 
@@ -581,7 +583,7 @@ class CFNStatsScraper:
         battlelog_collection: list[dict] = []
 
         while self.page_number <= 10:
-            # print(f"Fetching page {self.page_number} of matches.")
+            logging.debug("Fetching page %d of matches.", self.page_number)
             battlog_dict: dict = self._fetch_json(subject_type)
             battlelog_collection.append(battlog_dict)
 
@@ -596,31 +598,48 @@ class CFNStatsScraper:
                 time.sleep(2.5)  # todo, we dont need to sleep if it's cached data
             self.page_number += 1
 
-        player_name: str = battlelog_collection[0]["pageProps"]["fighter_banner_info"][
-            "personal_info"
-        ]["fighter_id"]
-
-        print(f"{player_name} match history pulled for {subject_type.name}")
+        logging.debug("Match history pulled for player_id: %s", player_id)
 
 
 if __name__ == "__main__":
-    cfn_scraper = CFNStatsScraper(datetime.now())
-    print()
-    # cfn_scraper.sync_player_stats() DONT NEED
+    if len(sys.argv) == 1:
+        print("Mising arguments:")
+        print("-debug -club -daily -matches -all")
 
-    cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
-    for player in FUNNY_ANIMALS:
-        cfn_scraper.sync_player_overview(player_id=player)
-        cfn_scraper.sync_player_avatar(player)
-        for match_type in [
-            Subject.ALL_MATCHES,
-            Subject.RANKED_MATCHES,
-            Subject.CASUAL_MATCHES,
-            Subject.CUSTOM_MATCHES,
-            Subject.HUB_MATCHES,
-        ]:
-            cfn_scraper.sync_battlelog(
-                player_id=player,
-                subject_type=match_type,
-                all_matches=False,
-            )
+    debug = False
+    logging.basicConfig(level=logging.INFO)
+
+    if "-debug" in sys.argv[1:]:
+        logging.basicConfig(level=logging.DEBUG)
+        debug = True
+
+    cfn_scraper = CFNStatsScraper(datetime.now(), debug_flag=debug)
+
+    if "-club" in sys.argv[1:]:
+        cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
+
+    if "-daily" in sys.argv[1:]:
+        for player in FUNNY_ANIMALS:
+            cfn_scraper.sync_player_overview(player_id=player)
+            cfn_scraper.sync_player_avatar(player)
+
+            if "-matches" in sys.argv[1:]:
+                for match_type in [
+                    Subject.ALL_MATCHES,
+                    Subject.RANKED_MATCHES,
+                    Subject.CASUAL_MATCHES,
+                    Subject.CUSTOM_MATCHES,
+                    Subject.HUB_MATCHES,
+                ]:
+                    if "-all" in sys.argv[1:]:
+                        cfn_scraper.sync_battlelog(
+                            player_id=player,
+                            subject_type=match_type,
+                            all_matches=True,
+                        )
+                    else:
+                        cfn_scraper.sync_battlelog(
+                            player_id=player,
+                            subject_type=match_type,
+                            all_matches=False,
+                        )
