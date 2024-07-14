@@ -473,7 +473,7 @@ def update_member_list(club_id, debug_flag: bool) -> None:
                     )
                 )
     except FileNotFoundError:
-        logger.error("No club overview for %s on %s!", club_id, req_date)
+        logger.error("No club overview for %s!", club_id)
         return
 
     table_name = "cfn-stats.db"

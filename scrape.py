@@ -609,13 +609,13 @@ if __name__ == "__main__":
         print("Mising arguments:")
         print("-debug -club -daily -matches -all")
 
-    debug = False
+    DEBUG = False
 
     if "-debug" in sys.argv[1:]:
         logger.setLevel(logging.DEBUG)
-        debug = True
+        DEBUG = True
 
-    cfn_scraper = CFNStatsScraper(datetime.now(), debug_flag=debug)
+    cfn_scraper = CFNStatsScraper(datetime.now(), debug_flag=DEBUG)
 
     if "-club" in sys.argv[1:]:
         cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
