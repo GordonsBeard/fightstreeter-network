@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='leaderboards.css') }}">
+        <title>Leaderboards</title>
+    </head>
+    <body>
+        <leaderboards>
+            <podium class="section">
+                <a name="podium"></a>
+                <div>
+                    <podium_grid>
+                        <div class="second stat">
+                            <p class="label">League Champion</p>
+                            <p class="value">55,099 LP</p>
+                        </div>
+                        <div class="first stat">
+                            <p class="label">Club Master</p>
+                            <p class="value">1,600 LP</p>
+                        </div>
+                        <div class="third stat">
+                            <p class="label">Kudos Leader</p>
+                            <p class="value">109,099 Kudos</p>
+                        </div>
+                        <div class="second-info av">Geight</div>
+                        <div class="first-info av">Scrub</div>
+                        <div class="third-info av">Shaymoo</div>
+                    </podium_grid>
+                </div>
+            </podium>
+            <boards class="section">
+                <a name="boards"></a>
+                <ranking-boards>
+                    {% for board_name in ["LP", "MR", "Kudos"] %}
+                    <board class="lp-board">
+                        <table>
+                            <caption>{{board_name}} Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Character</th>
+                                <th>League</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for e, player in [(1, "Scrub"), (1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(2,"Geight"), (3,"Shaymoo")] %}
+                            <tr>
+                                <td>{{e}}</td>
+                                <td>{{player}}</td>
+                                <td>Rashid</td>
+                                <td>Master</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </board>
+                    {% endfor %}
+                </ranking-boards>
+            </boards>
+            <cheers class="section">
+                <a name="cheers"></a>
+                {% for award_dict in [{"class": "hub", "name": "Hub Monster", "player": "Scrub", "value": "5,000 hub matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}] %}
+                <award class="{{award_dict['class']}}">
+                    <p class="award-title">{{award_dict['name']}}</p>
+                    <p class="award-player">{{award_dict['player']}}</p>
+                    <p class="award-value">{{award_dict['value']}}</p>
+                </award>
+                {% endfor %}
+            </cheers>
+            <jeers class="section">
+                <a name="jeers"></a>
+                {% for award_dict in [{"class": "hub", "name": "Least Played Char", "player": "M. Bison", "value": "0 players"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}] %}
+                <award class="{{award_dict['class']}}">
+                    <p class="award-title">{{award_dict['name']}}</p>
+                    <p class="award-player">{{award_dict['player']}}</p>
+                    <p class="award-value">{{award_dict['value']}}</p>
+                </award>
+                {% endfor %}
+            </jeers>
+        </leaderboards>
+    </body>
+</html>

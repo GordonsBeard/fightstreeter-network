@@ -1,14 +1,16 @@
 """The flask module that powers the website"""
 
+# import jinja2
+import dataclasses
 import sqlite3
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-# import jinja2
 import pandas as pd
 import plotly.express as px  # type: ignore[import-untyped]
 import plotly.graph_objects as go  # type: ignore[import-untyped]
 from flask import Flask, render_template
+from pandas import DataFrame
 
 from constants import FUNNY_ANIMALS, charid_map, league_ranks
 
@@ -54,7 +56,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
         datetime.now(tz=ZoneInfo("America/Los_Angeles")) - timedelta(days=30)
     )
 
-    df["date"] = pd.to_datetime(df["date"])
+    df["date"] = pd.to_datetime(df["date"], format="ISO8601")
 
     df = df[df["date"] > last_30_days]
 
@@ -94,52 +96,74 @@ def player_stats(player_id: str, disp_name: str) -> str:
     )
 
 
+@app.route("/leaderboards")
+def leaderboards() -> str:
+    """Displays MR/LP/Kudos leaderboards and stats for the club."""
+
+    return render_template(
+        "club_leaderboards.html",
+    )
+
+
+@dataclasses.dataclass
+class PlayerRank:
+    """Model of the player card to be displayed on ranking page."""
+
+    player_id: str
+    player_name: str
+    char_ranks: list[dict[str, str]]
+
+
 @app.route("/rankings")
 def club_ranking() -> str:
     """show lp history of all players in the club"""
     conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
 
-    fig = go.Figure()
-
     df: pd.DataFrame = pd.read_sql_query(
         "SELECT * FROM ranking WHERE player_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) AND lp >= 0",
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         conn,
         params=(tuple(FUNNY_ANIMALS)),
     )
 
     df["char_id"] = df["char_id"].replace(charid_map)
+    # df["date"] = pd.to_datetime(df["date"], format="ISO8601")
 
-    lp_fig_html: str | None = None
-    player_id: str = "3425126856"
-    df = df.where(df["player_id"] == player_id)
+    unranked_ids: list[str] = []
+    ranked_players: list[PlayerRank] = []
+    player_dfs: list[DataFrame] = []
 
-    fig.add_trace(
-        go.Scatter(
-            x=df["date"],
-            y=df["lp"],
-            name=player_id,
-            line={"color": "firebrick", "width": 4},
-        )
+    for player in FUNNY_ANIMALS:
+        player_df = df[df["player_id"] == player]
+        if len(player_df.values) == 0:
+            unranked_ids.append(player)
+            continue
+
+        newest_date = player_df.nlargest(1, "lp")["date"].values[0]
+        newest_ranks_df = player_df.query("date == @newest_date")
+        player_dfs.append(newest_ranks_df)
+
+    all_players_df: DataFrame = pd.concat(player_dfs)
+
+    all_players_df = all_players_df.sort_values(by="lp", ascending=False)
+
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header={"values": ["Player", "Character", "League Points"]},
+                cells={
+                    "values": [
+                        all_players_df.player_id,
+                        all_players_df.char_id,
+                        all_players_df.lp,
+                    ]
+                },
+            )
+        ]
     )
-    player_id = "3469051697"
-    df = df.where(df["player_id"] == player_id)
-    fig.add_trace(
-        go.Scatter(
-            x=df["date"],
-            y=df["lp"],
-            name=player_id,
-            line={"color": "royalblue", "width": 4},
-        )
-    )
 
-    fig.update_layout(
-        title="FunnyAnimals LP Board", xaxis_title="Date", yaxis_title="League Points"
-    )
-
-    lp_fig_html = fig.to_html(full_html=False)
-
+    player_table: str = fig.to_html(full_html=False)
     return render_template(
         "ranked_placements.html",
-        lp_fig=lp_fig_html,
+        player_table=player_table,
     )

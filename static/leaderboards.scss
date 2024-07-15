@@ -1,0 +1,146 @@
+@use "vars" as *;
+
+leaderboards {
+    display: block;
+    position: relative;
+
+    .section {
+        display: flex;
+
+        >div {
+            width: 100%;
+        }
+    }
+}
+
+podium, boards, cheers, jeers {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    max-width: 1000px;
+    margin-inline: auto;
+    padding: 2em;
+    border-bottom: thin solid $sec-text;
+}
+
+// Podium
+
+podium_grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: 1fr repeat(3, 75px) 1fr;
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+
+    .stat {
+        background-color: $def-text; color: white;
+        text-align: center;
+        padding-top: 6px;
+        line-height: 18px;
+        .label {
+            padding-bottom: 4px;
+        }
+    }
+
+    .av {
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 8px;
+        justify-content: center;
+        color: $hilight;
+        font-size: 22px;
+        font-weight: 600;
+    }
+    .second { grid-area: 3 / 1 / 5 / 3; }
+    .first { grid-area: 2 / 3 / 5 / 5; }
+    .third { grid-area: 4 / 5 / 5 / 7; }
+    .second-info { grid-area: 1 / 1 / 3 / 3; }
+    .first-info { grid-area: 1 / 3 / 2 / 5; }
+    .third-info { grid-area: 1 / 5 / 4 / 7; }
+}
+
+// Boards
+
+ranking-boards {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+
+    board {
+        margin-inline: 20px;
+        &:not(:last-child){
+            margin-bottom: 2em;
+        }
+        table {
+            border-collapse: collapse;
+
+            caption {
+                font-size: 18px;
+                font-weight: bold;
+                color: $hilight;
+                margin-bottom: 10px;
+            }
+            th {
+                border-bottom: 1px solid #364043;
+                color: $lolight;
+                font-size: 0.85em;
+                font-weight: 600;
+                padding: 3px 6px;
+                text-align: left;
+            }
+            td {
+                color: $sec-text;
+                font-weight: 400;
+                padding: 8px 12px;
+            }
+            tbody {
+                td {
+                    color: white;
+                }
+            }
+    
+        }
+    }
+}
+
+// Cheers
+cheers, jeers {
+    flex-wrap: wrap;
+
+    award {
+        margin-bottom: 2em;
+        margin-inline: 2em;
+        text-align: center;
+
+        .award-title {
+            color: $hilight;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 18px
+        }
+
+        .award-player {
+            color: white;
+            font-size: 18px;
+            line-height: 22px;
+            padding-bottom: 4px;
+        }
+
+        .award-value {
+            color: white;
+            font-style:italic;
+        }
+
+
+    }
+}
+
+// Jeers
+jeers {
+    award {
+        .award-title {
+            color: $lolight;
+        }
+    }
+}
