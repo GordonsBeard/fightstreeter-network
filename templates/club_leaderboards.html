@@ -14,21 +14,24 @@
                 <a name="podium"></a>
                 <div>
                     <podium_grid>
-                        <div class="second stat">
-                            <p class="label">{{ podium["lp"].name }}</p>
-                            <p class="value">{{ podium["lp"].character }} - {{ podium["lp"].value }}</p>
-                        </div>
+                        <div class="first-info av">{{ podium["mr"].player_name }}</div>
                         <div class="first stat">
                             <p class="label">{{ podium["mr"].name }}</p>
-                            <p class="value">{{ podium["mr"].character }} - {{ podium["mr"].value }}</p>
-                        </div>
-                        <div class="third stat">
-                            <p class="label">{{ podium["kudos"].name }}</p>
-                            <p class="value">{{ podium["kudos"].character }} - {{ podium["kudos"].value }}</p>
+                            <p class="value">{{ podium["mr"].character }}</p>
+                            <p class="value">{{ podium["mr"].value }}</p>
                         </div>
                         <div class="second-info av">{{ podium["lp"].player_name }}</div>
-                        <div class="first-info av">{{ podium["mr"].player_name }}</div>
+                        <div class="second stat">
+                            <p class="label">{{ podium["lp"].name }}</p>
+                            <p class="label">{{ podium["lp"].character }}</p>
+                            <p class="value">{{ podium["lp"].value }}</p>
+                        </div>
                         <div class="third-info av">{{ podium["kudos"].player_name }}</div>
+                        <div class="third stat">
+                            <p class="label">{{ podium["kudos"].name }}</p>
+                            <p class="label">{{ podium["kudos"].character }}</p>
+                            <p class="value">{{ podium["kudos"].value }}</p>
+                        </div>
                     </podium_grid>
                 </div>
             </podium>
