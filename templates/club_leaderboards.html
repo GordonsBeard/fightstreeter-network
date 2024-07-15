@@ -15,20 +15,20 @@
                 <div>
                     <podium_grid>
                         <div class="second stat">
-                            <p class="label">League Champion</p>
-                            <p class="value">55,099 LP</p>
+                            <p class="label">{{ podium["lp"].name }}</p>
+                            <p class="value">{{ podium["lp"].character }} - {{ podium["lp"].value }}</p>
                         </div>
                         <div class="first stat">
-                            <p class="label">Club Master</p>
-                            <p class="value">1,600 LP</p>
+                            <p class="label">{{ podium["mr"].name }}</p>
+                            <p class="value">{{ podium["mr"].character }} - {{ podium["mr"].value }}</p>
                         </div>
                         <div class="third stat">
-                            <p class="label">Kudos Leader</p>
-                            <p class="value">109,099 Kudos</p>
+                            <p class="label">{{ podium["kudos"].name }}</p>
+                            <p class="value">{{ podium["kudos"].character }} - {{ podium["kudos"].value }}</p>
                         </div>
-                        <div class="second-info av">Geight</div>
-                        <div class="first-info av">Scrub</div>
-                        <div class="third-info av">Shaymoo</div>
+                        <div class="second-info av">{{ podium["lp"].player_name }}</div>
+                        <div class="first-info av">{{ podium["mr"].player_name }}</div>
+                        <div class="third-info av">{{ podium["kudos"].player_name }}</div>
                     </podium_grid>
                 </div>
             </podium>
