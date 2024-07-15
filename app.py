@@ -123,27 +123,20 @@ def leaderboards() -> str:
     df = df[df["date"] > yesterday]
 
     player_ids = df["player_id"].unique()
-    top_mr_df: pd.Series = pd.Series(data={})
     top_lp_df: pd.Series = pd.Series(data={})
+    top_mr_df: pd.Series = pd.Series(data={})
 
     for player_id in player_ids:
         chars_seen: list[str] = []
         mr_chars_seen: list[str] = []
         player_df: pd.DataFrame = df[df["player_id"] == player_id]
 
-        for i, (_, player_id, _, char_id, _, _) in enumerate(player_df.values):
-            if (
-                top_lp_df.empty
-                or player_df["lp"].values[0] > top_lp_df["lp"]
-                and char_id not in chars_seen
-            ):
+        for i, (_, player_id, _, char_id, lp, mr) in enumerate(player_df.values):
+            if top_lp_df.empty or lp > top_lp_df["lp"] and char_id not in chars_seen:
                 chars_seen.append(char_id)
                 top_lp_df = player_df.iloc[i]
-            if (
-                top_mr_df.empty
-                or player_df["mr"].values[0] > top_mr_df["lp"]
-                and char_id not in mr_chars_seen
-            ):
+
+            if top_mr_df.empty or mr > top_mr_df["mr"] and char_id not in mr_chars_seen:
                 mr_chars_seen.append(char_id)
                 top_mr_df = player_df.iloc[i]
 
