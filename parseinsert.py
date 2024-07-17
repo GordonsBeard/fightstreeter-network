@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
 
 historical_dates: list[datetime.datetime] = [
+    datetime.datetime(2024, 7, 16, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 15, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 14, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 13, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
