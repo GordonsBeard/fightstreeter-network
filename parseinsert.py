@@ -13,6 +13,9 @@ from zoneinfo import ZoneInfo
 now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
 
 historical_dates: list[datetime.datetime] = [
+    datetime.datetime(2024, 7, 15, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
+    datetime.datetime(2024, 7, 14, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
+    datetime.datetime(2024, 7, 13, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 12, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 11, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 10, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
@@ -77,6 +80,7 @@ class HistoricStats:
     practice_time: int
     arcade_time: int
     wt_time: int
+    total_kudos: int
     thumbs: int
     last_played: str
     profile_tagline: str
@@ -128,6 +132,7 @@ def create_tables(debug_flag: bool):
             arcade_time INTEGER,
             wt_time INTEGER,
 
+            total_kudos INTEGER,
             thumbs INTEGER,
             last_played TIMESTAMP last_play_at NOT NULL,
             profile_tagline TEXT,
@@ -202,7 +207,7 @@ def insert_historic_stats_into_db(record: HistoricStats, debug_flag: bool) -> No
             cursor = conn.cursor()
 
             insert_query = """INSERT INTO historic_stats VALUES (?, ?, ?, ?, ?, ?, ?, \
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
 
             cursor.execute(
                 insert_query,
@@ -226,6 +231,7 @@ def insert_historic_stats_into_db(record: HistoricStats, debug_flag: bool) -> No
                     record.practice_time,
                     record.arcade_time,
                     record.wt_time,
+                    record.total_kudos,
                     record.thumbs,
                     record.last_played,
                     record.profile_tagline,
@@ -345,7 +351,9 @@ def build_historic_data(
     custom_matches = int(
         player_dict["play"]["battle_stats"]["custom_room_match_play_count"]
     )
-
+    total_kudos = int(
+        player_dict["play"]["battle_stats"]["total_all_character_play_point"]
+    )
     thumbs = int(player_dict["play"]["base_info"]["enjoy_total_point"])
     last_played = datetime.datetime.fromtimestamp(
         int(player_dict["fighter_banner_info"]["last_play_at"]),
@@ -378,6 +386,7 @@ def build_historic_data(
             practice_time,
             arcade_time,
             wt_time,
+            total_kudos,
             thumbs,
             last_played,
             profile_tagline,  # empty for now
