@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='leaderboards.css') }}">
+        <script src="{{ url_for('static', filename='leaderboards.js') }}"></script>
+        <title>Leaderboards</title>
+    </head>
+    <body>
+        <leaderboards>
+            <podium class="section">
+                <a name="podium"></a>
+                <div>
+                    <podium_grid>
+                        <div class="first-info av">{{ top_10_boards["mr"][0].player_name }}</div>
+                        <div class="first stat">
+                            <p class="label">Club Master</p>
+                            <p class="value">{{ top_10_boards["mr"][0].char_id }}</p>
+                            <p class="value">{{ "{:,}".format(top_10_boards["mr"][0].value) }} MR</p>
+                        </div>
+                        <div class="second-info av">{{ top_10_boards["lp"][0].player_name }}</div>
+                        <div class="second stat">
+                            <p class="label">League Champion</p>
+                            <p class="value">{{ top_10_boards["lp"][0].char_id }}</p>
+                            <p class="value">{{ "{:,}".format(top_10_boards["lp"][0].value) }} LP</p>
+                        </div>
+                        <div class="third-info av">{{ top_10_boards["kudos"][0].player_name }}</div>
+                        <div class="third stat">
+                            <p class="label">Kudos Leader</p>
+                            <p class="value">{{ "{:,}".format(top_10_boards["kudos"][0].value) }} Kudos</p>
+                        </div>
+                    </podium_grid>
+                </div>
+            </podium>
+            <boards class="section">
+                <a name="boards"></a>
+                <ranking-boards>
+                    <board class="lp-board">
+                        <button class="toggle" onclick="toggleTable('lp-board')">All</button>
+                        <table class="all visible">
+                            <caption>LP Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Character</th>
+                                <th>League</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_boards["lp"] %}
+                            <tr>
+                                <td>{{stat.rank}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{stat.char_id}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <table class="grouped">
+                            <caption>LP Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Character</th>
+                                <th>League</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_grouped["lp"] %}
+                            <tr>
+                                <td>{{stat.rank}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{stat.char_id}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </board>
+                    <board class="mr-board">
+                        <button class="toggle" onclick="toggleTable('mr-board')">All</button>
+                        <table class="all visible">
+                            <caption>MR Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Character</th>
+                                <th>Master Rating</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_boards["mr"] %}
+                            <tr>
+                                <td>{{stat.rank}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{stat.char_id}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <table class="grouped">
+                            <caption>MR Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Character</th>
+                                <th>Master Rating</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_grouped["mr"] %}
+                            <tr>
+                                <td>{{stat.rank}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{stat.char_id}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+                    </board>
+                    <board class="kudos-board">
+                        <table class="all visible">
+                            <caption>Kudos Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Total Kudos</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_boards["kudos"] %}
+                            <tr>
+                                <td>{{loop.index}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </board>
+
+                </ranking-boards>
+            </boards>
+            <cheers class="section">
+                <a name="cheers"></a>
+                {% for award_dict in [{"class": "hub", "name": "Hub Monster", "player": "Scrub", "value": "5,000 hub matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}] %}
+                <award class="{{award_dict['class']}}">
+                    <p class="award-title">{{award_dict['name']}}</p>
+                    <p class="award-player">{{award_dict['player']}}</p>
+                    <p class="award-value">{{award_dict['value']}}</p>
+                </award>
+                {% endfor %}
+            </cheers>
+            <jeers class="section">
+                <a name="jeers"></a>
+                {% for award_dict in [{"class": "hub", "name": "Least Played Char", "player": "M. Bison", "value": "0 players"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}] %}
+                <award class="{{award_dict['class']}}">
+                    <p class="award-title">{{award_dict['name']}}</p>
+                    <p class="award-player">{{award_dict['player']}}</p>
+                    <p class="award-value">{{award_dict['value']}}</p>
+                </award>
+                {% endfor %}
+            </jeers>
+        </leaderboards>
+    </body>
+</html>
