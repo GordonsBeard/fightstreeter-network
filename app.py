@@ -117,19 +117,37 @@ def leaderboards() -> str:
         ORDER BY r.date DESC;"""
     )
 
-    df: pd.DataFrame = pd.read_sql_query(latest_lp_scores, conn)
-    df["char_id"] = df["char_id"].replace(charid_map)
-    df["date"] = pd.to_datetime(df["date"], format="ISO8601")
-    df = df[df["date"] > yesterday]
+    latest_kudos_amounts_query: str = (
+        """SELECT hs.date, hs.player_id, cm.player_name, hs.total_kudos
+        FROM historic_stats hs
+        INNER JOIN club_members cm ON cm.player_id = hs.player_id
+        ORDER BY date DESC;"""
+    )
 
-    player_ids = df["player_id"].unique()
+    rank_df: pd.DataFrame = pd.read_sql_query(latest_lp_scores, conn)
+    rank_df["char_id"] = rank_df["char_id"].replace(charid_map)
+    rank_df["date"] = pd.to_datetime(rank_df["date"], format="ISO8601")
+    rank_df = rank_df[rank_df["date"] > yesterday]
+
+    hs_df: pd.DataFrame = pd.read_sql_query(latest_kudos_amounts_query, conn)
+    hs_df["date"] = pd.to_datetime(hs_df["date"], format="ISO8601")
+    hs_df = hs_df[hs_df["date"] > yesterday]
+
+    player_ids = rank_df["player_id"].unique()
+    kudos_ids = hs_df["player_id"].unique()
+    if len(player_ids) != len(kudos_ids):
+        print(
+            "[ERROR] Weird shit happening here."
+            f"player_ids: {player_ids} != {kudos_ids} kudos_ids."
+        )
+
     top_lp_df: pd.Series = pd.Series(data={})
     top_mr_df: pd.Series = pd.Series(data={})
 
     for player_id in player_ids:
         chars_seen: list[str] = []
         mr_chars_seen: list[str] = []
-        player_df: pd.DataFrame = df[df["player_id"] == player_id]
+        player_df: pd.DataFrame = rank_df[rank_df["player_id"] == player_id]
 
         for i, (_, player_id, _, char_id, lp, mr) in enumerate(player_df.values):
             if top_lp_df.empty or lp > top_lp_df["lp"] and char_id not in chars_seen:
@@ -150,10 +168,18 @@ def leaderboards() -> str:
     mr_player_id = top_mr_df["player_id"]
     mr_player_name = top_mr_df["player_name"]
 
-    kudos_value = "100,000 Kudos"
-    kudos_player_id = "123"
-    kudos_player_name = "Shaymoo"
-    kudos_character = "Ryu"
+    top_kudos_player: tuple[str, str, int] = ("", "", 0)
+
+    for player_id in kudos_ids:
+        kudos_player_df: pd.DataFrame = hs_df[hs_df["player_id"] == player_id]
+
+        for _, player_id, player_name, total_kudos in kudos_player_df.values:
+            if top_kudos_player[2] < total_kudos:
+                top_kudos_player = (player_id, player_name, total_kudos)
+
+    kudos_value = f"{top_kudos_player[2]:,} Kudos"
+    kudos_player_id = top_kudos_player[0]
+    kudos_player_name = top_kudos_player[1]
 
     podium = {
         "lp": {
@@ -175,7 +201,6 @@ def leaderboards() -> str:
             "value": kudos_value,
             "player_id": kudos_player_id,
             "player_name": kudos_player_name,
-            "character": kudos_character,
         },
     }
 
