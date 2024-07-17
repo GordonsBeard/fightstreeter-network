@@ -14,13 +14,10 @@ leaderboards {
 }
 
 podium, boards, cheers, jeers {
-    display: flex;
     justify-content: center;
     align-items: center;
-    width: 90%;
-    max-width: 1000px;
     margin-inline: auto;
-    padding: 2em;
+    padding: 1.5em;
     border-bottom: thin solid $sec-text;
 }
 

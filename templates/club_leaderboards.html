@@ -37,10 +37,9 @@
             <boards class="section">
                 <a name="boards"></a>
                 <ranking-boards>
-                    {% for board_name in ["LP", "MR", "Kudos"] %}
                     <board class="lp-board">
                         <table>
-                            <caption>{{board_name}} Leaderboard</caption>
+                            <caption>LP Leaderboard</caption>
                             <thead>
                             <tr>
                                 <th>Rank</th>
@@ -50,18 +49,62 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {% for e, player in [(1, "Scrub"), (1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(1, "Scrub"),(2,"Geight"), (3,"Shaymoo")] %}
+                            {% for stat in top_10_boards["lp"] %}
                             <tr>
-                                <td>{{e}}</td>
-                                <td>{{player}}</td>
-                                <td>Rashid</td>
-                                <td>Master</td>
+                                <td>{{loop.index}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{stat.char_id}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
                             </tr>
                             {% endfor %}
                             </tbody>
                         </table>
                     </board>
-                    {% endfor %}
+                    <board class="mr-board">
+                        <table>
+                            <caption>MR Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Character</th>
+                                <th>Master Rating</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_boards["mr"] %}
+                            <tr>
+                                <td>{{loop.index}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{stat.char_id}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </board>
+                    <board class="kudos-board">
+                        <table>
+                            <caption>Kudos Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Total Kudos</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_boards["kudos"] %}
+                            <tr>
+                                <td>{{loop.index}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </board>
+
                 </ranking-boards>
             </boards>
             <cheers class="section">
