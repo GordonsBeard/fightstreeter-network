@@ -14,22 +14,22 @@
                 <a name="podium"></a>
                 <div>
                     <podium_grid>
-                        <div class="first-info av">{{ podium["mr"].player_name }}</div>
+                        <div class="first-info av">{{ top_10_boards["lp"][0].player_name }}</div>
                         <div class="first stat">
-                            <p class="label">{{ podium["mr"].name }}</p>
-                            <p class="value">{{ podium["mr"].character }}</p>
-                            <p class="value">{{ podium["mr"].value }}</p>
+                            <p class="label">Club Master</p>
+                            <p class="value">{{ top_10_boards["mr"][0].char_id }}</p>
+                            <p class="value">{{ "{:,}".format(top_10_boards["mr"][0].value) }} MR</p>
                         </div>
-                        <div class="second-info av">{{ podium["lp"].player_name }}</div>
+                        <div class="second-info av">{{ top_10_boards["lp"][0].player_name }}</div>
                         <div class="second stat">
-                            <p class="label">{{ podium["lp"].name }}</p>
-                            <p class="label">{{ podium["lp"].character }}</p>
-                            <p class="value">{{ podium["lp"].value }}</p>
+                            <p class="label">League Champion</p>
+                            <p class="value">{{ top_10_boards["lp"][0].char_id }}</p>
+                            <p class="value">{{ "{:,}".format(top_10_boards["lp"][0].value) }} LP</p>
                         </div>
-                        <div class="third-info av">{{ podium["kudos"].player_name }}</div>
+                        <div class="third-info av">{{ top_10_boards["kudos"][0].player_name }}</div>
                         <div class="third stat">
-                            <p class="label">{{ podium["kudos"].name }}</p>
-                            <p class="value">{{ podium["kudos"].value }}</p>
+                            <p class="label">Kudos Leader</p>
+                            <p class="value">{{ "{:,}".format(top_10_boards["kudos"][0].value) }} Kudos</p>
                         </div>
                     </podium_grid>
                 </div>

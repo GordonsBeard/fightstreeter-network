@@ -135,36 +135,6 @@ def leaderboards() -> str:
 
     conn.close()
 
-    player_ids = rank_df["player_id"].unique()
-    kudos_ids = hs_df["player_id"].unique()
-
-    top_lp_df: pd.Series = pd.Series(data={})
-    top_mr_df: pd.Series = pd.Series(data={})
-
-    for player_id in player_ids:
-        chars_seen: list[str] = []
-        mr_chars_seen: list[str] = []
-        player_df: pd.DataFrame = rank_df[rank_df["player_id"] == player_id]
-
-        for i, (_, player_id, _, char_id, lp, mr) in enumerate(player_df.values):
-            if top_lp_df.empty or lp > top_lp_df["lp"] and char_id not in chars_seen:
-                chars_seen.append(char_id)
-                top_lp_df = player_df.iloc[i]
-
-            if top_mr_df.empty or mr > top_mr_df["mr"] and char_id not in mr_chars_seen:
-                mr_chars_seen.append(char_id)
-                top_mr_df = player_df.iloc[i]
-
-    lp_value = f"{top_lp_df['lp']:,} LP"
-    lp_player_id = top_lp_df["player_id"]
-    lp_player_name = top_lp_df["player_name"]
-    lp_character = top_lp_df["char_id"]
-
-    mr_character = top_mr_df["char_id"]
-    mr_value = f"{top_mr_df['mr']:,} MR"
-    mr_player_id = top_mr_df["player_id"]
-    mr_player_name = top_mr_df["player_name"]
-
     top10_lp_series: pd.DataFrame = rank_df.sort_values(by="lp", ascending=False)
     top10_mr_series: pd.DataFrame = rank_df.sort_values(by="mr", ascending=False)
 
@@ -200,19 +170,6 @@ def leaderboards() -> str:
         if len(top_10_boards["mr"]) == 10:
             break
 
-    top_kudos_player: tuple[str, str, int] = ("", "", 0)
-
-    for player_id in kudos_ids:
-        kudos_player_df: pd.DataFrame = hs_df[hs_df["player_id"] == player_id]
-
-        for _, player_id, player_name, total_kudos in kudos_player_df.values:
-            if top_kudos_player[2] < total_kudos:
-                top_kudos_player = (player_id, player_name, total_kudos)
-
-    kudos_value = f"{top_kudos_player[2]:,} Kudos"
-    kudos_player_id = top_kudos_player[0]
-    kudos_player_name = top_kudos_player[1]
-
     top_kudos_df = hs_df.sort_values(by="total_kudos", ascending=False)
 
     for _, player_id, player_name, total_kudos in top_kudos_df.values:
@@ -223,32 +180,7 @@ def leaderboards() -> str:
         if len(top_10_boards["kudos"]) == 10:
             break
 
-    podium = {
-        "lp": {
-            "name": "League Champion",
-            "value": lp_value,
-            "player_id": lp_player_id,
-            "player_name": lp_player_name,
-            "character": lp_character,
-        },
-        "mr": {
-            "name": "Club Master",
-            "value": mr_value,
-            "player_id": mr_player_id,
-            "player_name": mr_player_name,
-            "character": mr_character,
-        },
-        "kudos": {
-            "name": "Kudos Leader",
-            "value": kudos_value,
-            "player_id": kudos_player_id,
-            "player_name": kudos_player_name,
-        },
-    }
-
-    return render_template(
-        "club_leaderboards.html", podium=podium, top_10_boards=top_10_boards
-    )
+    return render_template("club_leaderboards.html", top_10_boards=top_10_boards)
 
 
 @dataclasses.dataclass
