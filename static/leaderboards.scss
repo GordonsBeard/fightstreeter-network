@@ -65,12 +65,31 @@ ranking-boards {
     flex-wrap: wrap;
 
     board {
+        position: relative;
         margin-inline: 20px;
+
         &:not(:last-child){
             margin-bottom: 2em;
         }
+
+        button {
+            position: absolute;
+            right: 0;
+            background-color: $bg-color;
+            border-radius: 6px;
+            border-color: $hilight;
+            color: $lolight;
+        }
+
         table {
+            visibility: hidden;
+            display: none;
             border-collapse: collapse;
+
+            &.visible {
+                visibility: visible;
+                display: block;
+            }
 
             caption {
                 font-size: 18px;
@@ -78,6 +97,7 @@ ranking-boards {
                 color: $hilight;
                 margin-bottom: 10px;
             }
+
             th {
                 border-bottom: 1px solid #364043;
                 color: $lolight;

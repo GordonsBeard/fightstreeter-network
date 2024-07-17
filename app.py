@@ -58,7 +58,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
 
     df["date"] = pd.to_datetime(df["date"], format="ISO8601")
 
-    df = df[df["date"] > last_30_days]
+    df = df[df["date"] > last_30_days]  # currently pulls data from last 30 days
 
     lp_fig = px.line(
         df,
@@ -137,6 +137,7 @@ def leaderboards() -> str:
 
     top10_lp_series: pd.DataFrame = rank_df.sort_values(by="lp", ascending=False)
     top10_mr_series: pd.DataFrame = rank_df.sort_values(by="mr", ascending=False)
+    top10_mr_series = top10_mr_series[top10_mr_series["mr"] > 0]
 
     top_10_boards: dict[str, list[dict[str, str | int]]] = {
         "lp": [],
@@ -144,9 +145,20 @@ def leaderboards() -> str:
         "kudos": [],
     }
 
-    for _, player_id, player_name, char_id, lp, mr in top10_lp_series.values:
+    top_10_grouped: dict[str, list[dict[str, str | int]]] = {
+        "lp": [],
+        "mr": [],
+    }
+
+    player_chars_lp: dict[str, list[tuple[str, int]]] = {}
+
+    display_lp_rank = 0
+    for i, (_, player_id, player_name, char_id, lp, _) in enumerate(
+        top10_lp_series.values
+    ):
         top_10_boards["lp"].append(
             {
+                "rank": i + 1,
                 "player_name": player_name,
                 "player_id": player_id,
                 "char_id": char_id,
@@ -154,12 +166,35 @@ def leaderboards() -> str:
             }
         )
 
-        if len(top_10_boards["lp"]) == 10:
-            break
+        row_viz = True
 
-    for _, player_id, player_name, char_id, lp, mr in top10_mr_series.values:
+        if player_name in player_chars_lp:
+            row_viz = False
+        else:
+            player_chars_lp[player_name] = []
+            display_lp_rank += 1
+
+            top_10_grouped["lp"].append(
+                {
+                    "rank": display_lp_rank,
+                    "player_name": player_name,
+                    "player_id": player_id,
+                    "char_id": char_id,
+                    "value": lp,
+                    "hide": row_viz,
+                }
+            )
+        player_chars_lp[player_name].append((char_id, lp))
+
+    player_chars_mr: dict[str, list[tuple[str, int]]] = {}
+    display_mr_rank = 0
+
+    for i, (_, player_id, player_name, char_id, _, mr) in enumerate(
+        top10_mr_series.values
+    ):
         top_10_boards["mr"].append(
             {
+                "rank": i + 1,
                 "player_name": player_name,
                 "player_id": player_id,
                 "char_id": char_id,
@@ -167,8 +202,24 @@ def leaderboards() -> str:
             }
         )
 
-        if len(top_10_boards["mr"]) == 10:
-            break
+        row_viz = True
+
+        if player_name in player_chars_mr:
+            row_viz = False
+        else:
+            player_chars_mr[player_name] = []
+            display_mr_rank += 1
+
+            top_10_grouped["mr"].append(
+                {
+                    "rank": display_mr_rank,
+                    "player_name": player_name,
+                    "player_id": player_id,
+                    "char_id": char_id,
+                    "value": mr,
+                    "hide": row_viz,
+                }
+            )
 
     top_kudos_df = hs_df.sort_values(by="total_kudos", ascending=False)
 
@@ -177,10 +228,11 @@ def leaderboards() -> str:
             {"player_name": player_name, "player_id": player_id, "value": total_kudos}
         )
 
-        if len(top_10_boards["kudos"]) == 10:
-            break
-
-    return render_template("club_leaderboards.html", top_10_boards=top_10_boards)
+    return render_template(
+        "club_leaderboards.html",
+        top_10_boards=top_10_boards,
+        top_10_grouped=top_10_grouped,
+    )
 
 
 @dataclasses.dataclass

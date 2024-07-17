@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='leaderboards.css') }}">
+        <script src="{{ url_for('static', filename='leaderboards.js') }}"></script>
         <title>Leaderboards</title>
     </head>
     <body>
@@ -14,7 +15,7 @@
                 <a name="podium"></a>
                 <div>
                     <podium_grid>
-                        <div class="first-info av">{{ top_10_boards["lp"][0].player_name }}</div>
+                        <div class="first-info av">{{ top_10_boards["mr"][0].player_name }}</div>
                         <div class="first stat">
                             <p class="label">Club Master</p>
                             <p class="value">{{ top_10_boards["mr"][0].char_id }}</p>
@@ -38,7 +39,8 @@
                 <a name="boards"></a>
                 <ranking-boards>
                     <board class="lp-board">
-                        <table>
+                        <button class="toggle" onclick="toggleTable('lp-board')">All</button>
+                        <table class="all visible">
                             <caption>LP Leaderboard</caption>
                             <thead>
                             <tr>
@@ -51,7 +53,28 @@
                             <tbody>
                             {% for stat in top_10_boards["lp"] %}
                             <tr>
-                                <td>{{loop.index}}</td>
+                                <td>{{stat.rank}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{stat.char_id}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <table class="grouped">
+                            <caption>LP Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Character</th>
+                                <th>League</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_grouped["lp"] %}
+                            <tr>
+                                <td>{{stat.rank}}</td>
                                 <td>{{stat.player_name}}</td>
                                 <td>{{stat.char_id}}</td>
                                 <td>{{"{:,}".format(stat.value)}}</td>
@@ -61,7 +84,8 @@
                         </table>
                     </board>
                     <board class="mr-board">
-                        <table>
+                        <button class="toggle" onclick="toggleTable('mr-board')">All</button>
+                        <table class="all visible">
                             <caption>MR Leaderboard</caption>
                             <thead>
                             <tr>
@@ -74,7 +98,7 @@
                             <tbody>
                             {% for stat in top_10_boards["mr"] %}
                             <tr>
-                                <td>{{loop.index}}</td>
+                                <td>{{stat.rank}}</td>
                                 <td>{{stat.player_name}}</td>
                                 <td>{{stat.char_id}}</td>
                                 <td>{{"{:,}".format(stat.value)}}</td>
@@ -82,9 +106,31 @@
                             {% endfor %}
                             </tbody>
                         </table>
+                        <table class="grouped">
+                            <caption>MR Leaderboard</caption>
+                            <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Character</th>
+                                <th>Master Rating</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for stat in top_10_grouped["mr"] %}
+                            <tr>
+                                <td>{{stat.rank}}</td>
+                                <td>{{stat.player_name}}</td>
+                                <td>{{stat.char_id}}</td>
+                                <td>{{"{:,}".format(stat.value)}}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
                     </board>
                     <board class="kudos-board">
-                        <table>
+                        <table class="all visible">
                             <caption>Kudos Leaderboard</caption>
                             <thead>
                             <tr>
