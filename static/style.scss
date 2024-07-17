@@ -1,11 +1,10 @@
+@use "vars" as *;
+
 body {
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-    .container {
-        display: flex;
-        justify-content: center;
-    }
+    font-family: $font-fam;
+    background-color: $bg-color;
+    color: $def-text;
 }
 
 li {
