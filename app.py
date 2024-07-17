@@ -12,7 +12,14 @@ import plotly.graph_objects as go  # type: ignore[import-untyped]
 from flask import Flask, render_template
 from pandas import DataFrame
 
-from constants import FUNNY_ANIMALS, charid_map, league_ranks
+from constants import (
+    FUNNY_ANIMALS,
+    charid_map,
+    get_kudos_class,
+    get_league_class,
+    get_mr_class,
+    league_ranks,
+)
 
 app = Flask(__name__)
 
@@ -158,6 +165,7 @@ def leaderboards() -> str:
     ):
         top_10_boards["lp"].append(
             {
+                "class": get_league_class(lp),
                 "rank": i + 1,
                 "player_name": player_name,
                 "player_id": player_id,
@@ -176,6 +184,7 @@ def leaderboards() -> str:
 
             top_10_grouped["lp"].append(
                 {
+                    "class": get_league_class(lp),
                     "rank": display_lp_rank,
                     "player_name": player_name,
                     "player_id": player_id,
@@ -194,6 +203,7 @@ def leaderboards() -> str:
     ):
         top_10_boards["mr"].append(
             {
+                "class": get_mr_class(mr),
                 "rank": i + 1,
                 "player_name": player_name,
                 "player_id": player_id,
@@ -212,6 +222,7 @@ def leaderboards() -> str:
 
             top_10_grouped["mr"].append(
                 {
+                    "class": get_mr_class(mr),
                     "rank": display_mr_rank,
                     "player_name": player_name,
                     "player_id": player_id,
@@ -223,9 +234,16 @@ def leaderboards() -> str:
 
     top_kudos_df = hs_df.sort_values(by="total_kudos", ascending=False)
 
-    for _, player_id, player_name, total_kudos in top_kudos_df.values:
+    for i, (_, player_id, player_name, total_kudos) in enumerate(top_kudos_df.values):
+        class_name = "bottom" if i > 10 else ""
+        class_name = class_name + " " + get_kudos_class(total_kudos)
         top_10_boards["kudos"].append(
-            {"player_name": player_name, "player_id": player_id, "value": total_kudos}
+            {
+                "class": class_name,
+                "player_name": player_name,
+                "player_id": player_id,
+                "value": total_kudos,
+            }
         )
 
     return render_template(
