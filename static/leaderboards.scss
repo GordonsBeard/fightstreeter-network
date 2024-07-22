@@ -3,17 +3,10 @@
 leaderboards {
     display: block;
     position: relative;
-
-    .section {
-        display: flex;
-
-        >div {
-            width: 100%;
-        }
-    }
 }
 
 podium, boards, cheers, jeers {
+    display: flex;
     justify-content: center;
     align-items: center;
     margin-inline: auto;
@@ -29,6 +22,8 @@ podium_grid {
     grid-template-rows: 1fr repeat(3, 75px) 1fr;
     grid-column-gap: 0px;
     grid-row-gap: 0px;
+    width: 90%;
+    max-width: 1290px;
 
     .stat {
         background-color: $def-text; color: white;

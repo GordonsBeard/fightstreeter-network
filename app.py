@@ -124,6 +124,13 @@ def leaderboards() -> str:
         ORDER BY r.date DESC;"""
     )
 
+    inactive_player_scores: str = (
+        """SELECT hs.date, hs.player_id, hs.player_name, hs.selected_char as char_id, hs.lp, hs.mr
+        FROM historic_stats hs
+        GROUP BY hs.date, hs.player_id, char_id
+        ORDER BY hs.date DESC;"""
+    )
+
     latest_kudos_amounts_query: str = (
         """SELECT hs.date, hs.player_id, cm.player_name, hs.total_kudos
         FROM historic_stats hs
@@ -134,13 +141,20 @@ def leaderboards() -> str:
     rank_df: pd.DataFrame = pd.read_sql_query(latest_lp_scores, conn)
     rank_df["char_id"] = rank_df["char_id"].replace(charid_map)
     rank_df["date"] = pd.to_datetime(rank_df["date"], format="ISO8601")
-    rank_df = rank_df[rank_df["date"] > yesterday]
+    rank_df = rank_df[rank_df["date"] > today]
 
     hs_df: pd.DataFrame = pd.read_sql_query(latest_kudos_amounts_query, conn)
     hs_df["date"] = pd.to_datetime(hs_df["date"], format="ISO8601")
-    hs_df = hs_df[hs_df["date"] > yesterday]
+    hs_df = hs_df[hs_df["date"] > today]
 
+    inactive_df: pd.DataFrame = pd.read_sql_query(inactive_player_scores, conn)
+    inactive_df["char_id"] = inactive_df["char_id"].replace(charid_map)
+    inactive_df["date"] = pd.to_datetime(inactive_df["date"], format="ISO8601")
+    inactive_df = inactive_df[inactive_df["lp"] != -1]
+    inactive_df = inactive_df[inactive_df["date"] > today]
     conn.close()
+
+    rank_df = pd.concat([inactive_df, rank_df]).drop_duplicates().reset_index(drop=True)
 
     top10_lp_series: pd.DataFrame = rank_df.sort_values(by="lp", ascending=False)
     top10_mr_series: pd.DataFrame = rank_df.sort_values(by="mr", ascending=False)
@@ -157,16 +171,14 @@ def leaderboards() -> str:
         "mr": [],
     }
 
-    player_chars_lp: dict[str, list[tuple[str, int]]] = {}
+    player_chars_lp: dict[str, bool] = {}
 
-    display_lp_rank = 0
     for i, (_, player_id, player_name, char_id, lp, _) in enumerate(
         top10_lp_series.values
     ):
         top_10_boards["lp"].append(
             {
                 "class": get_league_class(lp),
-                "rank": i + 1,
                 "player_name": player_name,
                 "player_id": player_id,
                 "char_id": char_id,
@@ -174,26 +186,18 @@ def leaderboards() -> str:
             }
         )
 
-        row_viz = True
-
-        if player_name in player_chars_lp:
-            row_viz = False
-        else:
-            player_chars_lp[player_name] = []
-            display_lp_rank += 1
+        if player_name not in player_chars_lp:
+            player_chars_lp[player_name] = True
 
             top_10_grouped["lp"].append(
                 {
                     "class": get_league_class(lp),
-                    "rank": display_lp_rank,
                     "player_name": player_name,
                     "player_id": player_id,
                     "char_id": char_id,
                     "value": lp,
-                    "hide": row_viz,
                 }
             )
-        player_chars_lp[player_name].append((char_id, lp))
 
     player_chars_mr: dict[str, list[tuple[str, int]]] = {}
     display_mr_rank = 0
@@ -204,7 +208,6 @@ def leaderboards() -> str:
         top_10_boards["mr"].append(
             {
                 "class": get_mr_class(mr),
-                "rank": i + 1,
                 "player_name": player_name,
                 "player_id": player_id,
                 "char_id": char_id,
@@ -212,11 +215,7 @@ def leaderboards() -> str:
             }
         )
 
-        row_viz = True
-
-        if player_name in player_chars_mr:
-            row_viz = False
-        else:
+        if player_name not in player_chars_mr:
             player_chars_mr[player_name] = []
             display_mr_rank += 1
 
@@ -228,7 +227,6 @@ def leaderboards() -> str:
                     "player_id": player_id,
                     "char_id": char_id,
                     "value": mr,
-                    "hide": row_viz,
                 }
             )
 

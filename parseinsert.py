@@ -13,6 +13,11 @@ from zoneinfo import ZoneInfo
 now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
 
 historical_dates: list[datetime.datetime] = [
+    datetime.datetime(2024, 7, 21, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
+    datetime.datetime(2024, 7, 20, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
+    datetime.datetime(2024, 7, 19, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
+    datetime.datetime(2024, 7, 18, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
+    datetime.datetime(2024, 7, 17, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 16, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 15, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
     datetime.datetime(2024, 7, 14, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
@@ -43,12 +48,13 @@ logger.setLevel(logging.INFO)
 class RecordedLP:
     """The thing we return to record LP"""
 
-    def __init__(self, player_id, char_id, date_stats, lp, mr) -> None:
+    def __init__(self, player_id, char_id, date_stats, phase, lp, mr) -> None:
         # pylint: disable-msg=too-many-arguments
 
         self.player_id: str = player_id
         self.char_id: str = char_id
         self.date_stats: datetime.datetime = date_stats.isoformat()
+        self.phase: int = phase
         self.lp: int = lp
         self.mr: int = mr
 
@@ -104,6 +110,7 @@ def create_tables(debug_flag: bool):
             unique(club_id, player_id));""",
         """CREATE TABLE IF NOT EXISTS ranking (
             date TIMESTAMP NOT NULL,
+            phase INTEGER NOT NULL,
             player_id TEXT NOT NULL,
             char_id TEXT NOT NULL,
             lp INTEGER,
@@ -175,12 +182,13 @@ def insert_rankings_into_db(record: RecordedLP, debug_flag: bool) -> None:
         with sqlite3.connect(table_name) as conn:
             cursor = conn.cursor()
 
-            insert_query = """INSERT INTO ranking VALUES (?, ?, ?, ?, ?);"""
+            insert_query = """INSERT INTO ranking VALUES (?, ?, ?, ?, ?, ?);"""
 
             cursor.execute(
                 insert_query,
                 (
                     record.date_stats,
+                    record.phase,
                     record.player_id,
                     record.char_id,
                     record.lp,
@@ -275,6 +283,7 @@ def build_rankings_data(
     player_dict = player_dict["pageProps"]
 
     player_chars: dict = player_dict["play"]["character_league_infos"]
+    phase: int = player_dict["play"]["current_season_id"]
 
     record_list: list[RecordedLP] = []
     for char in player_chars:
@@ -284,6 +293,7 @@ def build_rankings_data(
                     str(player_id),
                     str(char["character_id"]),
                     req_date,
+                    phase,
                     int(char["league_info"]["league_point"]),
                     int(char["league_info"]["master_rating"]),
                 )
