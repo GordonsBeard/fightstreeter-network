@@ -530,7 +530,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         print("No arguments supplied! (-debug -new -club -hist -daily)")
         print()
-        print("-debug:\tDoesn't actually execute SQL.")
+        print("-debug:\tDoesn't actually execute SQL. (does nothing by itself)")
         print("-new:\tCreates db and intializes databases.")
         print("-club:\tUpdates the club_members table with club overview .json")
         print("-hist:\tPopulates database with previously downloaded cfn_stats.")

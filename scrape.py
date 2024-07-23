@@ -608,7 +608,9 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         print("Mising arguments: (-debug -club -daily -matches -all)")
         print()
-        print("-debug:\t\tDownloads everything to /mock folder.")
+        print(
+            "-debug:\t\tDownloads everything to /mock folder. (does nothing by itself)"
+        )
         print("-club:\t\tDownloads club overview.")
         print("-daily:\t\tDownloads every club member's overview.json for today.")
         print("-matches:\tDownloads every club member's matches for today.")
