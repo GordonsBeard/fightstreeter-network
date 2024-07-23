@@ -102,6 +102,18 @@ ranking-boards {
                 text-align: left;
             }
 
+            tr.league-sep {
+                font-size: small;
+                text-align: center;
+                height: 10px;
+
+                td {
+                    padding: 0px;
+                    font-weight: normal;
+                    text-shadow: none;
+                }
+            }
+
             td {
                 padding: 8px 12px;
             }

@@ -49,13 +49,20 @@
                             </tr>
                             </thead>
                             <tbody>
+                            {% set mr = namespace(watcher=None) %}
                             {% for stat in top_10_boards["lp"] %}
-                            <tr class="{{stat.class}}">
-                                <td>{{loop.index}}</td>
-                                <td>{{stat.player_name}}</td>
-                                <td>{{stat.char_id}}</td>
-                                <td>{{"{:,}".format(stat.value)}}</td>
-                            </tr>
+                                {% if stat.league_name != mr.watcher %}
+                                    <tr class="league-sep {{stat.class}}">
+                                        <td colspan="4">{{stat.league_name}}</td>
+                                    </tr>
+                                    {% set mr.watcher = stat.league_name %}
+                                {% endif %}
+                                <tr class="{{stat.class}}">
+                                    <td>{{stat.rank}}</td>
+                                    <td>{{stat.player_name}}</td>
+                                    <td>{{stat.char_id}}</td>
+                                    <td>{{"{:,}".format(stat.value)}}</td>
+                                </tr>
                             {% endfor %}
                             </tbody>
                         </table>
@@ -70,13 +77,20 @@
                             </tr>
                             </thead>
                             <tbody>
+                            {% set mr = namespace(watcher=None) %}
                             {% for stat in top_10_grouped["lp"] %}
-                            <tr class="{{stat.class}}">
-                                <td>{{loop.index}}</td>
-                                <td>{{stat.player_name}}</td>
-                                <td>{{stat.char_id}}</td>
-                                <td>{{"{:,}".format(stat.value)}}</td>
-                            </tr>
+                                {% if stat.league_name != mr.watcher %}
+                                    <tr class="league-sep {{stat.class}}">
+                                        <td colspan="4">{{stat.league_name}}</td>
+                                    </tr>
+                                    {% set mr.watcher = stat.league_name %}
+                                {% endif %}
+                                <tr class="{{stat.class}}">
+                                    <td>{{loop.index}}</td>
+                                    <td>{{stat.player_name}}</td>
+                                    <td>{{stat.char_id}}</td>
+                                    <td>{{"{:,}".format(stat.value)}}</td>
+                                </tr>
                             {% endfor %}
                             </tbody>
                         </table>
@@ -96,7 +110,7 @@
                             <tbody>
                             {% for stat in top_10_boards["mr"] %}
                             <tr class="{{stat.class}}">
-                                <td>{{loop.index}}</td>
+                                <td>{{stat.rank}}</td>
                                 <td>{{stat.player_name}}</td>
                                 <td>{{stat.char_id}}</td>
                                 <td>{{"{:,}".format(stat.value)}}</td>

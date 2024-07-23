@@ -12,14 +12,8 @@ import plotly.graph_objects as go  # type: ignore[import-untyped]
 from flask import Flask, render_template
 from pandas import DataFrame
 
-from constants import (
-    FUNNY_ANIMALS,
-    charid_map,
-    get_kudos_class,
-    get_league_class,
-    get_mr_class,
-    league_ranks,
-)
+from constants import FUNNY_ANIMALS, charid_map, league_ranks
+from leaderboards import generate_leaderboards
 
 app = Flask(__name__)
 
@@ -107,142 +101,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
 def leaderboards() -> str:
     """Displays MR/LP/Kudos leaderboards and stats for the club."""
 
-    # pylint: disable=too-many-locals
-
-    conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
-
-    today: datetime = datetime.now(tz=ZoneInfo("America/Los_Angeles")).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    yesterday: datetime = today + timedelta(days=-1)
-
-    latest_lp_scores: str = (
-        """SELECT r.date, r.player_id, cm.player_name, r.char_id, r.lp, r.mr
-        FROM ranking r
-        INNER JOIN club_members cm ON cm.player_id = r.player_id
-        GROUP BY r.date, r.player_id, r.char_id
-        ORDER BY r.date DESC;"""
-    )
-
-    inactive_player_scores: str = (
-        """SELECT hs.date, hs.player_id, hs.player_name, hs.selected_char as char_id, hs.lp, hs.mr
-        FROM historic_stats hs
-        GROUP BY hs.date, hs.player_id, char_id
-        ORDER BY hs.date DESC;"""
-    )
-
-    latest_kudos_amounts_query: str = (
-        """SELECT hs.date, hs.player_id, cm.player_name, hs.total_kudos
-        FROM historic_stats hs
-        INNER JOIN club_members cm ON cm.player_id = hs.player_id
-        ORDER BY date DESC;"""
-    )
-
-    rank_df: pd.DataFrame = pd.read_sql_query(latest_lp_scores, conn)
-    rank_df["char_id"] = rank_df["char_id"].replace(charid_map)
-    rank_df["date"] = pd.to_datetime(rank_df["date"], format="ISO8601")
-    rank_df = rank_df[rank_df["date"] > today]
-
-    hs_df: pd.DataFrame = pd.read_sql_query(latest_kudos_amounts_query, conn)
-    hs_df["date"] = pd.to_datetime(hs_df["date"], format="ISO8601")
-    hs_df = hs_df[hs_df["date"] > today]
-
-    inactive_df: pd.DataFrame = pd.read_sql_query(inactive_player_scores, conn)
-    inactive_df["char_id"] = inactive_df["char_id"].replace(charid_map)
-    inactive_df["date"] = pd.to_datetime(inactive_df["date"], format="ISO8601")
-    inactive_df = inactive_df[inactive_df["lp"] != -1]
-    inactive_df = inactive_df[inactive_df["date"] > today]
-    conn.close()
-
-    rank_df = pd.concat([inactive_df, rank_df]).drop_duplicates().reset_index(drop=True)
-
-    top10_lp_series: pd.DataFrame = rank_df.sort_values(by="lp", ascending=False)
-    top10_mr_series: pd.DataFrame = rank_df.sort_values(by="mr", ascending=False)
-    top10_mr_series = top10_mr_series[top10_mr_series["mr"] > 0]
-
-    top_10_boards: dict[str, list[dict[str, str | int]]] = {
-        "lp": [],
-        "mr": [],
-        "kudos": [],
-    }
-
-    top_10_grouped: dict[str, list[dict[str, str | int]]] = {
-        "lp": [],
-        "mr": [],
-    }
-
-    player_chars_lp: dict[str, bool] = {}
-
-    for i, (_, player_id, player_name, char_id, lp, _) in enumerate(
-        top10_lp_series.values
-    ):
-        top_10_boards["lp"].append(
-            {
-                "class": get_league_class(lp),
-                "player_name": player_name,
-                "player_id": player_id,
-                "char_id": char_id,
-                "value": lp,
-            }
-        )
-
-        if player_name not in player_chars_lp:
-            player_chars_lp[player_name] = True
-
-            top_10_grouped["lp"].append(
-                {
-                    "class": get_league_class(lp),
-                    "player_name": player_name,
-                    "player_id": player_id,
-                    "char_id": char_id,
-                    "value": lp,
-                }
-            )
-
-    player_chars_mr: dict[str, list[tuple[str, int]]] = {}
-    display_mr_rank = 0
-
-    for i, (_, player_id, player_name, char_id, _, mr) in enumerate(
-        top10_mr_series.values
-    ):
-        top_10_boards["mr"].append(
-            {
-                "class": get_mr_class(mr),
-                "player_name": player_name,
-                "player_id": player_id,
-                "char_id": char_id,
-                "value": mr,
-            }
-        )
-
-        if player_name not in player_chars_mr:
-            player_chars_mr[player_name] = []
-            display_mr_rank += 1
-
-            top_10_grouped["mr"].append(
-                {
-                    "class": get_mr_class(mr),
-                    "rank": display_mr_rank,
-                    "player_name": player_name,
-                    "player_id": player_id,
-                    "char_id": char_id,
-                    "value": mr,
-                }
-            )
-
-    top_kudos_df = hs_df.sort_values(by="total_kudos", ascending=False)
-
-    for i, (_, player_id, player_name, total_kudos) in enumerate(top_kudos_df.values):
-        class_name = "bottom" if i > 10 else ""
-        class_name = class_name + " " + get_kudos_class(total_kudos)
-        top_10_boards["kudos"].append(
-            {
-                "class": class_name,
-                "player_name": player_name,
-                "player_id": player_id,
-                "value": total_kudos,
-            }
-        )
+    top_10_boards, top_10_grouped = generate_leaderboards()
 
     return render_template(
         "club_leaderboards.html",

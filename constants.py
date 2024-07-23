@@ -33,130 +33,55 @@ charid_map: dict[str, str] = {
     "30": "30",
 }
 
-league_ranks: dict[int, str] = {
-    0: "Rookie 1",
-    200: "Rookie 2",
-    400: "Rookie 3",
-    600: "Rookie 4",
-    800: "Rookie 5",
-    1000: "Iron 1",
-    1400: "Iron 2",
-    1800: "Iron 3",
-    2200: "Iron 4",
-    2600: "Iron 5",
-    3000: "Bronze 1",
-    3400: "Bronze 2",
-    3800: "Bronze 3",
-    4200: "Bronze 4",
-    4600: "Bronze 5",
-    5000: "Silver 1",
-    5800: "Silver 2",
-    6600: "Silver 3",
-    7400: "Silver 4",
-    8200: "Silver 5",
-    9000: "Gold 1",
-    9800: "Gold 2",
-    10600: "Gold 3",
-    11400: "Gold 4",
-    12200: "Gold 5",
-    13000: "Platinum 1",
-    14200: "Platinum 2",
-    15400: "Platinum 3",
-    16600: "Platinum 4",
-    17800: "Platinum 5",
-    19000: "Diamond 1",
-    20200: "Diamond 2",
-    21400: "Diamond 3",
-    22600: "Diamond 4",
-    23800: "Diamond 5",
-    25000: "Master",
+league_ranks: dict[int, dict[str, str]] = {
+    25000: {"name": "Master", "class": "m"},
+    23800: {"name": "Diamond 5", "class": "d-5"},
+    22600: {"name": "Diamond 4", "class": "d-4"},
+    21400: {"name": "Diamond 3", "class": "d-3"},
+    20200: {"name": "Diamond 2", "class": "d-2"},
+    19000: {"name": "Diamond 1", "class": "d-1"},
+    17800: {"name": "Platinum 5", "class": "p-5"},
+    16600: {"name": "Platinum 4", "class": "p-4"},
+    15400: {"name": "Platinum 3", "class": "p-3"},
+    14200: {"name": "Platinum 2", "class": "p-2"},
+    13000: {"name": "Platinum 1", "class": "p-1"},
+    12200: {"name": "Gold 5", "class": "g-5"},
+    11400: {"name": "Gold 4", "class": "g-4"},
+    10600: {"name": "Gold 3", "class": "g-3"},
+    9800: {"name": "Gold 2", "class": "g-2"},
+    9000: {"name": "Gold 1", "class": "g-1"},
+    8200: {"name": "Silver 5", "class": "s-5"},
+    7400: {"name": "Silver 4", "class": "s-4"},
+    6600: {"name": "Silver 3", "class": "s-3"},
+    5800: {"name": "Silver 2", "class": "s-2"},
+    5000: {"name": "Silver 1", "class": "s-1"},
+    4600: {"name": "Bronze 5", "class": "b-5"},
+    4200: {"name": "Bronze 4", "class": "b-4"},
+    3800: {"name": "Bronze 3", "class": "b-3"},
+    3400: {"name": "Bronze 2", "class": "b-2"},
+    3000: {"name": "Bronze 1", "class": "b-1"},
+    2600: {"name": "Iron 5", "class": "i-5"},
+    2200: {"name": "Iron 4", "class": "i-4"},
+    1800: {"name": "Iron 3", "class": "i-3"},
+    1400: {"name": "Iron 2", "class": "i-2"},
+    1000: {"name": "Iron 1", "class": "i-1"},
+    800: {"name": "Rookie 5", "class": "r-5"},
+    600: {"name": "Rookie 4", "class": "r-4"},
+    400: {"name": "Rookie 3", "class": "r-3"},
+    200: {"name": "Rookie 2", "class": "r-2"},
+    0: {"name": "Rookie 1", "class": "r-1"},
+    -1: {"name": "New Challenger", "class": "nc"},
 }
 
 
-def get_league_class(lp) -> str:
-    """Takes the players LP and returns the appropriate class name for HTML colors."""
-    class_name: str = ""
+def fetch_league_name(player_lp: int) -> dict[str, str]:
+    """Returns the league dictionary with league name and css class."""
 
-    if 0 <= lp < 200:
-        class_name = "r1"
-    elif 200 <= lp < 400:
-        class_name = "r-2"
-    elif 400 <= lp < 600:
-        class_name = "r-3"
-    elif 600 <= lp < 800:
-        class_name = "r-4"
-    elif 800 <= lp < 1000:
-        class_name = "r-5"
+    for minrank, league in league_ranks.items():
+        if player_lp >= minrank:  # and minrank != -1:
+            return league
 
-    elif 1000 <= lp < 1400:
-        class_name = "i-1"
-    elif 1400 <= lp < 1800:
-        class_name = "i-2"
-    elif 1800 <= lp < 2200:
-        class_name = "i-3"
-    elif 2200 <= lp < 2600:
-        class_name = "i-4"
-    elif 2600 <= lp < 3000:
-        class_name = "i-5"
-
-    elif 3000 <= lp < 3400:
-        class_name = "b-1"
-    elif 3400 <= lp < 3800:
-        class_name = "b-2"
-    elif 3800 <= lp < 4200:
-        class_name = "b-3"
-    elif 4200 <= lp < 4600:
-        class_name = "b-4"
-    elif 4600 <= lp < 5000:
-        class_name = "b-5"
-
-    elif 5000 <= lp < 5800:
-        class_name = "s-1"
-    elif 5800 <= lp < 6600:
-        class_name = "s-2"
-    elif 6600 <= lp < 7400:
-        class_name = "s-3"
-    elif 7400 <= lp < 8200:
-        class_name = "s-4"
-    elif 8200 <= lp < 9000:
-        class_name = "s-5"
-
-    elif 9000 <= lp < 9800:
-        class_name = "g-1"
-    elif 9800 <= lp < 10600:
-        class_name = "g-2"
-    elif 10600 <= lp < 11400:
-        class_name = "g-3"
-    elif 11400 <= lp < 12200:
-        class_name = "g-4"
-    elif 12200 <= lp < 13000:
-        class_name = "g-5"
-
-    elif 13000 <= lp < 14200:
-        class_name = "p-1"
-    elif 14200 <= lp < 15400:
-        class_name = "p-2"
-    elif 15400 <= lp < 16600:
-        class_name = "p-3"
-    elif 16600 <= lp < 17800:
-        class_name = "p-4"
-    elif 17800 <= lp < 19000:
-        class_name = "p-5"
-
-    elif 19000 <= lp < 20200:
-        class_name = "d-1"
-    elif 20200 <= lp < 21400:
-        class_name = "d-2"
-    elif 21400 <= lp < 22600:
-        class_name = "d-3"
-    elif 22600 <= lp < 23800:
-        class_name = "d-4"
-    elif 23800 <= lp < 25000:
-        class_name = "d-5"
-
-    elif lp >= 25000:
-        class_name = "m"
-    return class_name
+    return league_ranks[-1]
 
 
 def get_mr_class(mr) -> str:
