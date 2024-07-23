@@ -25,7 +25,19 @@ def generate_awards() -> list[dict[str, str]]:
     hs_df: pd.DataFrame = pd.read_sql_query(historic_stats_sql, conn)
     conn.close()
 
+    basic_awards = generate_basic_awards(hs_df)
+
+    awards_list += basic_awards
+
+    return awards_list
+
+
+def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
+    """Returns the list of basic (non-calculated) awards."""
+
     hs_df["selected_char"] = hs_df["selected_char"].replace(charid_map)
+
+    awards_list: list[dict[str, str]] = []
 
     if len(hs_df.values) == 0:
         return awards_list
@@ -67,7 +79,7 @@ def generate_awards() -> list[dict[str, str]]:
     awards_list.append(
         {
             "class": "casual-matches",
-            "name": "No Strings Attached",
+            "name": "Casual Matches",
             "player_name": casual_matches_row["player_name"].item(),
             "player_id": casual_matches_row["player_id"].item(),
             "value": f"{casual_matches_row['ranked_matches'].item():,} casual matches",
@@ -78,7 +90,7 @@ def generate_awards() -> list[dict[str, str]]:
     awards_list.append(
         {
             "class": "extreme-time",
-            "name": "X-Games Mode",
+            "name": "Extreme Matches",
             "player_name": extreme_time_row["player_name"].item(),
             "player_id": extreme_time_row["player_id"].item(),
             "value": f"{extreme_time_row['extreme_time'].item()/60:.0f} minutes of Extreme Battles",
@@ -89,7 +101,7 @@ def generate_awards() -> list[dict[str, str]]:
     awards_list.append(
         {
             "class": "versus-time",
-            "name": "Touched Grass",
+            "name": "Versus Time",
             "player_name": versus_time_row["player_name"].item(),
             "player_id": versus_time_row["player_id"].item(),
             "value": f"{versus_time_row['versus_time'].item()/60/60:.0f} hours of local versus",
@@ -132,7 +144,7 @@ def generate_awards() -> list[dict[str, str]]:
     thumbs_row = hs_df[hs_df["thumbs"] == hs_df["thumbs"].max()]
     awards_list.append(
         {
-            "class": "thumbs-time",
+            "class": "thumbs",
             "name": '"Nice Guy"',
             "player_name": thumbs_row["player_name"].item(),
             "player_id": thumbs_row["player_id"].item(),
