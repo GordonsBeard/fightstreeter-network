@@ -516,29 +516,6 @@ class CFNStatsScraper:
 
         logger.info("Club stats updated for club_id: %s.", club_id)
 
-    # def sync_player_stats(self, player_id: str) -> None:
-    #     """Checks and verifies the cache for a player's stats."""
-
-    #     if not player_id:
-    #         sys.exit("player_id required!")
-
-    #     # print(f"Syncing player stats for ID: {player_id}")
-
-    #     self.player_id = player_id
-    #     stats_data: dict = self._fetch_json(Subject.STATS)
-
-    #     playtimes = stats_data["pageProps"]["play"]["base_info"][
-    #         "content_play_time_list"
-    #     ]
-
-    #     player_name: str = stats_data["pageProps"]["fighter_banner_info"][
-    #         "personal_info"
-    #     ]["fighter_id"]
-
-    #     print(f"{player_name} has played {extreme_playtime} of Extreme battles.")
-    #     print(f"{player_name} stats updated for {self.date}")
-    #     print()
-
     def sync_player_avatar(self, player_id: str) -> None:
         """Checks and verifies the cache for a player's avatar."""
 
@@ -576,8 +553,6 @@ class CFNStatsScraper:
             )
             sys.exit()
 
-        # print(f"Syncing player battlelog ({subject_type.name}) for {player_id}.")
-
         self.player_id = player_id
 
         self._full_battlelog = all_matches
@@ -598,7 +573,7 @@ class CFNStatsScraper:
                 break
 
             if self.page_number != 10:
-                time.sleep(2.5)  # todo, we dont need to sleep if it's cached data
+                time.sleep(1.5)  # todo, we dont need to sleep if it's cached data
             self.page_number += 1
 
         logger.debug("Match history pulled for player_id: %s", player_id)
