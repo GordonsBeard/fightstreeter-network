@@ -528,8 +528,13 @@ def update_member_list(club_id, debug_flag: bool) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print("No arguments supplied!")
-        print("-debug -new -club -hist -daily")
+        print("No arguments supplied! (-debug -new -club -hist -daily)")
+        print()
+        print("-debug:\tDoesn't actually execute SQL.")
+        print("-new:\tCreates db and intializes databases.")
+        print("-club:\tUpdates the club_members table with club overview .json")
+        print("-hist:\tPopulates database with previously downloaded cfn_stats.")
+        print("-daily:\tPopulates database with player stats from today.")
 
     DEBUG_FLAG = False
 

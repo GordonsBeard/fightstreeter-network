@@ -606,8 +606,13 @@ class CFNStatsScraper:
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print("Mising arguments:")
-        print("-debug -club -daily -matches -all")
+        print("Mising arguments: (-debug -club -daily -matches -all)")
+        print()
+        print("-debug:\t\tDownloads everything to /mock folder.")
+        print("-club:\t\tDownloads club overview.")
+        print("-daily:\t\tDownloads every club member's overview.json for today.")
+        print("-matches:\tDownloads every club member's matches for today.")
+        print("-matches:\tDownloads every club member's matches (all 10 pages).")
 
     DEBUG = False
 
