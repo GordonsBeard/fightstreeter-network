@@ -30,7 +30,6 @@ def generate_awards() -> list[dict[str, str]]:
     if len(hs_df.values) == 0:
         return awards_list
 
-    # battle hub
     bhub_matches_row = hs_df[hs_df["hub_matches"] == hs_df["hub_matches"].max()]
     awards_list.append(
         {
@@ -61,6 +60,83 @@ def generate_awards() -> list[dict[str, str]]:
             "player_name": ranked_matches_row["player_name"].item(),
             "player_id": ranked_matches_row["player_id"].item(),
             "value": f"{ranked_matches_row['ranked_matches'].item():,} ranked matches",
+        }
+    )
+
+    casual_matches_row = hs_df[hs_df["casual_matches"] == hs_df["casual_matches"].max()]
+    awards_list.append(
+        {
+            "class": "casual-matches",
+            "name": "No Strings Attached",
+            "player_name": casual_matches_row["player_name"].item(),
+            "player_id": casual_matches_row["player_id"].item(),
+            "value": f"{casual_matches_row['ranked_matches'].item():,} casual matches",
+        }
+    )
+
+    extreme_time_row = hs_df[hs_df["extreme_time"] == hs_df["extreme_time"].max()]
+    awards_list.append(
+        {
+            "class": "extreme-time",
+            "name": "X-Games Mode",
+            "player_name": extreme_time_row["player_name"].item(),
+            "player_id": extreme_time_row["player_id"].item(),
+            "value": f"{extreme_time_row['extreme_time'].item()/60:.0f} minutes of Extreme Battles",
+        }
+    )
+
+    versus_time_row = hs_df[hs_df["versus_time"] == hs_df["versus_time"].max()]
+    awards_list.append(
+        {
+            "class": "versus-time",
+            "name": "Touched Grass",
+            "player_name": versus_time_row["player_name"].item(),
+            "player_id": versus_time_row["player_id"].item(),
+            "value": f"{versus_time_row['versus_time'].item()/60/60:.0f} hours of local versus",
+        }
+    )
+
+    practice_time_row = hs_df[hs_df["practice_time"] == hs_df["practice_time"].max()]
+    awards_list.append(
+        {
+            "class": "practice-time",
+            "name": "Head Trainer",
+            "player_name": practice_time_row["player_name"].item(),
+            "player_id": practice_time_row["player_id"].item(),
+            "value": f"{practice_time_row['practice_time'].item()/60/60:.0f} hours of practice",
+        }
+    )
+
+    arcade_time_row = hs_df[hs_df["arcade_time"] == hs_df["arcade_time"].max()]
+    awards_list.append(
+        {
+            "class": "arcade-time",
+            "name": "Cabinet Critter",
+            "player_name": arcade_time_row["player_name"].item(),
+            "player_id": arcade_time_row["player_id"].item(),
+            "value": f"{arcade_time_row['arcade_time'].item()/60/60:.0f} hours of arcade",
+        }
+    )
+
+    wt_time_row = hs_df[hs_df["wt_time"] == hs_df["wt_time"].max()]
+    awards_list.append(
+        {
+            "class": "wt-time",
+            "name": "World (Tour) Warrior",
+            "player_name": wt_time_row["player_name"].item(),
+            "player_id": wt_time_row["player_id"].item(),
+            "value": f"{wt_time_row['wt_time'].item()/60/60:.0f} hours of World Tour",
+        }
+    )
+
+    thumbs_row = hs_df[hs_df["thumbs"] == hs_df["thumbs"].max()]
+    awards_list.append(
+        {
+            "class": "thumbs-time",
+            "name": '"Nice Guy"',
+            "player_name": thumbs_row["player_name"].item(),
+            "player_id": thumbs_row["player_id"].item(),
+            "value": f"{thumbs_row['thumbs'].item():,} 👍",
         }
     )
 
