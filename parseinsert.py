@@ -370,11 +370,18 @@ def build_historic_data(
         int(player_dict["fighter_banner_info"]["last_play_at"]),
         tz=ZoneInfo("America/Los_Angeles"),
     ).isoformat()
-    profile_tagline = ""  # TODO: have to parse {{mesage1}} from JSON code
     title_text = str(player_dict["fighter_banner_info"]["title_data"]["title_data_val"])
     title_plate = str(
         player_dict["fighter_banner_info"]["title_data"]["title_data_plate_name"]
     )
+
+    profile_tag_name = str(
+        player_dict["fighter_banner_info"]["profile_comment"]["profile_tag_name"]
+    )
+    profile_tag_option = str(
+        player_dict["fighter_banner_info"]["profile_comment"]["profile_tag_option"]
+    )
+    profile_tagline = profile_tag_name.replace("{{message1}}", profile_tag_option)
 
     return [
         HistoricStats(
