@@ -132,10 +132,8 @@ def club_ranking() -> str:
     )
 
     df["char_id"] = df["char_id"].replace(charid_map)
-    # df["date"] = pd.to_datetime(df["date"], format="ISO8601")
 
     unranked_ids: list[str] = []
-    ranked_players: list[PlayerRank] = []
     player_dfs: list[DataFrame] = []
 
     for player in FUNNY_ANIMALS:
@@ -144,6 +142,7 @@ def club_ranking() -> str:
             unranked_ids.append(player)
             continue
 
+        # pylint: disable-next=unused-variable
         newest_date = player_df.nlargest(1, "lp")["date"].values[0]
         newest_ranks_df = player_df.query("date == @newest_date")
         player_dfs.append(newest_ranks_df)
