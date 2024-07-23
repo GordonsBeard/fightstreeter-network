@@ -12,6 +12,7 @@ import plotly.graph_objects as go  # type: ignore[import-untyped]
 from flask import Flask, render_template
 from pandas import DataFrame
 
+from awards import generate_awards
 from constants import FUNNY_ANIMALS, charid_map, league_ranks
 from leaderboards import generate_leaderboards
 
@@ -103,10 +104,24 @@ def leaderboards() -> str:
 
     top_10_boards, top_10_grouped = generate_leaderboards()
 
+    awards_list = generate_awards()
+
+    # test data
+    # awards_list.append(
+    #     {
+    #         "class": "hub",
+    #         "name": "Hub Monster",
+    #         "player_name": "Scrub",
+    #         "player_id": "3425126856",
+    #         "value": "5,000 hub matches",
+    #     }
+    # )
+
     return render_template(
         "club_leaderboards.html",
         top_10_boards=top_10_boards,
         top_10_grouped=top_10_grouped,
+        awards_list=awards_list,
     )
 
 

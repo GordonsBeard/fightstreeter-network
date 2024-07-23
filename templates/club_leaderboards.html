@@ -195,10 +195,10 @@
             </boards>
             <cheers>
                 <a name="cheers"></a>
-                {% for award_dict in [{"class": "hub", "name": "Hub Monster", "player": "Scrub", "value": "5,000 hub matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}] %}
+                {% for award_dict in awards_list %}
                 <award class="{{award_dict['class']}}">
                     <p class="award-title">{{award_dict['name']}}</p>
-                    <p class="award-player">{{award_dict['player']}}</p>
+                    <p class="award-player">{{award_dict['player_name']}}</p>
                     <p class="award-value">{{award_dict['value']}}</p>
                 </award>
                 {% endfor %}
