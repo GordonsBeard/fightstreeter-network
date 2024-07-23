@@ -52,9 +52,11 @@
                             {% set mr = namespace(watcher=None) %}
                             {% for stat in top_10_boards["lp"] %}
                                 {% if stat.league_name != mr.watcher %}
+                                    {% if stat.league_name != "Master" %}
                                     <tr class="league-sep {{stat.class}}">
                                         <td colspan="4">{{stat.league_name}}</td>
                                     </tr>
+                                    {% endif %}
                                     {% set mr.watcher = stat.league_name %}
                                 {% endif %}
                                 <tr class="{{stat.class}}">
@@ -80,9 +82,11 @@
                             {% set mr = namespace(watcher=None) %}
                             {% for stat in top_10_grouped["lp"] %}
                                 {% if stat.league_name != mr.watcher %}
+                                    {% if stat.league_name != "Master" %}
                                     <tr class="league-sep {{stat.class}}">
                                         <td colspan="4">{{stat.league_name}}</td>
                                     </tr>
+                                    {% endif %}
                                     {% set mr.watcher = stat.league_name %}
                                 {% endif %}
                                 <tr class="{{stat.class}}">
