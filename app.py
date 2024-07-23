@@ -73,7 +73,8 @@ def player_stats(player_id: str, disp_name: str) -> str:
     )
 
     lp_fig.update_yaxes(
-        tickvals=list(league_ranks.keys()), ticktext=list(league_ranks.values())
+        tickvals=list(league_ranks.keys()),
+        ticktext=[x["name"] for x in league_ranks.values()],
     )
 
     lp_fig_html: str = lp_fig.to_html(full_html=False)
