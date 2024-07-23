@@ -78,7 +78,7 @@ def fetch_league_name(player_lp: int) -> dict[str, str]:
     """Returns the league dictionary with league name and css class."""
 
     for minrank, league in league_ranks.items():
-        if player_lp >= minrank:  # and minrank != -1:
+        if player_lp >= minrank:
             return league
 
     return league_ranks[-1]
