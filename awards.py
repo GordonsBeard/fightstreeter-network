@@ -22,12 +22,92 @@ def generate_awards() -> list[dict[str, str]]:
         ORDER BY date DESC"""
     )
 
+    latest_lp_scores: str = (
+        """SELECT r.date, r.player_id, cm.player_name, r.char_id, r.lp, r.mr
+        FROM ranking r
+        INNER JOIN club_members cm ON cm.player_id = r.player_id
+        WHERE date = (SELECT MAX(date) FROM ranking)
+        GROUP BY r.date, r.player_id, r.char_id;"""
+    )
+
+    inactive_player_scores: str = (
+        """SELECT hs.date, hs.player_id, hs.player_name, hs.selected_char as char_id, hs.lp, hs.mr
+        FROM historic_stats hs
+        WHERE date = (SELECT MAX(date) FROM historic_stats)
+        GROUP BY hs.date, hs.player_id, char_id;"""
+    )
+
     hs_df: pd.DataFrame = pd.read_sql_query(historic_stats_sql, conn)
+    hs_df["selected_char"] = hs_df["selected_char"].replace(charid_map)
+
+    # ranking table gets us the ranks from this phase
+    rank_df: pd.DataFrame = pd.read_sql_query(latest_lp_scores, conn)
+    rank_df["char_id"] = rank_df["char_id"].replace(charid_map)
+    rank_df["date"] = pd.to_datetime(rank_df["date"], format="ISO8601")
+
+    # historic stats table gets us the ranks of every player's current char (all phases)
+    inactive_df: pd.DataFrame = pd.read_sql_query(inactive_player_scores, conn)
+    inactive_df["char_id"] = inactive_df["char_id"].replace(charid_map)
+    inactive_df["date"] = pd.to_datetime(inactive_df["date"], format="ISO8601")
+    inactive_df = inactive_df[inactive_df["lp"] != -1]
+
+    # combine the two ranking tables to get a complete list of everyone's lp/mr
+    rank_df = pd.concat([inactive_df, rank_df]).drop_duplicates().reset_index(drop=True)
+
     conn.close()
 
-    basic_awards = generate_basic_awards(hs_df)
+    if len(hs_df.values) == 0:
+        return awards_list
 
+    basic_awards = generate_basic_awards(hs_df)
     awards_list += basic_awards
+
+    char_awards = generate_character_awards(hs_df, rank_df)
+    awards_list += char_awards
+
+    return awards_list
+
+
+def generate_character_awards(
+    hs_df: pd.DataFrame, rank_df: pd.DataFrame
+) -> list[dict[str, str]]:
+    """Generate awards based on character usage."""
+
+    awards_list: list[dict[str, str]] = []
+
+    # Most Popular Selected
+    pop_df = hs_df[["selected_char"]]
+    char_name = pop_df.value_counts().to_frame().idxmax().item()[0]
+    times_used = pop_df.value_counts().to_frame().max().item()
+    awards_list.append(
+        {
+            "class": "pop-char",
+            "name": "Most Popular",
+            "player_name": char_name,
+            "player_id": "",
+            "value": f"Currently played by {times_used} people",
+        }
+    )
+
+    # Least Popular Character
+    # this one might disappear relatively soon, consider a new way of measuring this
+    used_char_list = rank_df["char_id"].drop_duplicates().to_list()
+    all_char_list = list(charid_map.values())
+
+    unused_chars = [
+        char for char in all_char_list if char not in used_char_list and char.isalpha()
+    ]
+
+    if len(unused_chars) == 1:
+        awards_list.append(
+            {
+                "class": "unpop-char",
+                "name": "Needs Represendation",
+                "player_name": unused_chars[0],
+                "player_id": "",
+                "value": "Played by nobody in ranked...",
+            }
+        )
 
     return awards_list
 
@@ -35,12 +115,7 @@ def generate_awards() -> list[dict[str, str]]:
 def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
     """Returns the list of basic (non-calculated) awards."""
 
-    hs_df["selected_char"] = hs_df["selected_char"].replace(charid_map)
-
     awards_list: list[dict[str, str]] = []
-
-    if len(hs_df.values) == 0:
-        return awards_list
 
     bhub_matches_row = hs_df[hs_df["hub_matches"] == hs_df["hub_matches"].max()]
     awards_list.append(

@@ -107,17 +107,6 @@ def leaderboards() -> str:
 
     awards_list = generate_awards()
 
-    # test data
-    # awards_list.append(
-    #     {
-    #         "class": "hub",
-    #         "name": "Hub Monster",
-    #         "player_name": "Scrub",
-    #         "player_id": "3425126856",
-    #         "value": "5,000 hub matches",
-    #     }
-    # )
-
     return render_template(
         "club_leaderboards.html",
         top_10_boards=top_10_boards,
