@@ -1,8 +1,6 @@
 """Generates the LP/MR/Kudos leaderboards"""
 
 import sqlite3
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
 import pandas as pd
 
