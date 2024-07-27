@@ -19,9 +19,8 @@ this readme is for myself (older, more forgetful) or someone else completely (yo
 ## run the daily stats
 
 1. get the *cfn-secrets.py* tokens filled out
-2. python **./scraper.py** (gets the .json downloaded for today)
-3. python **./parseinsert.py** (inserts the info to the database)
-    a. this also updates the club userlist
+2. python **./scraper.py -daily -club -matches** (gets the .json downloaded for today)
+3. python **./parseinsert.py -daily -club** (inserts the info to the database)
 
 ## notes that complicate it
 
