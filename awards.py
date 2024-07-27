@@ -1,5 +1,6 @@
 """Generate the awards for today."""
 
+import random
 import sqlite3
 
 import pandas as pd
@@ -171,8 +172,22 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
             "value": f"{extreme_time_row['extreme_time'].item()/60:.0f} minutes of Extreme Battles",
         }
     )
+    geight_time = hs_df[hs_df["player_id"] == "2251667984"]["versus_time"].item()
+    dos_time = hs_df[hs_df["player_id"] == "2531364579"]["versus_time"].item()
+    newest_date = hs_df[hs_df["date"] == hs_df["date"].max()]["date"].values[0]
 
+    dos_geight_name = "Geight & Dos" if random.random() > 0.5 else "Dos & Geight"
+
+    geight_n_dos = {
+        "date": newest_date,
+        "player_id": "1234567890",
+        "player_name": dos_geight_name,
+        "versus_time": dos_time + geight_time,
+    }
+
+    hs_df = pd.concat([hs_df, pd.DataFrame([geight_n_dos])], ignore_index=True)
     versus_time_row = hs_df[hs_df["versus_time"] == hs_df["versus_time"].max()]
+
     awards_list.append(
         {
             "class": "versus-time",
@@ -223,7 +238,7 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
             "name": '"Nice Guy"',
             "player_name": thumbs_row["player_name"].item(),
             "player_id": thumbs_row["player_id"].item(),
-            "value": f"{thumbs_row['thumbs'].item():,} 👍",
+            "value": f"{int(thumbs_row['thumbs'].item()):,} 👍",
         }
     )
 
