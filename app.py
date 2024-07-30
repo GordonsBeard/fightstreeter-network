@@ -23,14 +23,38 @@ app = Flask(__name__)
 def index() -> str:
     """index/home"""
     conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT player_name, player_id FROM club_members WHERE club_id='c984cc7ce8cd44b9a209e984a73d0c9e'"
+
+    inactive_player_scores: str = (
+        """SELECT hs.date, hs.player_id, hs.player_name, hs.selected_char as char_id, hs.selected_char as char_name, hs.lp, hs.mr
+        FROM historic_stats hs
+        WHERE date = (SELECT MAX(date) FROM historic_stats)
+        GROUP BY hs.date, hs.player_id
+        ORDER BY hs.player_name COLLATE NOCASE;"""
     )
 
-    member_list = [(x[0], x[1]) for x in cur.fetchall()]
+    # historic stats table gets us the ranks of every player's current char (all phases)
+    inactive_df: pd.DataFrame = pd.read_sql_query(inactive_player_scores, conn)
+    inactive_df["char_name"] = inactive_df["char_id"].replace(charid_map)
+    inactive_df["date"] = pd.to_datetime(inactive_df["date"], format="ISO8601")
 
-    return render_template("index.html", member_list=member_list)
+    conn.close()
+
+    print(inactive_df)
+
+    member_list = [
+        (
+            player_id,
+            player_name,
+            char_name.lower().replace(" ", "").replace(".", ""),
+            lp,
+        )
+        for _, player_id, player_name, char_id, char_name, lp, _ in inactive_df.values
+    ]
+
+    return render_template(
+        "index.html",
+        member_list=member_list,
+    )
 
 
 @app.route("/u/<string:player_id>/<string:disp_name>")
@@ -60,7 +84,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
 
     df["date"] = pd.to_datetime(df["date"], format="ISO8601")
 
-    df = df[df["date"] > last_30_days]  # currently pulls data from last 30 days
+    # df = df[df["date"] > last_30_days]  # currently pulls data from last 30 days
 
     lp_fig = px.line(
         df,
@@ -77,10 +101,12 @@ def player_stats(player_id: str, disp_name: str) -> str:
         ticktext=[x["name"] for x in league_ranks.values()],
     )
 
+    # lp_fig_html: str = lp_fig.to_html(full_html=False)
     lp_fig_html: str = lp_fig.to_html(full_html=False)
 
-    df = df.where(df["mr"] > 0)
+    mr_fig_html: str = ""
 
+    df = df[df["mr"] > 0]
     if len(df["mr"]) > 0:
         mr_fig = px.line(
             df,
@@ -92,7 +118,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
             line_shape="spline",
         )
 
-        mr_fig_html: str = mr_fig.to_html(full_html=False)
+        mr_fig_html = mr_fig.to_html(full_html=False)
 
     return render_template(
         "player_lp_history.html", lp_fig=lp_fig_html, mr_fig=mr_fig_html

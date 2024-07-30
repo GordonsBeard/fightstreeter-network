@@ -5,17 +5,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <title>Index</title>
+        <title>FunnyAnimals Stats</title>
     </head>
     <body>
-        <div class="container">
-            <member-list>
-                {% for name, id in member_list %}
-                    <member>
-                        <a href="/u/{{id}}/{{name}}">{{name}}</a>
-                    </member>
-                {% endfor %}
-            </member-list>
-        </div>
+        <h1>Funny Animals Fighting Fans Statistics</h1>
+        <p>We are the Funny Animals and we are here to make you think about strength and have fun and stuff!</p>
+        <h3>Members:</h3>
+        <member-list>
+            {% for id, name, char_name, lp in member_list %}
+            <member class="{{char_name}}">
+                <a href="/u/{{id}}/{{name}}">{{name}}</a>
+            </member>
+        {% endfor %}
+        </member-list>
     </body>
 </html>
