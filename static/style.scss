@@ -28,6 +28,27 @@ h3 {
     padding: 4px 4px 8px 4px;
 }
 
+header {
+    display: flex;
+    justify-content: center;
+    background-color: #222;
+
+    navigation {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+
+        a {
+            background-color: $sec-text;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 6px;
+            margin-inline: 8px;
+            color: #100;
+        }
+    }
+}
+
 member-list {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
