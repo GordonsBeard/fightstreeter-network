@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='leaderboards.css') }}">
-    <script src="{{ url_for('static', filename='leaderboards.js') }}"></script>
+    <link rel="stylesheet" href="static/leaderboards.css">
+    <script src="static/leaderboards.js"></script>
 {% endblock %}
 {% block title %}The Board{% endblock %}
 {% block content %}
@@ -186,7 +186,6 @@
                         </tbody>
                     </table>
                 </board>
-
             </ranking-boards>
         </boards>
         <cheers>
@@ -199,15 +198,5 @@
             </award>
             {% endfor %}
         </cheers>
-        <!-- <jeers>
-            <a name="jeers"></a>
-            {% for award_dict in [{"class": "hub", "name": "Least Played Char", "player": "M. Bison", "value": "0 players"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}, {"class": "hub", "name": "Award Title", "player": "Scrub", "value": "5,000 matches"}] %}
-            <award class="{{award_dict['class']}}">
-                <p class="award-title">{{award_dict['name']}}</p>
-                <p class="award-player">{{award_dict['player']}}</p>
-                <p class="award-value">{{award_dict['value']}}</p>
-            </award>
-            {% endfor %}
-        </jeers> -->
     </leaderboards>
 {% endblock %}

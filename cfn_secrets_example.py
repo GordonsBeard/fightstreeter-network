@@ -11,3 +11,6 @@ DEFAULT_CLUB_ID: str = "c984cc7ce8cd44b9a209e984a73d0c9e"  # FunnyAnimals
 # https://www.streetfighter.com/6/buckler/_next/data/{URL_TOKEN_HERE}/en/profile/{PLAYER_ID_HERE}/play.json?sid={PLAYER_ID_HERE}
 
 URL_TOKEN: str = "AAABBBCCCDDD"
+
+# Notification channel (https://notify.run/)
+NOTIFY_CHANNEL: str = "aaabbb333eeewwwDDDD"

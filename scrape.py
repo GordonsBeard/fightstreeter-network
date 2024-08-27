@@ -10,6 +10,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import requests
+from notify_run import Notify  # type: ignore
 
 import cfn_secrets
 import cookieread
@@ -18,6 +19,10 @@ from constants import FUNNY_ANIMALS
 logging.basicConfig()
 logger = logging.getLogger("cfn-stats-scrape")
 logger.setLevel(logging.INFO)
+
+MISSING_ID_MATCHES = "Missing player_id, cannot build request url for matches."
+MISSING_ID_DATA = "Missing player_id, cannot build request url for data."
+MISSING_CLUB_ID = "Missing club_id, cannot build reqeuest url for data."
 
 
 class Subject(Enum):
@@ -50,6 +55,7 @@ class CFNStatsScraper:
         self._page_no: int = 1
         self._full_battlelog: bool = False
         self._no_more_fetch: bool = False
+        self.notify = Notify(cfn_secrets.NOTIFY_CHANNEL)
 
         base_cache_dir: str = (
             f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
@@ -61,6 +67,10 @@ class CFNStatsScraper:
 
         if debug_flag:
             logger.setLevel(logging.DEBUG)
+
+    def send_push_alert(self, message) -> None:
+        """This will send a notify.run alert."""
+        self.notify.send(message)
 
     @property
     def player_id(self) -> str:
@@ -168,7 +178,8 @@ class CFNStatsScraper:
         match subject:
             case Subject.OVERVIEW:
                 if not self.player_id:
-                    sys.exit("Missing player_id, cannot build request url for data.")
+                    self.send_push_alert(MISSING_ID_DATA)
+                    sys.exit(MISSING_ID_DATA)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -177,7 +188,8 @@ class CFNStatsScraper:
                 )
             case Subject.CLUB:
                 if not self.club_id:
-                    sys.exit("Missing club_id, cannot build reqeuest url for data.")
+                    self.send_push_alert(MISSING_CLUB_ID)
+                    sys.exit(MISSING_CLUB_ID)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -186,7 +198,8 @@ class CFNStatsScraper:
                 )
             case Subject.STATS:
                 if not self.player_id:
-                    sys.exit("Missing player_id, cannot build request url for data.")
+                    self.send_push_alert(MISSING_ID_DATA)
+                    sys.exit(MISSING_ID_DATA)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -195,7 +208,8 @@ class CFNStatsScraper:
                 )
             case Subject.AVATAR:
                 if not self.player_id:
-                    sys.exit("Missing player_id, cannot build request url for data.")
+                    self.send_push_alert(MISSING_ID_DATA)
+                    sys.exit(MISSING_ID_DATA)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -204,7 +218,8 @@ class CFNStatsScraper:
                 )
             case Subject.ALL_MATCHES:
                 if not self.player_id:
-                    sys.exit("Missing player_id, cannot build request url for matches.")
+                    self.send_push_alert(MISSING_ID_MATCHES)
+                    sys.exit(MISSING_ID_MATCHES)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -213,7 +228,8 @@ class CFNStatsScraper:
                 )
             case Subject.RANKED_MATCHES:
                 if not self.player_id:
-                    sys.exit("Missing player_id, cannot build request url for matches.")
+                    self.send_push_alert(MISSING_ID_MATCHES)
+                    sys.exit(MISSING_ID_MATCHES)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -222,7 +238,8 @@ class CFNStatsScraper:
                 )
             case Subject.CASUAL_MATCHES:
                 if not self.player_id:
-                    sys.exit("Missing player_id, cannot build request url for matches.")
+                    self.send_push_alert(MISSING_ID_MATCHES)
+                    sys.exit(MISSING_ID_MATCHES)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -231,7 +248,8 @@ class CFNStatsScraper:
                 )
             case Subject.CUSTOM_MATCHES:
                 if not self.player_id:
-                    sys.exit("Missing player_id, cannot build request url for matches.")
+                    self.send_push_alert(MISSING_ID_MATCHES)
+                    sys.exit(MISSING_ID_MATCHES)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -240,7 +258,8 @@ class CFNStatsScraper:
                 )
             case Subject.HUB_MATCHES:
                 if not self.player_id:
-                    sys.exit("Missing player_id, cannot build request url for matches.")
+                    self.send_push_alert(MISSING_ID_MATCHES)
+                    sys.exit(MISSING_ID_MATCHES)
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
@@ -264,6 +283,9 @@ class CFNStatsScraper:
         if self.date.date() < datetime.today().date():
             logger.error(
                 "[ERROR] Cannot request new data from a time before today! Halting."
+            )
+            self.send_push_alert(
+                "Cannot request new data from a time before today! Halting."
             )
             sys.exit()
 
@@ -300,8 +322,10 @@ class CFNStatsScraper:
         logger.debug("Url attempted: %s", response.url)
 
         if response.status_code != 200:
-            logger.error("Bad request! Status code: %d", response.status_code)
-            sys.exit("")
+            bad_request: str = f"Bad request! Status code: {response.status_code}"
+            logger.error(bad_request)
+            self.send_push_alert(bad_request)
+            sys.exit()
 
         json_data: dict = response.json()
 
@@ -314,13 +338,17 @@ class CFNStatsScraper:
         """Does sanity checks on the keys expected in the json data."""
 
         if not json_data:
-            logger.error("%s json is empty. Aborting.", subject.name)
+            empty_json: str = f"{subject.name} json is empty. Aborting."
+            logger.error(empty_json)
+            self.send_push_alert(empty_json)
             sys.exit()
 
         if "pageProps" not in json_data:
-            logger.error(
-                "%s json is missing root 'pageProps' element. Aborting.", subject.name
+            missing_props: str = (
+                "{subject.name} json is missing root 'pageProps' element. Aborting."
             )
+            logger.error(missing_props)
+            self.send_push_alert(missing_props)
             sys.exit()
 
         req_profile_keys: list[str] = ["fighter_banner_info", "play"]
@@ -328,10 +356,11 @@ class CFNStatsScraper:
         match subject:
             case Subject.OVERVIEW:
                 if not all(k in json_data["pageProps"] for k in req_profile_keys):
-                    logger.error(
-                        "%s json is missing a required stats key. Aborting.",
-                        subject.name,
+                    missing_key: str = (
+                        "{subject.name} json is missing a required stats key. Aborting."
                     )
+                    logger.error(missing_key)
+                    self.send_push_alert(missing_key)
                     sys.exit()
                 req_ov_keys: list[str] = [
                     "base_info",
@@ -344,10 +373,12 @@ class CFNStatsScraper:
                     "season_ids",
                 ]
                 if not all(k in json_data["pageProps"]["play"] for k in req_ov_keys):
-                    sys.exit(
-                        f"{subject.name} data is incomplete, missing keys in 'play' "
-                        "section. Aborting."
+                    data_incomplete: str = (
+                        f"{subject.name} data is incomplete, missing keys in 'play' section. Aborting."
                     )
+                    self.send_push_alert(data_incomplete)
+                    logger.error(data_incomplete)
+                    sys.exit()
             case Subject.CLUB:
                 req_club_keys: list[str] = [
                     "circle_base_info",
@@ -355,17 +386,19 @@ class CFNStatsScraper:
                     "circle_timeline_list",
                 ]
                 if not all(k in json_data["pageProps"] for k in req_club_keys):
-                    logger.error(
-                        "%s json is missing a required stats key. Aborting.",
-                        subject.name,
+                    missing_keys: str = (
+                        f"{subject.name} json is missing a required stats key. Aborting."
                     )
+                    logger.error(missing_keys)
+                    self.send_push_alert(missing_keys)
                     sys.exit()
             case Subject.STATS:
                 if not all(k in json_data["pageProps"] for k in req_profile_keys):
-                    logger.error(
-                        "%s json is missing a required stats key. Aborting.",
-                        subject.name,
+                    missing_prof: str = (
+                        f"{subject.name} json is missing a required stats key. Aborting."
                     )
+                    logger.error(missing_prof)
+                    self.send_push_alert(missing_prof)
                     sys.exit()
                 req_battle_keys: list[str] = [
                     "base_info",
@@ -380,16 +413,20 @@ class CFNStatsScraper:
                 if not all(
                     k in json_data["pageProps"]["play"] for k in req_battle_keys
                 ):
-                    sys.exit(
+                    missing_play: str = (
                         f"{subject.name} json is missing a required play key. Aborting."
                     )
+                    self.send_push_alert(missing_play)
+                    logger.error(missing_play)
+                    sys.exit()
             case Subject.AVATAR:
                 req_av_keys: list[str] = ["avatar", "fighter_banner_info"]
                 if not all(k in json_data["pageProps"] for k in req_av_keys):
-                    logger.error(
-                        "%s json is missing a required avatar key. Aborting.",
-                        subject.name,
+                    missing_avkey: str = (
+                        f"{subject.name} json is missing a required avatar key. Aborting."
                     )
+                    logger.error(missing_avkey)
+                    self.send_push_alert(missing_avkey)
                     sys.exit()
                 req_av_props: list[str] = [
                     "equiped_style",
@@ -400,10 +437,11 @@ class CFNStatsScraper:
                     "style_list",
                 ]
                 if not all(k in json_data["pageProps"]["avatar"] for k in req_av_props):
-                    logger.error(
-                        "%s json is missing a required avatar properties. Halting.",
-                        subject.name,
+                    missing_props: str = (
+                        f"{subject.name} json is missing a required avatar properties. Halting."
                     )
+                    logger.error(missing_props)
+                    self.send_push_alert(missing_props)
                     sys.exit()
             case (
                 Subject.ALL_MATCHES
@@ -413,10 +451,11 @@ class CFNStatsScraper:
                 | Subject.HUB_MATCHES
             ):
                 if "replay_list" not in json_data["pageProps"]:
-                    logger.error(
-                        "%s json is missing replay_list property. Halting.",
-                        subject.name,
+                    missing_replay: str = (
+                        f"{subject.name} json is missing replay_list property. Halting."
                     )
+                    logger.error(missing_replay)
+                    self.send_push_alert(missing_replay)
                     sys.exit()
                 if len(json_data["pageProps"]["replay_list"]) == 0:
                     logger.debug(
@@ -589,7 +628,7 @@ if __name__ == "__main__":
         print("-club:\t\tDownloads club overview.")
         print("-daily:\t\tDownloads every club member's overview.json for today.")
         print("-matches:\tDownloads every club member's matches for today.")
-        print("-matches:\tDownloads every club member's matches (all 10 pages).")
+        print("--all:\tDownloads every club member's matches (all 10 pages).")
 
     DEBUG = False
 
@@ -615,7 +654,7 @@ if __name__ == "__main__":
                     Subject.CUSTOM_MATCHES,
                     Subject.HUB_MATCHES,
                 ]:
-                    if "-all" in sys.argv[1:]:
+                    if "--all" in sys.argv[1:]:
                         cfn_scraper.sync_battlelog(
                             player_id=player,
                             subject_type=match_type,
@@ -627,3 +666,6 @@ if __name__ == "__main__":
                             subject_type=match_type,
                             all_matches=False,
                         )
+        cfn_scraper.send_push_alert(
+            f"CFN stats downloaded for {datetime.today().date().strftime('%b %d %Y')}"
+        )

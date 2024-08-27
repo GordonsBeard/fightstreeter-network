@@ -39,8 +39,6 @@ def index() -> str:
 
     conn.close()
 
-    print(inactive_df)
-
     member_list = [
         (
             player_id,
