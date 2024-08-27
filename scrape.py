@@ -437,11 +437,11 @@ class CFNStatsScraper:
                     "style_list",
                 ]
                 if not all(k in json_data["pageProps"]["avatar"] for k in req_av_props):
-                    missing_props: str = (
+                    missing_avprops: str = (
                         f"{subject.name} json is missing a required avatar properties. Halting."
                     )
-                    logger.error(missing_props)
-                    self.send_push_alert(missing_props)
+                    logger.error(missing_avprops)
+                    self.send_push_alert(missing_avprops)
                     sys.exit()
             case (
                 Subject.ALL_MATCHES
