@@ -10,6 +10,10 @@ import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from notify_run import Notify  # type: ignore
+
+import cfn_secrets
+
 now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
 
 historical_dates: list[datetime.datetime] = [
@@ -42,6 +46,8 @@ historical_dates: list[datetime.datetime] = [
 logging.basicConfig()
 logger = logging.getLogger("cfn-stats-scrape")
 logger.setLevel(logging.INFO)
+
+notify = Notify(cfn_secrets.NOTIFY_CHANNEL)
 
 
 @dataclasses.dataclass
@@ -164,6 +170,7 @@ def create_tables(debug_flag: bool):
 
             conn.commit()
     except sqlite3.Error as e:
+        notify.send(f"Error in table creation.")
         logger.error(e)
 
     logger.debug("Tables successfully created. [SUCCESS]")
@@ -199,6 +206,7 @@ def insert_rankings_into_db(record: RecordedLP, debug_flag: bool) -> None:
             conn.commit()
             cursor.close()
     except sqlite3.Error as e:
+        notify.send(f"Error in inserting record into db: {record}")
         logger.error(e)
 
 
@@ -252,6 +260,7 @@ def insert_historic_stats_into_db(record: HistoricStats, debug_flag: bool) -> No
             conn.commit()
             cursor.close()
     except sqlite3.Error as e:
+        notify.send(f"Error in inserting data into historic_stats: {record}")
         logger.error(e)
 
 
@@ -407,7 +416,7 @@ def build_historic_data(
             total_kudos,
             thumbs,
             last_played,
-            profile_tagline,  # empty for now
+            profile_tagline,
             title_text,
             title_plate,
         )
@@ -558,3 +567,6 @@ if __name__ == "__main__":
     if "-daily" in sys.argv[1:]:
         logger.debug("**** DAILY RUN")
         update_stats_for_date(now_datetime, debug_flag=DEBUG_FLAG)
+        notify.send(
+            f"CFN stats inserted for {datetime.datetime.today().date().strftime('%b %d %Y')}"
+        )
