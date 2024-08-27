@@ -47,8 +47,6 @@ logging.basicConfig()
 logger = logging.getLogger("cfn-stats-scrape")
 logger.setLevel(logging.INFO)
 
-notify = Notify(cfn_secrets.NOTIFY_CHANNEL)
-
 
 @dataclasses.dataclass
 class RecordedLP:
@@ -536,6 +534,8 @@ def update_member_list(club_id, debug_flag: bool) -> None:
 
 
 if __name__ == "__main__":
+    notify = Notify(cfn_secrets.NOTIFY_CHANNEL)
+
     if len(sys.argv) == 1:
         print("No arguments supplied! (-debug -new -club -hist -daily)")
         print()
