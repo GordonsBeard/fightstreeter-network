@@ -169,7 +169,7 @@ def create_tables(debug_flag: bool):
 
             conn.commit()
     except sqlite3.Error as e:
-        notify.send(f"Error in table creation.")
+        notify.send("Error in table creation.")
         logger.error(e)
 
     logger.debug("Tables successfully created. [SUCCESS]")
