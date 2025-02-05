@@ -106,6 +106,12 @@ def create_tables(debug_flag: bool):
     logger.debug("Creating tables")
 
     sql_statements = [
+        """CREATE TABLE IF NOT EXISTS last_update (
+            date TIMESTAMP PRIMARY KEY,
+            status INTEGER DEFAULT 0 NOT NULL,
+            download_complete INTEGER DEFAULT 0 NOT NULL,
+            parsing_complete INTEGER DEFAULT 0 NOT NULL,
+            current_phase INTEGER NOT NULL);""",
         """CREATE TABLE IF NOT EXISTS club_members (
             club_id TEXT NOT NULL,
             player_name TEXT NOT NULL,
