@@ -113,11 +113,11 @@
                         <tbody>
                         {% set mr = namespace(watcher=None) %}
                         {% for stat in top_10_boards["mr"] %}
-                        {% if stat.league_name != lp.watcher %}
+                        {% if stat.league_name != mr.watcher %}
                             <tr class="league-sep {{stat.class}}">
                                 <td colspan="4">{{stat.league_name}}</td>
                             </tr>
-                            {% set lp.watcher = stat.league_name %}
+                            {% set mr.watcher = stat.league_name %}
                         {% endif %}
                         <tr class="{{stat.class}}">
                             <td>{{stat.rank}}</td>
@@ -139,13 +139,13 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% set mr = namespace(watcher=None) %}
+                        {% set mra = namespace(watcher=None) %}
                         {% for stat in top_10_boards["mr"] %}
-                        {% if stat.league_name != lp.watcher %}
+                        {% if stat.league_name != mra.watcher %}
                             <tr class="league-sep {{stat.class}}">
                                 <td colspan="4">{{stat.league_name}}</td>
                             </tr>
-                            {% set lp.watcher = stat.league_name %}
+                            {% set mra.watcher = stat.league_name %}
                         {% endif %}
                         <tr class="{{stat.class}}">
                             <td>{{loop.index}}</td>
