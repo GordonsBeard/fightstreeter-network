@@ -2,6 +2,7 @@
 
 import dataclasses
 import datetime
+import glob
 import json
 import logging
 import os
@@ -13,36 +14,30 @@ from zoneinfo import ZoneInfo
 from notify_run import Notify  # type: ignore
 
 import cfn_secrets
-from last_updated import log_last_update
+from last_updated import log_last_update, start_last_update
 
-now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
+now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles")).replace(
+    microsecond=0, second=0, minute=0, hour=12
+)
 
-historical_dates: list[datetime.datetime] = [
-    datetime.datetime(2024, 7, 21, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 20, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 19, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 18, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 17, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 16, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 15, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 14, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 13, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 12, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 11, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 10, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 9, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 8, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 7, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 6, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 5, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 2, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    datetime.datetime(2024, 7, 1, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    # first snags, very few players
-    # datetime.datetime(2024, 5, 13, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    # datetime.datetime(2024, 1, 12, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    # datetime.datetime(2024, 1, 10, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
-    # datetime.datetime(2023, 12, 24, 0, 0, 0, 0, ZoneInfo("America/Los_Angeles")),
+dates_to_restore = [
+    x.replace("cfn_stats\\", "").split("\\") for x in glob.glob("cfn_stats/20*/*/*")
 ]
+historical_dates = []
+
+for date in dates_to_restore:
+    historical_dates.append(
+        datetime.datetime(
+            int(date[0]),
+            int(date[1]),
+            int(date[2]),
+            12,
+            0,
+            0,
+            0,
+            ZoneInfo("America/Los_Angeles"),
+        )
+    )
 
 logging.basicConfig()
 logger = logging.getLogger("cfn-stats-scrape")
@@ -429,7 +424,9 @@ def rebuild_database_from_local(debug_flag: bool) -> None:
     logger.debug("Attempting %d days of past data.", len(historical_dates))
 
     for hist_date in historical_dates:
+        start_last_update(hist_date)
         update_stats_for_date(hist_date, debug_flag)
+        log_last_update(date=hist_date, parsing_complete=True, download_complete=True)
 
 
 def update_stats_for_date(req_date: datetime.datetime, debug_flag: bool) -> None:
@@ -444,6 +441,8 @@ def update_stats_for_date(req_date: datetime.datetime, debug_flag: bool) -> None
         return
 
     # all_player_json: dict[str, dict] = {}
+
+    ## CHECK IF DATA IS NEEDED TO BE ENTERED
 
     for player_id in player_stat_dirs:
         logger.debug("Going through player_id: %s", player_id)
@@ -483,12 +482,12 @@ def update_member_list(club_id, debug_flag: bool) -> None:
 
     # Initialize the club members and put Shay first because he's not in the club
     member_list: list[tuple[str, str, str | None, int]] = [
-        (
-            "Shaymoo",
-            "3022660117",
-            None,
-            3,
-        )
+        # (
+        #     "Shaymoo",
+        #     "3022660117",
+        #     None,
+        #     3,
+        # )
     ]
 
     try:

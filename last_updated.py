@@ -35,7 +35,6 @@ def start_last_update(date) -> None:
 
 def log_last_update(date, download_complete=False, parsing_complete=False) -> None:
     """Lets the scraper or parser signal when they're done."""
-    print(date)
     table_name = "cfn-stats.db"
 
     try:
