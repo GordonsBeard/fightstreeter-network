@@ -16,21 +16,45 @@ from notify_run import Notify  # type: ignore
 import cfn_secrets
 from last_updated import log_last_update, start_last_update
 
+logging.basicConfig()
+logger = logging.getLogger("cfn-stats-scrape")
+logger.setLevel(logging.INFO)
+notify = Notify(cfn_secrets.NOTIFY_CHANNEL)
+
 now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles")).replace(
     microsecond=0, second=0, minute=0, hour=12
 )
 
-dates_to_restore = [
-    x.replace("cfn_stats\\", "").split("\\") for x in glob.glob("cfn_stats/20*/*/*")
-]
+
+def split_all(path) -> list[str]:
+    """Stolen code that splits the path instead of learning a smart way of doing this"""
+    allparts: list[str] = []
+
+    while True:
+        parts = os.path.split(path)
+        if parts[0] == path:
+            allparts.insert(0, parts[0])
+            break
+        if parts[1] == path:
+            allparts.insert(0, parts[1])
+            break
+        path = parts[0]
+        allparts.insert(0, parts[1])
+
+    return allparts
+
+
+cfn_path = os.path.join("cfn_stats", "20*", "*", "*")
+dates_to_restore = list(glob.glob(cfn_path))
 historical_dates = []
 
 for date in dates_to_restore:
+    date_vals = split_all(date)
     historical_dates.append(
         datetime.datetime(
-            int(date[0]),
-            int(date[1]),
-            int(date[2]),
+            int(date_vals[1]),
+            int(date_vals[2]),
+            int(date_vals[3]),
             12,
             0,
             0,
@@ -38,11 +62,6 @@ for date in dates_to_restore:
             ZoneInfo("America/Los_Angeles"),
         )
     )
-
-logging.basicConfig()
-logger = logging.getLogger("cfn-stats-scrape")
-logger.setLevel(logging.INFO)
-notify = Notify(cfn_secrets.NOTIFY_CHANNEL)
 
 
 @dataclasses.dataclass
