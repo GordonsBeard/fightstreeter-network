@@ -1,17 +1,18 @@
+__pycache__
 __pycache__/*.*
 **.pyc
+.vscode
 .vscode/*.*
 env
 *.db
 
-cfn_secrets.py
 cfn_stats/
+output_html
 notes/
+cfn_secrets.py
 cookies.txt
 
 static/style.css
 static/style.css.map
 static/leaderboards.css
 static/leaderboards.css.map
-
-output_html/*
