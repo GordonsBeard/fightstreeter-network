@@ -4,7 +4,12 @@ import sqlite3
 
 import pandas as pd
 
-from constants import charid_map, fetch_league_name, get_kudos_class, get_mr_class
+from constants import (
+    charid_map,
+    fetch_league_name,
+    fetch_mr_league_name,
+    get_kudos_class,
+)
 
 
 def generate_leaderboards() -> (
@@ -103,12 +108,13 @@ def generate_mr_board(
 
         all_10_mr.append(
             {
-                "class": get_mr_class(mr),
+                "class": fetch_mr_league_name(mr)["class"],
                 "player_name": player_name,
                 "player_id": player_id,
                 "char_id": char_id,
                 "value": mr,
                 "rank": display_mr_rank,
+                "league_name": fetch_mr_league_name(mr)["name"],
             }
         )
 
@@ -117,11 +123,12 @@ def generate_mr_board(
 
             group_10_mr.append(
                 {
-                    "class": get_mr_class(mr),
+                    "class": fetch_mr_league_name(mr)["class"],
                     "player_name": player_name,
                     "player_id": player_id,
                     "char_id": char_id,
                     "value": mr,
+                    "league_name": fetch_mr_league_name(mr)["name"],
                 }
             )
 

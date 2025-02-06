@@ -73,6 +73,14 @@ league_ranks: dict[int, dict[str, str]] = {
     -1: {"name": "New Challenger", "class": "nc"},
 }
 
+mr_league_ranks: dict[int, dict[str, str]] = {
+    1800: {"name": "Ultimate Master", "class": "mr-ult"},
+    1700: {"name": "Grand Master", "class": "mr-grand"},
+    1600: {"name": "High Master", "class": "mr-high"},
+    0: {"name": "Master", "class": "mr-def"},
+    -1: {"name": "New Master", "class": "nc"},
+}
+
 
 def fetch_league_name(player_lp: int) -> dict[str, str]:
     """Returns the league dictionary with league name and css class."""
@@ -84,25 +92,31 @@ def fetch_league_name(player_lp: int) -> dict[str, str]:
     return league_ranks[-1]
 
 
-def get_mr_class(mr) -> str:
-    """Takes the players LP and returns the appropriate class name for HTML colors."""
+def fetch_mr_league_name(player_mr: int) -> dict[str, str]:
+    """Returns the league name for Master rank."""
 
-    class_name = ""
+    for minrank, league in mr_league_ranks.items():
+        if player_mr >= minrank:
+            return league
 
-    if 0 <= mr < 1500:
-        class_name = "mr-low"
-    elif mr == 1500:
-        class_name = "mr-15"
-    elif 1500 <= mr < 1600:
-        class_name = "mr-16"
-    elif 1600 <= mr < 1700:
-        class_name = "mr-17"
-    elif 1700 <= mr < 1800:
-        class_name = "mr-18"
-    elif 1800 <= mr:
-        class_name = "mr-high"
+    return mr_league_ranks[-1]
 
-    return class_name
+    # class_name = ""
+
+    # high = 1400  # 1600
+    # grand = 1505  # 1700
+    # ult = 1540  # 1800
+
+    # if player_mr < high:
+    #     class_name = "mr-def"
+    # elif high <= player_mr < grand:
+    #     class_name = "mr-high"
+    # elif grand <= player_mr < ult:
+    #     class_name = "mr-grand"
+    # elif ult <= player_mr:
+    #     class_name = "mr-ult"
+
+    # return class_name
 
 
 def get_kudos_class(kudos) -> str:

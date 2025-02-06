@@ -11,7 +11,6 @@
             <last-updated>
                 <p class="last-updated">{{ last_updated }}</p>
             </last-updated>
-        
             <a name="podium"></a>
             <podium_grid>
                 <div class="first-info av">{{ top_10_boards["mr"][0].player_name }}</div>
@@ -49,15 +48,15 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% set mr = namespace(watcher=None) %}
+                        {% set lpa = namespace(watcher=None) %}
                         {% for stat in top_10_boards["lp"] %}
-                            {% if stat.league_name != mr.watcher %}
+                            {% if stat.league_name != lpa.watcher %}
                                 {% if stat.league_name != "Master" %}
                                 <tr class="league-sep {{stat.class}}">
                                     <td colspan="4">{{stat.league_name}}</td>
                                 </tr>
                                 {% endif %}
-                                {% set mr.watcher = stat.league_name %}
+                                {% set lpa.watcher = stat.league_name %}
                             {% endif %}
                             <tr class="{{stat.class}}">
                                 <td>{{stat.rank}}</td>
@@ -112,7 +111,14 @@
                         </tr>
                         </thead>
                         <tbody>
+                        {% set mr = namespace(watcher=None) %}
                         {% for stat in top_10_boards["mr"] %}
+                        {% if stat.league_name != lp.watcher %}
+                            <tr class="league-sep {{stat.class}}">
+                                <td colspan="4">{{stat.league_name}}</td>
+                            </tr>
+                            {% set lp.watcher = stat.league_name %}
+                        {% endif %}
                         <tr class="{{stat.class}}">
                             <td>{{stat.rank}}</td>
                             <td>{{stat.player_name}}</td>
@@ -133,7 +139,14 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for stat in top_10_grouped["mr"] %}
+                        {% set mr = namespace(watcher=None) %}
+                        {% for stat in top_10_boards["mr"] %}
+                        {% if stat.league_name != lp.watcher %}
+                            <tr class="league-sep {{stat.class}}">
+                                <td colspan="4">{{stat.league_name}}</td>
+                            </tr>
+                            {% set lp.watcher = stat.league_name %}
+                        {% endif %}
                         <tr class="{{stat.class}}">
                             <td>{{loop.index}}</td>
                             <td>{{stat.player_name}}</td>

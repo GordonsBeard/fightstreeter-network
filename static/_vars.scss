@@ -46,29 +46,23 @@ $font-fam: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #50E7B3;
 }
 
-.mr-15 {
-    color: #50E7B3;
-    opacity: 60%;
-    font-style: italic;
-}
-
-.mr-16 {
+.mr-def {
     font-weight: 600;
     color: #47e869;
 }
 
-.mr-17 {
+.mr-high {
     font-weight: 600;
     color: #EA5623;
 }
 
-.mr-18 {
+.mr-grand {
     font-weight: 700;
     color: #f1851f;
     text-shadow: 1px 1px 2px $sec-text;
 }
 
-.mr-high {
+.mr-ult {
     font-weight: 800;
     color: #FFED16;
     text-shadow: 1px 1px 2px $sec-text;
