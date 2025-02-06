@@ -438,7 +438,7 @@ def rebuild_database_from_local(debug_flag: bool) -> None:
 
 
 def update_stats_for_date(req_date: datetime.datetime, debug_flag: bool) -> None:
-    """Update the database with todays overview data."""
+    """Update the database with a given date's overview data."""
 
     player_stat_dirs = os.listdir(
         f"cfn_stats/{req_date.year}/{req_date.month}/{req_date.day}"
@@ -448,7 +448,7 @@ def update_stats_for_date(req_date: datetime.datetime, debug_flag: bool) -> None
         logger.warning("There's no data for today %s!", req_date.strftime("%b %d %Y"))
         return
 
-    all_player_json: dict[str, dict] = {}
+    # all_player_json: dict[str, dict] = {}
 
     for player_id in player_stat_dirs:
         logger.debug("Going through player_id: %s", player_id)
@@ -458,7 +458,7 @@ def update_stats_for_date(req_date: datetime.datetime, debug_flag: bool) -> None
 
         # This is the object we calculate stats on
         player_data_dict = load_player_overview_json(player_id, req_date)
-        all_player_json[player_id] = player_data_dict  # do i need this?
+        # all_player_json[player_id] = player_data_dict  # do i need this?
 
         # Gather each player's LP/MR for the date
         ranking_rows = build_rankings_data(player_data_dict, player_id, req_date)
@@ -474,6 +474,9 @@ def update_stats_for_date(req_date: datetime.datetime, debug_flag: bool) -> None
         "Data (possibly) inserted to db for: %s. [SUCCESS]",
         req_date.strftime("%b %d %Y"),
     )
+
+    # Stats Insertion Complete at this point
+    log_last_update(date=req_date.strftime("%Y-%m-%d"), parsing_complete=True)
 
 
 def update_member_list(club_id, debug_flag: bool) -> None:
@@ -538,6 +541,21 @@ def update_member_list(club_id, debug_flag: bool) -> None:
         logger.error(e)
 
     logger.info("Updating member list: [SUCCESS]")
+
+
+def log_last_update(date, parsing_complete=False):
+    table_name = "cfn-stats.db"
+    try:
+        with sqlite3.connect(table_name) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """UPDATE last_update SET parsing_complete = ? WHERE date = ?""",
+                (parsing_complete, date),
+            )
+
+    except sqlite3.Error as e:
+        logger.error(e)
 
 
 if __name__ == "__main__":

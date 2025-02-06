@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sqlite3
 import sys
 import time
 from datetime import datetime
@@ -618,6 +619,22 @@ class CFNStatsScraper:
         logger.debug("Match history pulled for player_id: %s", player_id)
 
 
+def log_last_update(date, download_complete=False):
+    table_name = "cfn-stats.db"
+    try:
+        with sqlite3.connect(table_name) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """INSERT OR REPLACE INTO last_update (date, download_complete, current_phase)
+                VALUES (?, ?, ?)""",
+                (date.strftime("%Y-%m-%d"), download_complete, 7),
+            )
+
+    except sqlite3.Error as e:
+        logger.error(e)
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         print("Mising arguments: (-debug -club -daily -matches -all)")
@@ -638,10 +655,14 @@ if __name__ == "__main__":
 
     cfn_scraper = CFNStatsScraper(datetime.now(), debug_flag=DEBUG)
 
+    if "-club" not in sys.argv[1:] and "-daily" not in sys.argv[1:]:
+        sys.exit("Missing -daily or -club, script will do nothing.")
+
     if "-club" in sys.argv[1:]:
         cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
 
     if "-daily" in sys.argv[1:]:
+        log_last_update(date=cfn_scraper.date)
         for player in FUNNY_ANIMALS:
             cfn_scraper.sync_player_overview(player_id=player)
             cfn_scraper.sync_player_avatar(player)
@@ -669,3 +690,4 @@ if __name__ == "__main__":
         cfn_scraper.send_push_alert(
             f"CFN stats downloaded for {datetime.today().date().strftime('%b %d %Y')}"
         )
+        log_last_update(date=cfn_scraper.date, download_complete=True)
