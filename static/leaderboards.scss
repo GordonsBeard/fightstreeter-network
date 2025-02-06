@@ -1,9 +1,11 @@
 @use "vars" as *;
 
+
 leaderboards {
     display: block;
     position: relative;
 }
+
 
 podium, boards, cheers, jeers {
     display: flex;
@@ -15,6 +17,22 @@ podium, boards, cheers, jeers {
 }
 
 // Podium
+
+podium {
+    position: relative;
+
+    last-updated {
+        display: block;
+        position: absolute;
+        right: center;
+        bottom: 50px;
+        padding: 8px;
+        color: rgba(0, 0, 0, .55);
+        font-style: italic;
+        font-weight: 800;
+        font-size: 24px;
+    }
+}
 
 podium_grid {
     display: grid;

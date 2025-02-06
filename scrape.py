@@ -15,6 +15,7 @@ from notify_run import Notify  # type: ignore
 import cfn_secrets
 import cookieread
 from constants import FUNNY_ANIMALS
+from last_updated import log_last_update, start_last_update
 
 logging.basicConfig()
 logger = logging.getLogger("cfn-stats-scrape")
@@ -612,7 +613,7 @@ class CFNStatsScraper:
                 break
 
             if self.page_number != 10:
-                time.sleep(1.5)  # todo, we dont need to sleep if it's cached data
+                time.sleep(0.75)  # todo, we dont need to sleep if it's cached data
             self.page_number += 1
 
         logger.debug("Match history pulled for player_id: %s", player_id)
@@ -638,10 +639,14 @@ if __name__ == "__main__":
 
     cfn_scraper = CFNStatsScraper(datetime.now(), debug_flag=DEBUG)
 
+    if "-club" not in sys.argv[1:] and "-daily" not in sys.argv[1:]:
+        sys.exit("Missing -daily or -club, script will do nothing.")
+
     if "-club" in sys.argv[1:]:
         cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
 
     if "-daily" in sys.argv[1:]:
+        start_last_update(date=cfn_scraper.date)
         for player in FUNNY_ANIMALS:
             cfn_scraper.sync_player_overview(player_id=player)
             cfn_scraper.sync_player_avatar(player)
@@ -669,3 +674,4 @@ if __name__ == "__main__":
         cfn_scraper.send_push_alert(
             f"CFN stats downloaded for {datetime.today().date().strftime('%b %d %Y')}"
         )
+        log_last_update(date=cfn_scraper.date, download_complete=True)

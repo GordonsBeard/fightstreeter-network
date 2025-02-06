@@ -8,6 +8,10 @@
 {% block content %}
     <leaderboards>
         <podium>
+            <last-updated>
+                <p class="last-updated">{{ last_updated }}</p>
+            </last-updated>
+        
             <a name="podium"></a>
             <podium_grid>
                 <div class="first-info av">{{ top_10_boards["mr"][0].player_name }}</div>
