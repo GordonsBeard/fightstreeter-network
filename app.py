@@ -131,11 +131,20 @@ def leaderboards() -> str:
 
     awards_list = generate_awards()
 
+    last_updated = """SELECT MAX(date) FROM last_update;"""
+    conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
+    cur = conn.cursor()
+    cur.execute(last_updated)
+    date_fetched = cur.fetchone()
+
+    last_updated = date_fetched[0] if date_fetched else "Never!"
+
     return render_template(
         "club_leaderboards.html",
         top_10_boards=top_10_boards,
         top_10_grouped=top_10_grouped,
         awards_list=awards_list,
+        last_updated=last_updated,
     )
 
 

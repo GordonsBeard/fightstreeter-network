@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 from notify_run import Notify  # type: ignore
 
 import cfn_secrets
+from last_updated import log_last_update
 
 now_datetime = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
 
@@ -106,12 +107,6 @@ def create_tables(debug_flag: bool):
     logger.debug("Creating tables")
 
     sql_statements = [
-        """CREATE TABLE IF NOT EXISTS last_update (
-            date TIMESTAMP PRIMARY KEY,
-            status INTEGER DEFAULT 0 NOT NULL,
-            download_complete INTEGER DEFAULT 0 NOT NULL,
-            parsing_complete INTEGER DEFAULT 0 NOT NULL,
-            current_phase INTEGER NOT NULL);""",
         """CREATE TABLE IF NOT EXISTS club_members (
             club_id TEXT NOT NULL,
             player_name TEXT NOT NULL,
@@ -476,7 +471,7 @@ def update_stats_for_date(req_date: datetime.datetime, debug_flag: bool) -> None
     )
 
     # Stats Insertion Complete at this point
-    log_last_update(date=req_date.strftime("%Y-%m-%d"), parsing_complete=True)
+    log_last_update(date=req_date, parsing_complete=True)
 
 
 def update_member_list(club_id, debug_flag: bool) -> None:
@@ -541,21 +536,6 @@ def update_member_list(club_id, debug_flag: bool) -> None:
         logger.error(e)
 
     logger.info("Updating member list: [SUCCESS]")
-
-
-def log_last_update(date, parsing_complete=False):
-    table_name = "cfn-stats.db"
-    try:
-        with sqlite3.connect(table_name) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute(
-                """UPDATE last_update SET parsing_complete = ? WHERE date = ?""",
-                (parsing_complete, date),
-            )
-
-    except sqlite3.Error as e:
-        logger.error(e)
 
 
 if __name__ == "__main__":
