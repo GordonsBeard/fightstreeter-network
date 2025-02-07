@@ -1,6 +1,7 @@
 """Generates the LP/MR/Kudos leaderboards"""
 
 import sqlite3
+from datetime import datetime
 
 import pandas as pd
 
@@ -12,42 +13,64 @@ from constants import (
 )
 
 
-def generate_leaderboards() -> (
-    tuple[dict[str, list[dict[str, str | int]]], dict[str, list[dict[str, str | int]]]]
-):
+def generate_leaderboards(
+    req_datetime: datetime,
+) -> tuple[
+    dict[str, list[dict[str, str | int]]], dict[str, list[dict[str, str | int]]]
+]:
     """Returns a tuple with the lp/mr leaderboards"""
 
     conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
+
+    latest_lp_date_selected = (
+        req_datetime.isoformat() if req_datetime else "(SELECT MAX(date) FROM ranking)"
+    )
 
     latest_lp_scores: str = (
         """SELECT r.date, r.player_id, cm.player_name, r.char_id, r.lp, r.mr
         FROM ranking r
         INNER JOIN club_members cm ON cm.player_id = r.player_id
-        WHERE date = (SELECT MAX(date) FROM ranking)
+        WHERE date = ?
         GROUP BY r.date, r.player_id, r.char_id;"""
+    )
+
+    inactive_scores_date_selected = (
+        req_datetime.isoformat()
+        if req_datetime
+        else "(SELECT MAX(date) FROM historic_stats)"
     )
 
     inactive_player_scores: str = (
         """SELECT hs.date, hs.player_id, hs.player_name, hs.selected_char as char_id, hs.lp, hs.mr
         FROM historic_stats hs
-        WHERE date = (SELECT MAX(date) FROM historic_stats)
+        WHERE date = ?
         GROUP BY hs.date, hs.player_id, char_id;"""
+    )
+
+    latest_kudos_date_selected = (
+        req_datetime.isoformat()
+        if req_datetime
+        else "(SELECT MAX(date) FROM historic_stats)"
     )
 
     latest_kudos_amounts_query: str = (
         """SELECT hs.date, hs.player_id, cm.player_name, hs.total_kudos
         FROM historic_stats hs
         INNER JOIN club_members cm ON cm.player_id = hs.player_id
-        WHERE date = (SELECT MAX(date) FROM historic_stats);"""
+        WHERE date = ?;"""
     )
 
     # ranking table gets us the ranks from this phase
-    rank_df: pd.DataFrame = pd.read_sql_query(latest_lp_scores, conn)
+    rank_df: pd.DataFrame = pd.read_sql_query(
+        latest_lp_scores, conn, params=[latest_lp_date_selected]
+    )
     rank_df["char_id"] = rank_df["char_id"].replace(charid_map)
     rank_df["date"] = pd.to_datetime(rank_df["date"], format="ISO8601")
 
     # historic stats table gets us the ranks of every player's current char (all phases)
-    inactive_df: pd.DataFrame = pd.read_sql_query(inactive_player_scores, conn)
+    inactive_df: pd.DataFrame = pd.read_sql_query(
+        inactive_player_scores, conn, params=[inactive_scores_date_selected]
+    )
     inactive_df["char_id"] = inactive_df["char_id"].replace(charid_map)
     inactive_df["date"] = pd.to_datetime(inactive_df["date"], format="ISO8601")
     inactive_df = inactive_df[inactive_df["lp"] != -1]
@@ -55,7 +78,9 @@ def generate_leaderboards() -> (
     # combine the two ranking tables to get a complete list of everyone's lp/mr
     rank_df = pd.concat([inactive_df, rank_df]).drop_duplicates().reset_index(drop=True)
 
-    hs_df: pd.DataFrame = pd.read_sql_query(latest_kudos_amounts_query, conn)
+    hs_df: pd.DataFrame = pd.read_sql_query(
+        latest_kudos_amounts_query, conn, params=[latest_kudos_date_selected]
+    )
     hs_df["date"] = pd.to_datetime(hs_df["date"], format="ISO8601")
 
     conn.close()

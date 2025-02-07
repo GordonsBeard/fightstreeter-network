@@ -20,3 +20,8 @@ function toggleTable(name) {
         button.innerText = "Best";
     }
 }
+
+function changeDate() {
+    const date_selected = document.getElementById("date_select").value;
+    window.location.href = date_selected;
+}

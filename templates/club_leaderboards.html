@@ -8,11 +8,17 @@
 {% block content %}
     <leaderboards>
         <podium>
-            <last-updated>
-                <p class="last-updated">{{ last_updated }}</p>
-            </last-updated>
+            <date-selected>
+                <select id="date_select" onchange="changeDate()">
+                    {% for date in date_list %}
+                    <option value="{{ date }}" {% if date == date_selected %}selected{% endif %}>{{ date }}</option>
+                    {% endfor %}
+                </select>
+                <p class="date-selected">{{ date_selected }}</p>
+            </date-selected>
             <a name="podium"></a>
             <podium_grid>
+                {% if top_10_boards["mr"] %}
                 <div class="first-info av">{{ top_10_boards["mr"][0].player_name }}</div>
                 <div class="first stat">
                     <p class="label">Club Master</p>
@@ -30,6 +36,13 @@
                     <p class="label">Kudos Leader</p>
                     <p class="value">{{ "{:,}".format(top_10_boards["kudos"][0].value) }} Kudos</p>
                 </div>
+                {% else %}
+                <div class="second-info av"></div>
+                <div class="first-info av">
+                <p class="no-data">Whoops didn't get data for today!!</p>
+                </div>
+                <div class="third-info av"></div>
+                {% endif %}
             </podium_grid>
         </podium>
         <boards>

@@ -123,29 +123,57 @@ def player_stats(player_id: str, disp_name: str) -> str:
     )
 
 
-@app.route("/leaderboards")
-def leaderboards() -> str:
+@app.route("/leaderboards/", defaults={"date_req": ""})
+@app.route("/leaderboards/<string:date_req>")
+def leaderboards(date_req: str) -> str:
     """Displays MR/LP/Kudos leaderboards and stats for the club."""
 
-    top_10_boards, top_10_grouped = generate_leaderboards()
+    req_datetime: datetime = datetime.now(ZoneInfo("America/Los_Angeles")).replace(
+        microsecond=0, second=0, minute=0, hour=12
+    )
+
+    if date_req:
+        split_date = date_req.split("-")
+        if len(split_date) == 3:
+            y, m, d = split_date
+            if len(y) == 4 and len(m) == 2 and len(d) == 2:
+                yint = int(y)
+                mint = int(m)
+                dint = int(d)
+                req_datetime = datetime.now(ZoneInfo("America/Los_Angeles")).replace(
+                    microsecond=0,
+                    second=0,
+                    minute=0,
+                    hour=12,
+                    year=yint,
+                    month=mint,
+                    day=dint,
+                )
+
+    top_10_boards, top_10_grouped = generate_leaderboards(req_datetime)
 
     awards_list = generate_awards()
-
-    last_updated = """SELECT MAX(date) FROM last_update;"""
-    conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
-    cur = conn.cursor()
-    cur.execute(last_updated)
-    date_fetched = cur.fetchone()
-
-    last_updated = date_fetched[0] if date_fetched else "Never!"
 
     return render_template(
         "club_leaderboards.html",
         top_10_boards=top_10_boards,
         top_10_grouped=top_10_grouped,
         awards_list=awards_list,
-        last_updated=last_updated,
+        date_selected=req_datetime.strftime("%Y-%m-%d"),
+        date_list=get_list_of_dates(),
     )
+
+
+def get_list_of_dates():
+    """Returns a list of dates the site has data for"""
+
+    conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
+    cursor = conn.cursor()
+    sql = """SELECT date from last_update ORDER BY date DESC;"""
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    dates_with_data = [x[0] for x in results]
+    return dates_with_data
 
 
 @dataclasses.dataclass
