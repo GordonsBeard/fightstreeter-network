@@ -11,8 +11,3 @@ output_html
 notes/
 cfn_secrets.py
 cookies.txt
-
-static/style.css
-static/style.css.map
-static/leaderboards.css
-static/leaderboards.css.map

@@ -1,0 +1,143 @@
+.m {
+  color: #50E7B3;
+  font-weight: 800;
+  text-shadow: 1px 1px 2px #474B4F;
+}
+
+.d-1, .d-2, .d-3, .d-4, .d-5 {
+  color: #BD6DA8;
+  font-weight: 650;
+}
+
+.p-1, .p-2, .p-3, .p-4, .p-5 {
+  color: #6EC0C1;
+  font-weight: 500;
+}
+
+.g-1, .g-2, .g-3, .g-4, .g-5 {
+  color: #DAB55A;
+}
+
+.s-1, .s-2, .s-3, .s-4, .s-5 {
+  color: #B2B6B5;
+}
+
+.b-1, .b-2, .b-3, .b-4, .b-5 {
+  color: #926D4B;
+}
+
+.i-1, .i-2, .i-3, .i-4, .i-5 {
+  color: #7A7974;
+}
+
+.r-1, .r-2, .r-3, .r-4, .r-5 {
+  color: #6B6E70;
+}
+
+.mr-low {
+  color: #50E7B3;
+}
+
+.mr-def {
+  font-weight: 600;
+  color: #47e869;
+}
+
+.mr-high {
+  font-weight: 600;
+  color: #EA5623;
+}
+
+.mr-grand {
+  font-weight: 700;
+  color: #f1851f;
+  text-shadow: 1px 1px 2px #474B4F;
+}
+
+.mr-ult {
+  font-weight: 800;
+  color: #FFED16;
+  text-shadow: 1px 1px 2px #474B4F;
+}
+
+.kud-1 {
+  color: #6B6E70;
+}
+
+.kud-2 {
+  color: lightblue;
+}
+
+.kud-3 {
+  color: rgb(121, 149, 234);
+}
+
+.kud-4 {
+  color: lightcoral;
+  font-weight: 600;
+  text-shadow: 0px 1px 1px darkred;
+}
+
+.kud-5 {
+  color: #86C232;
+  font-weight: 700;
+  text-shadow: 0px 1px 1px #61892F;
+}
+
+body {
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #222629;
+  color: #6B6E70;
+}
+
+a {
+  color: #61892F;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+  color: #86C232;
+}
+
+h1 {
+  color: #86C232;
+  font-size: 48px;
+  padding: 4px 4px 12px 4px;
+}
+
+h3 {
+  color: #61892F;
+  padding: 4px 4px 8px 4px;
+}
+
+header {
+  display: flex;
+  justify-content: center;
+  background-color: #222;
+}
+header navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+header navigation a {
+  background-color: #474B4F;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: 6px;
+  margin-inline: 8px;
+  color: #100;
+}
+
+member-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding-bottom: 12px;
+}
+member-list member {
+  font-size: 18px;
+  display: flex;
+  padding: 8px;
+}/*# sourceMappingURL=style.css.map */
