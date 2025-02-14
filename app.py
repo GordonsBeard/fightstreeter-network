@@ -17,6 +17,7 @@ from constants import FUNNY_ANIMALS, charid_map, league_ranks
 from leaderboards import generate_leaderboards
 
 app = Flask(__name__)
+TABLE_NAME = "cfn-stats.db"
 
 
 @app.route("/")
@@ -128,27 +129,40 @@ def player_stats(player_id: str, disp_name: str) -> str:
 def leaderboards(date_req: str) -> str:
     """Displays MR/LP/Kudos leaderboards and stats for the club."""
 
-    req_datetime: datetime = datetime.now(ZoneInfo("America/Los_Angeles")).replace(
-        microsecond=0, second=0, minute=0, hour=12
-    )
+    # hit db to get latest data point
+    latest_data_date_sql = """SELECT date, download_complete, parsing_complete
+                            FROM last_update
+                            WHERE download_complete = 1 AND parsing_complete = 1
+                            ORDER BY date DESC
+                            LIMIT 1;"""
 
-    if date_req:
-        split_date = date_req.split("-")
-        if len(split_date) == 3:
-            y, m, d = split_date
-            if len(y) == 4 and len(m) == 2 and len(d) == 2:
-                yint = int(y)
-                mint = int(m)
-                dint = int(d)
-                req_datetime = datetime.now(ZoneInfo("America/Los_Angeles")).replace(
-                    microsecond=0,
-                    second=0,
-                    minute=0,
-                    hour=12,
-                    year=yint,
-                    month=mint,
-                    day=dint,
-                )
+    if not date_req:
+        try:
+            with sqlite3.connect(TABLE_NAME) as conn:
+                cursor = conn.cursor()
+                cursor.execute(latest_data_date_sql)
+                results = cursor.fetchone()
+                if results[0]:
+                    date_req = results[0]
+        except sqlite3.Error as e:
+            print(e)
+
+    split_date = date_req.split("-")
+    if len(split_date) == 3:
+        y, m, d = split_date
+        if len(y) == 4 and len(m) == 2 and len(d) == 2:
+            yint = int(y)
+            mint = int(m)
+            dint = int(d)
+            req_datetime = datetime.now(ZoneInfo("America/Los_Angeles")).replace(
+                microsecond=0,
+                second=0,
+                minute=0,
+                hour=12,
+                year=yint,
+                month=mint,
+                day=dint,
+            )
 
     top_10_boards, top_10_grouped = generate_leaderboards(req_datetime)
 
@@ -167,7 +181,7 @@ def leaderboards(date_req: str) -> str:
 def get_list_of_dates():
     """Returns a list of dates the site has data for"""
 
-    conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
+    conn: sqlite3.Connection = sqlite3.connect(TABLE_NAME)
     cursor = conn.cursor()
     sql = """SELECT date from last_update ORDER BY date DESC;"""
     cursor.execute(sql)
