@@ -10,8 +10,14 @@
         <podium>
             <date-selected>
                 <select id="date_select" onchange="changeDate()">
+                    {% set datens = namespace(phasename=None) %}
                     {% for date in date_list %}
-                    <option value="{{ date }}" {% if date == date_selected %}selected{% endif %}>{{ date }}</option>
+                        {% if date[1] != datens.phasename %}
+                            {% if not loop.first %}</optgroup>{% endif %}
+                            <optgroup label="Phase {{ date[1] }}">
+                        {% endif %}
+                        <option value="{{ date[0] }}" {% if date[0] == date_selected %}selected{% endif %}>{{ date[0] }}</option>
+                    {% set datens.phasename = date[1] %}
                     {% endfor %}
                 </select>
                 <p class="date-selected">{{ date_selected }}</p>

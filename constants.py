@@ -101,23 +101,6 @@ def fetch_mr_league_name(player_mr: int) -> dict[str, str]:
 
     return mr_league_ranks[-1]
 
-    # class_name = ""
-
-    # high = 1400  # 1600
-    # grand = 1505  # 1700
-    # ult = 1540  # 1800
-
-    # if player_mr < high:
-    #     class_name = "mr-def"
-    # elif high <= player_mr < grand:
-    #     class_name = "mr-high"
-    # elif grand <= player_mr < ult:
-    #     class_name = "mr-grand"
-    # elif ult <= player_mr:
-    #     class_name = "mr-ult"
-
-    # return class_name
-
 
 def get_kudos_class(kudos) -> str:
     """Takes the players Kudos and returns the appropriate class name for HTML colors."""
@@ -169,3 +152,14 @@ FUNNY_ANIMALS: list[str] = [
     "4010969238",
     "4249556471",
 ]
+
+phase_dates = {
+    0: ("2023-06-02", "2023-07-31"),
+    1: ("2023-08-01", "2023-10-31"),
+    2: ("2023-11-01", "2024-01-31"),
+    3: ("2024-02-01", "2024-04-30"),
+    4: ("2024-05-01", "2024-07-30"),
+    5: ("2024-08-01", "2024-10-31"),
+    6: ("2024-11-01", "2025-02-04"),
+    7: ("2025-02-05", "2025-04-30"),
+}

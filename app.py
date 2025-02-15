@@ -13,7 +13,7 @@ from flask import Flask, render_template
 from pandas import DataFrame
 
 from awards import generate_awards
-from constants import FUNNY_ANIMALS, charid_map, league_ranks
+from constants import FUNNY_ANIMALS, charid_map, league_ranks, phase_dates
 from leaderboards import generate_leaderboards
 
 app = Flask(__name__)
@@ -148,6 +148,7 @@ def leaderboards(date_req: str) -> str:
             print(e)
 
     split_date = date_req.split("-")
+    req_datetime = datetime.now(ZoneInfo("America/Los_Angeles"))
     if len(split_date) == 3:
         y, m, d = split_date
         if len(y) == 4 and len(m) == 2 and len(d) == 2:
@@ -168,25 +169,34 @@ def leaderboards(date_req: str) -> str:
 
     awards_list = generate_awards()
 
+    date_list = get_list_of_dates()
+
+    final_list = []
+
+    for date in date_list:
+        for phases in phase_dates.items():
+            if phases[1][0] <= date <= phases[1][1]:
+                final_list.append((date, phases[0]))
+
     return render_template(
         "club_leaderboards.html",
         top_10_boards=top_10_boards,
         top_10_grouped=top_10_grouped,
         awards_list=awards_list,
         date_selected=req_datetime.strftime("%Y-%m-%d"),
-        date_list=get_list_of_dates(),
+        date_list=final_list,
     )
 
 
 def get_list_of_dates():
     """Returns a list of dates the site has data for"""
-
-    conn: sqlite3.Connection = sqlite3.connect(TABLE_NAME)
-    cursor = conn.cursor()
-    sql = """SELECT date from last_update ORDER BY date DESC;"""
-    cursor.execute(sql)
-    results = cursor.fetchall()
-    dates_with_data = [x[0] for x in results]
+    dates_with_data = []
+    with sqlite3.connect(TABLE_NAME) as conn:
+        cursor = conn.cursor()
+        sql = """SELECT date from last_update ORDER BY date DESC;"""
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        dates_with_data = [x[0] for x in results]
     return dates_with_data
 
 

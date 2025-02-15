@@ -22,9 +22,7 @@ def generate_leaderboards(
 
     conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
 
-    latest_lp_date_selected = (
-        req_datetime.isoformat() if req_datetime else "(SELECT MAX(date) FROM ranking)"
-    )
+    latest_lp_date_selected = req_datetime.isoformat()
 
     latest_lp_scores: str = (
         """SELECT r.date, r.player_id, cm.player_name, r.char_id, r.lp, r.mr
