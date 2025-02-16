@@ -51,7 +51,7 @@ def index() -> str:
     ]
 
     return render_template(
-        "index.html",
+        "index.html.j2",
         member_list=member_list,
     )
 
@@ -60,7 +60,7 @@ def index() -> str:
 def player_stats(player_id: str, disp_name: str) -> str:
     """stats page for a single player"""
     if len(player_id) != 10 or not player_id.isnumeric():
-        return render_template("player_lp_history_error.html", player_id=player_id)
+        return render_template("player_lp_history_error.html.j2", player_id=player_id)
 
     conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
 
@@ -73,7 +73,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
     )
 
     if not df["lp"].any():
-        return render_template("player_lp_history_error.html", player_id=player_id)
+        return render_template("player_lp_history_error.html.j2", player_id=player_id)
 
     df["char_id"] = df["char_id"].replace(charid_map)
 
@@ -120,7 +120,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
         mr_fig_html = mr_fig.to_html(full_html=False)
 
     return render_template(
-        "player_lp_history.html", lp_fig=lp_fig_html, mr_fig=mr_fig_html
+        "player_lp_history.html.j2", lp_fig=lp_fig_html, mr_fig=mr_fig_html
     )
 
 
@@ -179,7 +179,7 @@ def leaderboards(date_req: str) -> str:
                 final_list.append((date, phases[0]))
 
     return render_template(
-        "club_leaderboards.html",
+        "club_leaderboards.html.j2",
         top_10_boards=top_10_boards,
         top_10_grouped=top_10_grouped,
         awards_list=awards_list,
@@ -215,8 +215,8 @@ def club_ranking() -> str:
     conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
 
     df: pd.DataFrame = pd.read_sql_query(
-        "SELECT * FROM ranking WHERE player_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "SELECT r.*, cm.name FROM ranking WHERE player_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         conn,
         params=(tuple(FUNNY_ANIMALS)),
     )
@@ -258,6 +258,6 @@ def club_ranking() -> str:
 
     player_table: str = fig.to_html(full_html=False)
     return render_template(
-        "ranked_placements.html",
+        "ranked_placements.html.j2",
         player_table=player_table,
     )
