@@ -1,9 +1,8 @@
 """The flask module that powers the website"""
 
-# import jinja2
 import dataclasses
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -56,19 +55,39 @@ def index() -> str:
     )
 
 
-@app.route("/u/<string:player_id>/<string:disp_name>")
-def player_stats(player_id: str, disp_name: str) -> str:
-    """stats page for a single player"""
+@app.route("/u/<string:player_id>")
+def player_homepage(player_id: str) -> str:
+    """dashboard page for a single player"""
+    if len(player_id) != 10 or not player_id.isnumeric():
+        return render_template("player_lp_history_error.html.j2", player_id=player_id)
+
+    player_name = "???"
+    with sqlite3.connect(TABLE_NAME) as conn:
+        player_name_sql: str = (
+            """SELECT cm.player_name
+            FROM club_members cm
+            WHERE player_id = ?;"""
+        )
+        cur = conn.cursor()
+        cur.execute(player_name_sql, (player_id,))
+
+        results = cur.fetchone()
+        player_name = results[0] if results[0] else "???"
+
+    return render_template("player_homepage.html.j2", player_name=player_name)
+
+
+@app.route("/u/<string:player_id>/graph")
+def player_stats(player_id: str) -> str:
     if len(player_id) != 10 or not player_id.isnumeric():
         return render_template("player_lp_history_error.html.j2", player_id=player_id)
 
     conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
 
     df: pd.DataFrame = pd.read_sql_query(
-        "SELECT player_id, char_id, lp, mr, "
-        "[date]"
-        f" FROM ranking WHERE player_id='{player_id}'"
-        " AND lp > 0",
+        "SELECT r.player_id, r.char_id, r.lp, r.mr, r.[date]"
+        f" FROM ranking r WHERE r.player_id='{player_id}'"
+        " AND r.lp > 0",
         conn,
     )
 
@@ -77,19 +96,13 @@ def player_stats(player_id: str, disp_name: str) -> str:
 
     df["char_id"] = df["char_id"].replace(charid_map)
 
-    last_30_days = pd.to_datetime(
-        datetime.now(tz=ZoneInfo("America/Los_Angeles")) - timedelta(days=30)
-    )
-
-    df["date"] = pd.to_datetime(df["date"], format="ISO8601")
-
-    # df = df[df["date"] > last_30_days]  # currently pulls data from last 30 days
+    df["date"] = pd.to_datetime(df["date"], format="ISO8601", utc=True)
 
     lp_fig = px.line(
         df,
         x="date",
         y="lp",
-        title=f"{disp_name}: League Points",
+        title=f"{player_id}: League Points",
         color="char_id",
         template="plotly_dark",
         line_shape="spline",
@@ -100,7 +113,6 @@ def player_stats(player_id: str, disp_name: str) -> str:
         ticktext=[x["name"] for x in league_ranks.values()],
     )
 
-    # lp_fig_html: str = lp_fig.to_html(full_html=False)
     lp_fig_html: str = lp_fig.to_html(full_html=False)
 
     mr_fig_html: str = ""
@@ -111,7 +123,7 @@ def player_stats(player_id: str, disp_name: str) -> str:
             df,
             x="date",
             y="mr",
-            title=f"{disp_name}: Master Rate",
+            title=f"{player_id}: Master Rate",
             color="char_id",
             template="plotly_dark",
             line_shape="spline",
