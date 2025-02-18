@@ -5,6 +5,7 @@ __pycache__/*.*
 .vscode/*.*
 env
 *.db
+fightstreeter-site/instance
 
 cfn_stats/
 output_html
