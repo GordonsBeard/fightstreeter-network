@@ -3,8 +3,8 @@ from zoneinfo import ZoneInfo
 
 from jinja2 import Environment, FileSystemLoader
 
-from awards import generate_awards
-from leaderboards import generate_leaderboards
+from fightstreeter.awards import generate_awards
+from fightstreeter.leaderboards import generate_leaderboards
 
 env = Environment(loader=FileSystemLoader("templates"))
 template = env.get_template("club_leaderboards.html.j2")

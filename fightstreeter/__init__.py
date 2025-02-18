@@ -29,17 +29,8 @@ def create_app(test_config=None):
 
     db.init_app(app)
 
-    # with app.app_context():
-    #     from . import auth
+    with app.app_context():
+        from . import leaderboards
 
-    #     app.register_blueprint(auth.bp)
-
-    #     from . import user
-
-    #     app.register_blueprint(user.bp)
-
-    #     from . import videos
-
-    #     app.register_blueprint(videos.bp)
-
+        app.register_blueprint(leaderboards.bp)
     return app

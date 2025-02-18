@@ -2,18 +2,14 @@
 
 import dataclasses
 import sqlite3
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
 import pandas as pd
 import plotly.express as px  # type: ignore[import-untyped]
 import plotly.graph_objects as go  # type: ignore[import-untyped]
-from awards import generate_awards
 from flask import Flask, render_template
-from leaderboards import generate_leaderboards
 from pandas import DataFrame
 
-from constants import FUNNY_ANIMALS, charid_map, league_ranks, phase_dates
+from constants import FUNNY_ANIMALS, charid_map, league_ranks
 
 app = Flask(__name__)
 TABLE_NAME = "cfn-stats.db"
@@ -25,7 +21,8 @@ def index() -> str:
     conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
 
     inactive_player_scores: str = (
-        """SELECT hs.date, hs.player_id, hs.player_name, hs.selected_char as char_id, hs.selected_char as char_name, hs.lp, hs.mr
+        """SELECT hs.date, hs.player_id, hs.player_name, hs.selected_char as char_id, 
+        hs.selected_char as char_name, hs.lp, hs.mr
         FROM historic_stats hs
         WHERE date = (SELECT MAX(date) FROM historic_stats)
         GROUP BY hs.date, hs.player_id
@@ -78,7 +75,8 @@ def player_homepage(player_id: str) -> str:
 
 
 @app.route("/u/<string:player_id>/graph")
-def player_stats(player_id: str) -> str:
+def player_graph(player_id: str) -> str:
+    """shows the old/simple graph"""
     if len(player_id) != 10 or not player_id.isnumeric():
         return render_template("player_lp_history_error.html.j2", player_id=player_id)
 
@@ -134,82 +132,6 @@ def player_stats(player_id: str) -> str:
     return render_template(
         "player_lp_history.html.j2", lp_fig=lp_fig_html, mr_fig=mr_fig_html
     )
-
-
-@app.route("/leaderboards/", defaults={"date_req": ""})
-@app.route("/leaderboards/<string:date_req>")
-def leaderboards(date_req: str) -> str:
-    """Displays MR/LP/Kudos leaderboards and stats for the club."""
-
-    # hit db to get latest data point
-    latest_data_date_sql = """SELECT date, download_complete, parsing_complete
-                            FROM last_update
-                            WHERE download_complete = 1 AND parsing_complete = 1
-                            ORDER BY date DESC
-                            LIMIT 1;"""
-
-    if not date_req:
-        try:
-            with sqlite3.connect(TABLE_NAME) as conn:
-                cursor = conn.cursor()
-                cursor.execute(latest_data_date_sql)
-                results = cursor.fetchone()
-                if results[0]:
-                    date_req = results[0]
-        except sqlite3.Error as e:
-            print(e)
-
-    split_date = date_req.split("-")
-    req_datetime = datetime.now(ZoneInfo("America/Los_Angeles"))
-    if len(split_date) == 3:
-        y, m, d = split_date
-        if len(y) == 4 and len(m) == 2 and len(d) == 2:
-            yint = int(y)
-            mint = int(m)
-            dint = int(d)
-            req_datetime = datetime.now(ZoneInfo("America/Los_Angeles")).replace(
-                microsecond=0,
-                second=0,
-                minute=0,
-                hour=12,
-                year=yint,
-                month=mint,
-                day=dint,
-            )
-
-    top_10_boards, top_10_grouped = generate_leaderboards(req_datetime)
-
-    awards_list = generate_awards()
-
-    date_list = get_list_of_dates()
-
-    final_list = []
-
-    for date in date_list:
-        for phases in phase_dates.items():
-            if phases[1][0] <= date <= phases[1][1]:
-                final_list.append((date, phases[0]))
-
-    return render_template(
-        "club_leaderboards.html.j2",
-        top_10_boards=top_10_boards,
-        top_10_grouped=top_10_grouped,
-        awards_list=awards_list,
-        date_selected=req_datetime.strftime("%Y-%m-%d"),
-        date_list=final_list,
-    )
-
-
-def get_list_of_dates():
-    """Returns a list of dates the site has data for"""
-    dates_with_data = []
-    with sqlite3.connect(TABLE_NAME) as conn:
-        cursor = conn.cursor()
-        sql = """SELECT date from last_update ORDER BY date DESC;"""
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        dates_with_data = [x[0] for x in results]
-    return dates_with_data
 
 
 @dataclasses.dataclass

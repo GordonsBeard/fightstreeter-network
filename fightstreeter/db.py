@@ -45,4 +45,4 @@ def insert_db(query, args=()) -> bool:
 
 def init_app(app):
     """init the database module"""
-    app.teardown_context(close_db)
+    app.teardown_appcontext(close_db)
