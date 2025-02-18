@@ -8,12 +8,12 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import plotly.express as px  # type: ignore[import-untyped]
 import plotly.graph_objects as go  # type: ignore[import-untyped]
+from awards import generate_awards
 from flask import Flask, render_template
+from leaderboards import generate_leaderboards
 from pandas import DataFrame
 
-from awards import generate_awards
 from constants import FUNNY_ANIMALS, charid_map, league_ranks, phase_dates
-from leaderboards import generate_leaderboards
 
 app = Flask(__name__)
 TABLE_NAME = "cfn-stats.db"
