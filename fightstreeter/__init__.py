@@ -21,9 +21,9 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # @app.route("/")
-    # def index():
-    #     return videos.no_video_id()
+    @app.route("/")
+    def index():
+        return roster.roster()
 
     from . import db
 
@@ -33,4 +33,12 @@ def create_app(test_config=None):
         from . import leaderboards
 
         app.register_blueprint(leaderboards.bp)
+
+        from . import roster
+
+        app.register_blueprint(roster.bp)
+
+        from . import player
+
+        app.register_blueprint(player.bp)
     return app

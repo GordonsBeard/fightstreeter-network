@@ -1,0 +1,6 @@
+{% extends "base.html.j2" %}
+
+{% block title %}Roster{% endblock %}
+{% block content %}
+<p>Welcome {{ player_name }}. Looking for the old graph? <a href="{{ url_for('player.old_graph', player_id=player_id) }}">[Old Graph]</a></p>
+{% endblock %}

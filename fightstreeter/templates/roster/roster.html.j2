@@ -4,9 +4,9 @@
     <p>We are the Funny Animals and we are here to make you think about strength and have fun and stuff!</p>
     <h3>Members:</h3>
     <member-list>
-        {% for id, name, char_name, lp in member_list %}
-        <member class="{{char_name}}">
-            <a href="/u/{{id}}/{{name}}/graph">{{name}}</a>
+        {% for player in member_list %}
+        <member>
+            <a href="{{ url_for('player.homepage', player_id=player.player_id) }}">{{player.player_name}}</a>
         </member>
     {% endfor %}
     </member-list>
