@@ -3,13 +3,13 @@
 # pylint: disable=C
 import os
 
-from flask import Flask, redirect, render_template
+from flask import Flask
 
 
 def create_app(test_config=None):
     """Create and configure the flask app"""
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(DATABASE="cfn-stats.db")
+    app.config.from_mapping(DATABASE=os.path.join(app.instance_path, "cfn-stats.db"))
 
     if not test_config:
         app.config.from_pyfile("config.py", silent=True)

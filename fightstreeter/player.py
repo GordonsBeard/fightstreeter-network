@@ -37,7 +37,7 @@ def old_graph(player_id: str) -> str:
     if len(player_id) != 10 or not player_id.isnumeric():
         return render_template("player_lp_history_error.html.j2", player_id=player_id)
 
-    conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
+    conn: sqlite3.Connection = sqlite3.connect("instance/cfn-stats.db")
 
     df: pd.DataFrame = pd.read_sql_query(
         "SELECT r.player_id, r.char_id, r.lp, r.mr, r.[date]"

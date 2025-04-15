@@ -2,6 +2,7 @@
 
 import sqlite3
 
+import click
 from flask import current_app, g
 
 
@@ -47,10 +48,25 @@ def latest_stats_date():
     """Get's the date of the latest stats insert"""
     if "latest" not in g:
         row = query_db("SELECT MAX(date) as date FROM last_update;", one=True)
-        g.latest = row["date"]
+        g.latest = row["date"]  # type: ignore
     return g.latest
+
+
+def init_db():
+    """DELETES and initializes new databases."""
+    db = get_db()
+    with current_app.open_resource("schema.sql") as f:
+        db.executescript(f.read().decode("utf8"))
+
+
+@click.command("init-db")
+def init_db_command():
+    """Clear the existing tables and their data and create new (empty) tables."""
+    init_db()
+    click.echo("Databases initialized.")
 
 
 def init_app(app):
     """init the database module"""
     app.teardown_appcontext(close_db)
+    app.cli.add_command(init_db_command)

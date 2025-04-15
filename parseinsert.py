@@ -170,7 +170,7 @@ def create_tables(debug_flag: bool):
             unique(date, player_id));""",
     ]
 
-    table_name: str = "cfn-stats.db"
+    table_name: str = "instance/cfn-stats.db"
 
     if debug_flag:
         table_name = "cfn-stats-debug.db"
@@ -193,7 +193,7 @@ def create_tables(debug_flag: bool):
 def insert_rankings_into_db(record: RecordedLP, debug_flag: bool) -> None:
     """Takes the RecordedLP object and inserts it into the ranking table."""
 
-    table_name = "cfn-stats.db"
+    table_name = "instance/cfn-stats.db"
 
     if debug_flag:
         logger.debug("In debug mode, using debug db.")
@@ -227,7 +227,7 @@ def insert_rankings_into_db(record: RecordedLP, debug_flag: bool) -> None:
 def insert_historic_stats_into_db(record: HistoricStats, debug_flag: bool) -> None:
     """Takes the HistoricalStats object and inserts it into the historic_stats table."""
 
-    table_name = "cfn-stats.db"
+    table_name = "instance/cfn-stats.db"
 
     if debug_flag:
         logger.debug("In debug mode, using debug db.")
@@ -533,7 +533,7 @@ def update_member_list(club_id, debug_flag: bool) -> None:
         logger.error("No club overview for %s!", club_id)
         return
 
-    table_name = "cfn-stats.db"
+    table_name = "instance/cfn-stats.db"
     if debug_flag:
         logger.debug("Running in debug mode, using debug db.")
         table_name = "cfn-stats-debug.db"
