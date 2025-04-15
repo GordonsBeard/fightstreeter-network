@@ -50,18 +50,10 @@ historical_dates = []
 
 for date in dates_to_restore:
     date_vals = split_all(date)
-    historical_dates.append(
-        datetime.datetime(
-            int(date_vals[1]),
-            int(date_vals[2]),
-            int(date_vals[3]),
-            12,
-            0,
-            0,
-            0,
-            ZoneInfo("America/Los_Angeles"),
-        )
+    dt = datetime.datetime(
+        year=int(date_vals[1]), month=int(date_vals[2]), day=int(date_vals[3])
     )
+    historical_dates.append(dt)
 
 
 @dataclasses.dataclass
@@ -73,7 +65,7 @@ class RecordedLP:
 
         self.player_id: str = player_id
         self.char_id: str = char_id
-        self.date_stats: datetime.datetime = date_stats.isoformat()
+        self.date_stats: datetime.datetime = date_stats
         self.phase: int = phase
         self.lp: int = lp
         self.mr: int = mr
@@ -315,7 +307,7 @@ def build_rankings_data(
                 RecordedLP(
                     str(player_id),
                     str(char["character_id"]),
-                    req_date,
+                    req_date.strftime("%Y-%m-%d"),
                     phase,
                     int(char["league_info"]["league_point"]),
                     int(char["league_info"]["master_rating"]),
@@ -392,7 +384,7 @@ def build_historic_data(
     last_played = datetime.datetime.fromtimestamp(
         int(player_dict["fighter_banner_info"]["last_play_at"]),
         tz=ZoneInfo("America/Los_Angeles"),
-    ).isoformat()
+    ).strftime("%Y-%m-%d")
     title_text = str(player_dict["fighter_banner_info"]["title_data"]["title_data_val"])
     title_plate = str(
         player_dict["fighter_banner_info"]["title_data"]["title_data_plate_name"]
@@ -408,7 +400,7 @@ def build_historic_data(
 
     return [
         HistoricStats(
-            req_date.isoformat(),
+            req_date.strftime("%Y-%m-%d"),
             player_id,
             player_name,
             fav_char_id,
@@ -582,6 +574,7 @@ if __name__ == "__main__":
         logger.debug("**** UPDATING CLUB INFO")
         update_member_list("c984cc7ce8cd44b9a209e984a73d0c9e", debug_flag=DEBUG_FLAG)
 
+    # historical update now handled in flask app (init-db)
     if "-hist" in sys.argv[1:]:
         logger.debug("**** REBUILDING PAST DATA")
         rebuild_database_from_local(debug_flag=DEBUG_FLAG)

@@ -2,6 +2,7 @@
 
 import logging
 import sqlite3
+from datetime import datetime
 
 logging.basicConfig()
 logger = logging.getLogger("cfn-stats-scrape")
@@ -14,7 +15,7 @@ LAST_UPDATE_TABLE_SQL = """CREATE TABLE IF NOT EXISTS last_update (
             parsing_complete INTEGER DEFAULT 0 NOT NULL);"""
 
 
-def start_last_update(date) -> None:
+def start_last_update(date: datetime) -> None:
     """Starts the last_update log entry"""
     table_name = "instance/cfn-stats.db"
     try:
