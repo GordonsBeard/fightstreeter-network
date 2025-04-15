@@ -43,6 +43,14 @@ def insert_db(query, args=()) -> bool:
     return success
 
 
+def latest_stats_date():
+    """Get's the date of the latest stats insert"""
+    if "latest" not in g:
+        row = query_db("SELECT MAX(date) as date FROM last_update;", one=True)
+        g.latest = row["date"]
+    return g.latest
+
+
 def init_app(app):
     """init the database module"""
     app.teardown_appcontext(close_db)

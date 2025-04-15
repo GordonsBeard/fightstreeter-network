@@ -14,7 +14,6 @@ from constants import (
     get_kudos_class,
     phase_dates,
 )
-from fightstreeter import db
 
 from .awards import generate_awards
 
@@ -308,7 +307,7 @@ def leaderboards(date_req: str) -> str:
                 final_list.append((date, phases[0]))
 
     return render_template(
-        "club_leaderboards.html.j2",
+        "leaderboards/club_leaderboards.html.j2",
         top_10_boards=top_10_boards,
         top_10_grouped=top_10_grouped,
         awards_list=awards_list,
