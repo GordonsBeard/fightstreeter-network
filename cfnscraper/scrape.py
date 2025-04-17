@@ -12,11 +12,6 @@ from zoneinfo import ZoneInfo
 import requests
 from notify_run import Notify  # type: ignore
 
-import cfn_secrets
-import cookieread
-from constants import FUNNY_ANIMALS
-from last_updated import log_last_update, start_last_update
-
 logging.basicConfig()
 logger = logging.getLogger("cfn-stats-scrape")
 logger.setLevel(logging.INFO)
@@ -43,28 +38,39 @@ class Subject(Enum):
 class CFNStatsScraper:
     """Object that grabs the data from the website"""
 
-    _url_token: str = cfn_secrets.URL_TOKEN
-    _buckler_id = cookieread.BUCKLER_ID
-    _buckler_r_id = cookieread.BUCKLER_R_ID
-    _buckler_praise_date = cookieread.BUCKLER_PRAISE_DATE
+    _page_no: int = 1
+    _club_id: str = ""
+    _player_id: str = ""
+    _full_battlelog: bool = False
+    _no_more_fetch: bool = False
 
-    def __init__(self, date: datetime, debug_flag: bool) -> None:
+    def __init__(
+        self,
+        date: datetime,
+        debug_flag: bool,
+        notify: str,
+        url_token: str,
+        buckler_id: str,
+        buckler_r_id: str,
+        buckler_praise_date: str,
+        default_player_id: str,
+    ) -> None:
         self.debug: bool = debug_flag
         self.date: datetime = date
-        self._player_id: str = ""
-        self._club_id: str = ""
-        self._page_no: int = 1
-        self._full_battlelog: bool = False
-        self._no_more_fetch: bool = False
-        self.notify = Notify(cfn_secrets.NOTIFY_CHANNEL)
+        self.notify: Notify = Notify(notify)
+        self.url_token: str = url_token
+        self.buckler_id: str = buckler_id
+        self.buckler_r_id: str = buckler_r_id
+        self.buckler_praise_date: str = buckler_praise_date
+        self.default_player_id: str = default_player_id
 
-        base_cache_dir: str = (
+        cache_dir: str = (
             f"cfn_stats/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
             if not debug_flag
             else f"cfn_stats/mock/{str(self.date.year)}/{str(self.date.month)}/{str(self.date.day)}"
         )
 
-        self.base_cache_dir: Path = Path(base_cache_dir)
+        self.base_cache_dir: Path = Path(cache_dir)
 
         if debug_flag:
             logger.setLevel(logging.DEBUG)
@@ -184,7 +190,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/profile"
+                    f"/{self.url_token}/en/profile"
                     f"/{self.player_id}.json?sid={self.player_id}"
                 )
             case Subject.CLUB:
@@ -194,7 +200,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/club"
+                    f"/{self.url_token}/en/club"
                     f"/{self.club_id}.json?clubid={self.club_id}"
                 )
             case Subject.STATS:
@@ -204,7 +210,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/profile"
+                    f"/{self.url_token}/en/profile"
                     f"/{self.player_id}/play.json?sid={self.player_id}"
                 )
             case Subject.AVATAR:
@@ -214,7 +220,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/profile"
+                    f"/{self.url_token}/en/profile"
                     f"/{self.player_id}/avatar.json?sid={self.player_id}"
                 )
             case Subject.ALL_MATCHES:
@@ -224,7 +230,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/profile"
+                    f"/{self.url_token}/en/profile"
                     f"/{self.player_id}/battlelog.json?page={self.page_number}&sid={self.player_id}"
                 )
             case Subject.RANKED_MATCHES:
@@ -234,7 +240,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/profile"
+                    f"/{self.url_token}/en/profile"
                     f"/{self.player_id}/battlelog/rank.json?page={self.page_number}&sid={self.player_id}"
                 )
             case Subject.CASUAL_MATCHES:
@@ -244,7 +250,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/profile"
+                    f"/{self.url_token}/en/profile"
                     f"/{self.player_id}/battlelog/casual.json?page={self.page_number}&sid={self.player_id}"
                 )
             case Subject.CUSTOM_MATCHES:
@@ -254,7 +260,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/profile"
+                    f"/{self.url_token}/en/profile"
                     f"/{self.player_id}/battlelog/custom.json?page={self.page_number}&sid={self.player_id}"
                 )
             case Subject.HUB_MATCHES:
@@ -264,7 +270,7 @@ class CFNStatsScraper:
 
                 return (
                     "https://www.streetfighter.com/6/buckler/_next/data"
-                    f"/{self._url_token}/en/profile"
+                    f"/{self.url_token}/en/profile"
                     f"/{self.player_id}/battlelog/hub.json?page={self.page_number}&sid={self.player_id}"
                 )
             case _:
@@ -291,9 +297,9 @@ class CFNStatsScraper:
             sys.exit()
 
         cookies: dict[str, str] = {
-            "buckler_id": self._buckler_id,
-            "buckler_r_id": self._buckler_r_id,
-            "buckler_praise_date": self._buckler_praise_date,
+            "buckler_id": self.buckler_id,
+            "buckler_r_id": self.buckler_r_id,
+            "buckler_praise_date": self.buckler_praise_date,
         }
 
         headers: dict[str, str] = {
@@ -304,7 +310,7 @@ class CFNStatsScraper:
             "Connection": "keep-alive",
             "Host": "www.streetfighter.com",
             "Pragma": "no-cache",
-            "Referer": f"https://www.streetfighter.com/6/buckler/profile/{cfn_secrets.DEFAULT_PLAYER_ID}/play",
+            "Referer": f"https://www.streetfighter.com/6/buckler/profile/{self.default_player_id}/play",
             "Sec-Fetch-Dest": "empty",
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
@@ -617,61 +623,3 @@ class CFNStatsScraper:
             self.page_number += 1
 
         logger.debug("Match history pulled for player_id: %s", player_id)
-
-
-if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        print("Mising arguments: (-debug -club -daily -matches -all)")
-        print()
-        print(
-            "-debug:\t\tDownloads everything to /mock folder. (does nothing by itself)"
-        )
-        print("-club:\t\tDownloads club overview.")
-        print("-daily:\t\tDownloads every club member's overview.json for today.")
-        print("-matches:\tDownloads every club member's matches for today.")
-        print("--all:\tDownloads every club member's matches (all 10 pages).")
-
-    DEBUG = False
-
-    if "-debug" in sys.argv[1:]:
-        logger.setLevel(logging.DEBUG)
-        DEBUG = True
-
-    cfn_scraper = CFNStatsScraper(datetime.now(), debug_flag=DEBUG)
-
-    if "-club" not in sys.argv[1:] and "-daily" not in sys.argv[1:]:
-        sys.exit("Missing -daily or -club, script will do nothing.")
-
-    if "-club" in sys.argv[1:]:
-        cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
-
-    if "-daily" in sys.argv[1:]:
-        start_last_update(date=cfn_scraper.date)
-        for player in FUNNY_ANIMALS:
-            cfn_scraper.sync_player_overview(player_id=player)
-            cfn_scraper.sync_player_avatar(player)
-
-            if "-matches" in sys.argv[1:]:
-                for match_type in [
-                    Subject.ALL_MATCHES,
-                    Subject.RANKED_MATCHES,
-                    Subject.CASUAL_MATCHES,
-                    Subject.CUSTOM_MATCHES,
-                    Subject.HUB_MATCHES,
-                ]:
-                    if "--all" in sys.argv[1:]:
-                        cfn_scraper.sync_battlelog(
-                            player_id=player,
-                            subject_type=match_type,
-                            all_matches=True,
-                        )
-                    else:
-                        cfn_scraper.sync_battlelog(
-                            player_id=player,
-                            subject_type=match_type,
-                            all_matches=False,
-                        )
-        cfn_scraper.send_push_alert(
-            f"CFN stats downloaded for {datetime.today().date().strftime('%b %d %Y')}"
-        )
-        log_last_update(date=cfn_scraper.date, download_complete=True)
