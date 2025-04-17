@@ -31,6 +31,7 @@ charid_map: dict[str, str] = {
     "28": "Mai",
     "29": "29",
     "30": "30",
+    "254": "Random",
 }
 
 league_ranks: dict[int, dict[str, str]] = {
