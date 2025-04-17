@@ -6,6 +6,7 @@ __pycache__/*.*
 env
 *.db
 instance/*.*
+instance
 
 cfn_stats/
 output_html
