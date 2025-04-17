@@ -252,6 +252,8 @@ def get_list_of_dates():
 
 @dataclasses.dataclass
 class MRPosition:
+    """Class object for leaderboards"""
+
     rank: int
     date: str
     player_id: str

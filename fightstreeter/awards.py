@@ -1,6 +1,5 @@
 """Generate the awards for today."""
 
-import random
 import sqlite3
 
 import pandas as pd
@@ -35,7 +34,8 @@ def generate_awards() -> list[dict[str, str]]:
     )
 
     inactive_player_scores: str = (
-        """SELECT hs.date, hs.player_id as pid, hs.player_name, hs.selected_char as char_id, hs.lp, hs.mr, cm.player_name as handle
+        """SELECT hs.date, hs.player_id as pid, hs.player_name, 
+            hs.selected_char as char_id, hs.lp, hs.mr, cm.player_name as handle
         FROM historic_stats hs
         LEFT JOIN club_members cm ON cm.player_id = hs.player_id
         WHERE date = (SELECT MAX(date) FROM historic_stats) AND cm.hidden = 0

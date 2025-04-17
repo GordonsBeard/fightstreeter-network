@@ -13,6 +13,8 @@ bp = Blueprint("roster", __name__, url_prefix="/roster")
 
 @dataclasses.dataclass
 class Player:
+    """Class object for a club member"""
+
     date: str
     player_name: str
     player_id: str
@@ -35,6 +37,7 @@ def generate_member_list() -> list[Player]:
 
 @bp.route("/")
 def club_overview() -> str:
+    """Default homepage for the roster"""
     return render_template(
         "roster/roster.html.j2",
         member_list=generate_member_list(),
