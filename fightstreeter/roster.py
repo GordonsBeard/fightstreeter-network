@@ -19,11 +19,12 @@ class Player:
     player_name: str
     player_id: str
     last_played: str
+    lp: str
 
 
 def generate_member_list() -> list[Player]:
     """Returns the list of club players with sorting"""
-    all_members_sql = """SELECT hs.date, hs.player_name, hs.player_id, hs.last_played
+    all_members_sql = """SELECT hs.date, hs.player_name, hs.player_id, hs.last_played, hs.lp
         FROM historic_stats hs
         LEFT JOIN club_members cm ON cm.player_id = hs.player_id
         WHERE hs.date = ? AND cm.hidden = 0

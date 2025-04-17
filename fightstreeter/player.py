@@ -15,13 +15,20 @@ bp = Blueprint("player", __name__, url_prefix="/u")
 
 
 @bp.route("/<string:player_id>")
-@bp.route("/<string:player_id>/graph")
 def homepage(player_id: str) -> str:
     """shows the old/simple graph"""
     if len(player_id) != 10 or not player_id.isnumeric():
         return render_template("player_lp_history_error.html.j2", player_id=player_id)
 
-    conn: sqlite3.Connection = sqlite3.connect("instance/cfn-stats.db")
+    player_name_sql: str = (
+        """SELECT cm.player_name
+            FROM club_members cm
+            WHERE player_id = ?;"""
+    )
+    name = db.query_db(player_name_sql, (player_id,), one=True)
+    name = name["player_name"]  # type: ignore
+
+    conn: sqlite3.Connection = db.get_db()
 
     df: pd.DataFrame = pd.read_sql_query(
         "SELECT r.player_id, r.char_id, r.lp, r.mr, r.[date]"
@@ -32,27 +39,22 @@ def homepage(player_id: str) -> str:
 
     if not df["lp"].any():
         return render_template(
-            "player/player_lp_history_error.html.j2", player_id=player_id
+            "player/player_homepage.html.j2",
+            lp_fig=None,
+            mr_fig=None,
+            player_name=name,
+            player_id=player_id,
+            member_list=generate_member_list(),
         )
 
-    player_name_sql: str = (
-        """SELECT cm.player_name
-            FROM club_members cm
-            WHERE player_id = ?;"""
-    )
-
-    name = db.query_db(player_name_sql, (player_id,), one=True)
-    name = name["player_name"]  # type: ignore
-
     df["char_id"] = df["char_id"].replace(charid_map)
-
     df["date"] = pd.to_datetime(df["date"], format="ISO8601", utc=True)
 
     lp_fig = px.line(
         df,
         x="date",
         y="lp",
-        title=f"{name}: League Points",
+        title="League Points",
         color="char_id",
         template="plotly_dark",
         line_shape="spline",
@@ -73,7 +75,7 @@ def homepage(player_id: str) -> str:
             df,
             x="date",
             y="mr",
-            title=f"{name}: Master Rate",
+            title="Master Rate",
             color="char_id",
             template="plotly_dark",
             line_shape="spline",

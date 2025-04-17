@@ -8,29 +8,32 @@
             <div class="navbar">
             <div class="container">
                 <div class="navbar-nav">
-                    <a class="nav-link pb-1 active" href="#">Funny Animals</a>
+                    <a class="nav-link pb-1" href="{{ url_for('roster.club_overview')}}">Funny Animals</a>
                     {% for player in member_list %}
-                    <a class="nav-link pb-1" href="{{ url_for('player.homepage', player_id=player.player_id) }}">{{player.player_name}}</a>
+                    <a class="nav-link pb-1 {% if player.lp == -1 %}disabled{% elif player.player_id == player_id %}active{% endif %}" href="{{ url_for('player.homepage', player_id=player.player_id) }}">{{player.player_name}}</a>
                     {% endfor %}
                 </div>
             </div>
             </div>
         </div>
         <main class="col-md-10">
+        <h2 class="h1 mb-3 p-2">{{ player_name }}</h2>
         <nav>
             <div class="nav nav-tabs" id="graphTab" role="tablist">
                 <button class="nav-link active" id="old-tab" data-bs-toggle="tab" data-bs-target="#old-tab-pane" type="button" role="tab" aria-controls="old-tab-pane" aria-selected="true">Old</button>
-                <button class="nav-link" id="new-tab" data-bs-toggle="tab" data-bs-target="#new-tab-pane" type="button" role="tab" aria-controls="new-tab-pane" aria-selected="false">New</button>
+                <button class="nav-link disabled" id="new-tab" data-bs-toggle="tab" data-bs-target="#new-tab-pane" type="button" role="tab" aria-controls="new-tab-pane" aria-selected="false">New</button>
             </div>
         </nav>
         <div class="tab-content" id="graphTabContent">
             <div class="tab-pane show active" id="old-tab-pane" role="tabpanel" aria-labelledby="old-tab" tabindex="0">
-                <div class="row mb-3">
                 {% if lp_fig %}
+                <div class="mb-3 p-3">
                     {{ lp_fig|safe }}
-                {% endif %}
                 </div>
-                <div class="row mb-3">
+                {% else %}
+                    <p class="card-text p-3"><em>No recent ranked matches. Other data coming in the future.</em></p>
+                {% endif %}
+                <div class="mb-3 p-3">
                 {% if mr_fig %}
                     {{ mr_fig|safe }}
                 {% endif %}

@@ -9,7 +9,7 @@
                     <div class="navbar-nav">
                         <a class="nav-link pb-1 active" href="#">Funny Animals</a>
                         {% for player in member_list %}
-                        <a class="nav-link pb-1" href="{{ url_for('player.homepage', player_id=player.player_id) }}">{{player.player_name}}</a>
+                        <a class="nav-link pb-1 {% if player.lp == -1 %}disabled{% endif %}" href="{{ url_for('player.homepage', player_id=player.player_id) }}">{{player.player_name}}</a>
                         {% endfor %}
                     </div>
                 </div>
