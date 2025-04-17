@@ -1,2 +1,3 @@
-# Change this and place in fightstreeter-site/instance/config.py
+"""Example config. Change this and place in ./instance/config.py"""
+
 SECRET_KEY = "fight streeter"

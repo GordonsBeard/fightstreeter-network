@@ -1,0 +1,10 @@
+<cheers>
+    <a name="cheers"></a>
+    {% for award_dict in awards_list %}
+    <award class="{{award_dict['class']}}">
+        <p class="award-title">{{award_dict['name']}}</p>
+        <p class="award-player">{{award_dict['player_name']}}</p>
+        <p class="award-value">{{award_dict['value']}}</p>
+    </award>
+    {% endfor %}
+</cheers>

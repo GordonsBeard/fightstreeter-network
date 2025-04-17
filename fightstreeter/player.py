@@ -7,32 +7,16 @@ import plotly.express as px  # type: ignore[import-untyped]
 from flask import Blueprint, render_template
 
 from constants import charid_map, league_ranks
-from fightstreeter import db
+
+from . import db
+from .roster import generate_member_list
 
 bp = Blueprint("player", __name__, url_prefix="/u")
 
 
 @bp.route("/<string:player_id>")
-def homepage(player_id: str) -> str:
-    """dashboard page for a single player"""
-    if len(player_id) != 10 or not player_id.isnumeric():
-        return render_template("player_lp_history_error.html.j2", player_id=player_id)
-
-    player_name_sql: str = (
-        """SELECT cm.player_name
-            FROM club_members cm
-            WHERE player_id = ?;"""
-    )
-
-    name = db.query_db(player_name_sql, (player_id,), one=True)
-
-    return render_template(
-        "player/player_homepage.html.j2", player_name=name, player_id=player_id
-    )
-
-
 @bp.route("/<string:player_id>/graph")
-def old_graph(player_id: str) -> str:
+def homepage(player_id: str) -> str:
     """shows the old/simple graph"""
     if len(player_id) != 10 or not player_id.isnumeric():
         return render_template("player_lp_history_error.html.j2", player_id=player_id)
@@ -51,6 +35,15 @@ def old_graph(player_id: str) -> str:
             "player/player_lp_history_error.html.j2", player_id=player_id
         )
 
+    player_name_sql: str = (
+        """SELECT cm.player_name
+            FROM club_members cm
+            WHERE player_id = ?;"""
+    )
+
+    name = db.query_db(player_name_sql, (player_id,), one=True)
+    name = name["player_name"]
+
     df["char_id"] = df["char_id"].replace(charid_map)
 
     df["date"] = pd.to_datetime(df["date"], format="ISO8601", utc=True)
@@ -59,7 +52,7 @@ def old_graph(player_id: str) -> str:
         df,
         x="date",
         y="lp",
-        title=f"{player_id}: League Points",
+        title=f"{name}: League Points",
         color="char_id",
         template="plotly_dark",
         line_shape="spline",
@@ -80,7 +73,7 @@ def old_graph(player_id: str) -> str:
             df,
             x="date",
             y="mr",
-            title=f"{player_id}: Master Rate",
+            title=f"{name}: Master Rate",
             color="char_id",
             template="plotly_dark",
             line_shape="spline",
@@ -89,5 +82,10 @@ def old_graph(player_id: str) -> str:
         mr_fig_html = mr_fig.to_html(full_html=False)
 
     return render_template(
-        "player/player_lp_history.html.j2", lp_fig=lp_fig_html, mr_fig=mr_fig_html
+        "player/player_homepage.html.j2",
+        lp_fig=lp_fig_html,
+        mr_fig=mr_fig_html,
+        player_name=name,
+        player_id=player_id,
+        member_list=generate_member_list(),
     )

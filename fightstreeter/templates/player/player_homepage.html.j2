@@ -2,5 +2,32 @@
 
 {% block title %}Roster{% endblock %}
 {% block content %}
-<p>Welcome {{ player_name }}. Looking for the old graph? <a href="{{ url_for('player.old_graph', player_id=player_id) }}">[Old Graph]</a></p>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 sidebar">
+            <div class="navbar">
+            <div class="container">
+                <div class="navbar-nav">
+                    <a class="nav-link pb-1 active" href="#">Funny Animals</a>
+                    {% for player in member_list %}
+                    <a class="nav-link pb-1" href="{{ url_for('player.homepage', player_id=player.player_id) }}">{{player.player_name}}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            </div>
+        </div>
+        <main class="col-md-10">
+            <div class="row mb-3">
+            {% if lp_fig %}
+                {{ lp_fig|safe }}
+            {% endif %}
+            </div>
+            <div class="row mb-3">
+            {% if mr_fig %}
+                {{ mr_fig|safe }}
+            {% endif %}
+            </div>
+        </main>
+    </div>
+</div>
 {% endblock %}
