@@ -23,7 +23,7 @@ def create_app(test_config=None):
 
     @app.route("/")
     def index():
-        return roster.roster()
+        return roster.club_overview()
 
     from . import db
 
