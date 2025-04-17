@@ -1,0 +1,72 @@
+{% extends "base.html.j2" %}
+{% block title %}Roster{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 sidebar">
+            <div class="navbar">
+                <div class="container">
+                    <div class="navbar-nav">
+                        <a class="nav-link pb-1 active" href="#">Funny Animals</a>
+                        {% for player in member_list %}
+                        <a class="nav-link pb-1" href="{{ url_for('player.homepage', player_id=player.player_id) }}">{{player.player_name}}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <main class="col-md-10">
+
+        <div class="d-flex pt-2 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Club Overview</h1>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Total Members</h4>
+                        <p class="card-text">{{ member_list|length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Established</h4>
+                        <p class="card-text">June 08 2023</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Last Updated</h4>
+                        <p class="card-text">{{ latest_update }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="container-fluid text-center">
+            {% for row_set in awards_list|slice(3) %}
+            <div class="row">
+                {% for award in row_set %}
+                <div class="col-3 card border-dark">
+                    <div class="card-body ">
+                        <h5 class="card-title">{{ award['name'] }}</h5>
+                        <h6 class="card-subtitle mb-2">{{ award['player_name'] }}</h6>
+                        <p class="card-text"><em>{{ award['value'] }}</em></p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        </main>
+    </div>
+</div>
+
+{% endblock %}

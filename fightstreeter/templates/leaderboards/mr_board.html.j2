@@ -1,0 +1,84 @@
+{% extends "base.html.j2" %}
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="/static/leaderboards.css">
+    <script src="/static/leaderboards.js"></script>
+{% endblock %}
+{% block title %}The Masters{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="row mb-3 align-items-center justify-content-center">
+            <div class="col-1 text-center align-items-center">
+            {% if prev_link != -1 %}
+                <a href="{{ url_for('leaderboards.mr_leaderboard', date_req = prev_link) }}">&lang; Prev</a>
+            {% endif %}
+            </div>
+            <div class="col-3">
+                <select id="date_select" onchange="changeDate()" class="form-select form-select-lg" aria-label="Date select">
+                    {% set datens = namespace(phasename=None) %}
+                    {% for date in date_list %}
+                        {% if date[1] != datens.phasename %}
+                            {% if not loop.first %}</optgroup>{% endif %}
+                            <optgroup label="Phase {{ date[1] }}">
+                        {% endif %}
+                        <option value="{{ date[0] }}" {% if date[0] == date_selected %}selected{% endif %}>{{ date[0] }}</option>
+                    {% set datens.phasename = date[1] %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-1 text-center align-items-center">
+            {% if next_link != -1 %}
+                <a href="{{ url_for('leaderboards.mr_leaderboard', date_req = next_link) }}">Next &rang;</a>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+        <h5 class="text-center">Master Rating (per character)</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Character</th>
+                    <th>Master Rating</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for player in lp_list %}
+                <tr>
+                    <td>{{ player.rank }}</td>
+                    <td>{{ player.player_name }}</td>
+                    <td>{{ player.char_id }}</td>
+                    <td>{{ "{:,}".format(player.mr) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+        <h5 class="text-center">League Points (per character)</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Character</th>
+                    <th>League Points</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for player in mr_list %}
+                <tr>
+                    <td>{{ player.rank }}</td>
+                    <td>{{ player.player_name }}</td>
+                    <td>{{ player.char_id }}</td>
+                    <td>{{ "{:,}".format(player.lp) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

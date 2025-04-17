@@ -2,6 +2,7 @@
 
 import logging
 import sqlite3
+from datetime import datetime
 
 logging.basicConfig()
 logger = logging.getLogger("cfn-stats-scrape")
@@ -14,9 +15,9 @@ LAST_UPDATE_TABLE_SQL = """CREATE TABLE IF NOT EXISTS last_update (
             parsing_complete INTEGER DEFAULT 0 NOT NULL);"""
 
 
-def start_last_update(date) -> None:
+def start_last_update(date: datetime) -> None:
     """Starts the last_update log entry"""
-    table_name = "cfn-stats.db"
+    table_name = "instance/cfn-stats.db"
     try:
         with sqlite3.connect(table_name) as conn:
             cursor = conn.cursor()
@@ -35,7 +36,7 @@ def start_last_update(date) -> None:
 
 def log_last_update(date, download_complete=False, parsing_complete=False) -> None:
     """Lets the scraper or parser signal when they're done."""
-    table_name = "cfn-stats.db"
+    table_name = "instance/cfn-stats.db"
 
     try:
         with sqlite3.connect(table_name) as conn:

@@ -1,11 +1,12 @@
 """Generate the awards for today."""
 
-import random
 import sqlite3
 
 import pandas as pd
 
 from constants import charid_map
+
+from . import db
 
 
 def generate_awards() -> list[dict[str, str]]:
@@ -13,29 +14,32 @@ def generate_awards() -> list[dict[str, str]]:
 
     awards_list: list[dict[str, str]] = []
 
-    conn: sqlite3.Connection = sqlite3.connect("cfn-stats.db")
+    conn: sqlite3.Connection = db.get_db()
 
     historic_stats_sql: str = (
-        """SELECT *
+        """SELECT *, cm.player_id as pid, cm.player_name as handle
         FROM historic_stats hs
-        WHERE date = (SELECT MAX(date) FROM historic_stats)
-        GROUP BY date, player_id, selected_char
-        ORDER BY date DESC"""
+        LEFT JOIN club_members cm ON pid = hs.player_id
+        WHERE date = (SELECT MAX(date) FROM historic_stats) AND cm.hidden = 0
+        GROUP BY hs.date, hs.player_id, hs.selected_char, handle
+        ORDER BY hs.date DESC"""
     )
 
     latest_lp_scores: str = (
-        """SELECT r.date, r.player_id, cm.player_name, r.char_id, r.lp, r.mr
+        """SELECT r.date, r.player_id as pid, cm.player_name, r.char_id, r.lp, r.mr, cm.player_name as handle
         FROM ranking r
         INNER JOIN club_members cm ON cm.player_id = r.player_id
-        WHERE date = (SELECT MAX(date) FROM ranking)
-        GROUP BY r.date, r.player_id, r.char_id;"""
+        WHERE date = (SELECT MAX(date) FROM ranking) AND cm.hidden = 0
+        GROUP BY r.date, r.player_id, r.char_id, handle;"""
     )
 
     inactive_player_scores: str = (
-        """SELECT hs.date, hs.player_id, hs.player_name, hs.selected_char as char_id, hs.lp, hs.mr
+        """SELECT hs.date, hs.player_id as pid, hs.player_name, 
+            hs.selected_char as char_id, hs.lp, hs.mr, cm.player_name as handle
         FROM historic_stats hs
-        WHERE date = (SELECT MAX(date) FROM historic_stats)
-        GROUP BY hs.date, hs.player_id, char_id;"""
+        LEFT JOIN club_members cm ON cm.player_id = hs.player_id
+        WHERE date = (SELECT MAX(date) FROM historic_stats) AND cm.hidden = 0
+        GROUP BY hs.date, hs.player_id, char_id, handle;"""
     )
 
     hs_df: pd.DataFrame = pd.read_sql_query(historic_stats_sql, conn)
@@ -122,9 +126,9 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
     awards_list.append(
         {
             "class": "hub-matches",
-            "name": "Hub Monster",
-            "player_name": bhub_matches_row["player_name"].item(),
-            "player_id": bhub_matches_row["player_id"].item(),
+            "name": "Hub Critter",
+            "player_name": bhub_matches_row["handle"].item(),
+            "player_id": bhub_matches_row["pid"].item(),
             "value": f"{bhub_matches_row['hub_matches'].item():,} hub matches",
         }
     )
@@ -134,8 +138,8 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
         {
             "class": "custom-matches",
             "name": "The V.I.P.",
-            "player_name": custom_matches_row["player_name"].item(),
-            "player_id": custom_matches_row["player_id"].item(),
+            "player_name": custom_matches_row["handle"].item(),
+            "player_id": custom_matches_row["pid"].item(),
             "value": f"{custom_matches_row['custom_matches'].item():,} custom room matches",
         }
     )
@@ -145,8 +149,8 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
         {
             "class": "ranked-matches",
             "name": "League Regular",
-            "player_name": ranked_matches_row["player_name"].item(),
-            "player_id": ranked_matches_row["player_id"].item(),
+            "player_name": ranked_matches_row["handle"].item(),
+            "player_id": ranked_matches_row["pid"].item(),
             "value": f"{ranked_matches_row['ranked_matches'].item():,} ranked matches",
         }
     )
@@ -155,9 +159,9 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
     awards_list.append(
         {
             "class": "casual-matches",
-            "name": "Casual Matches",
-            "player_name": casual_matches_row["player_name"].item(),
-            "player_id": casual_matches_row["player_id"].item(),
+            "name": "Casual Cruiser",
+            "player_name": casual_matches_row["handle"].item(),
+            "player_id": casual_matches_row["pid"].item(),
             "value": f"{casual_matches_row['ranked_matches'].item():,} casual matches",
         }
     )
@@ -167,33 +171,19 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
         {
             "class": "extreme-time",
             "name": "Extreme Matches",
-            "player_name": extreme_time_row["player_name"].item(),
-            "player_id": extreme_time_row["player_id"].item(),
+            "player_name": extreme_time_row["handle"].item(),
+            "player_id": extreme_time_row["pid"].item(),
             "value": f"{extreme_time_row['extreme_time'].item()/60:.0f} minutes of Extreme Battles",
         }
     )
-    geight_time = hs_df[hs_df["player_id"] == "2251667984"]["versus_time"].item()
-    dos_time = hs_df[hs_df["player_id"] == "2531364579"]["versus_time"].item()
-    newest_date = hs_df[hs_df["date"] == hs_df["date"].max()]["date"].values[0]
 
-    dos_geight_name = "Geight & Dos" if random.random() > 0.5 else "Dos & Geight"
-
-    geight_n_dos = {
-        "date": newest_date,
-        "player_id": "1234567890",
-        "player_name": dos_geight_name,
-        "versus_time": dos_time + geight_time,
-    }
-
-    hs_df = pd.concat([hs_df, pd.DataFrame([geight_n_dos])], ignore_index=True)
     versus_time_row = hs_df[hs_df["versus_time"] == hs_df["versus_time"].max()]
-
     awards_list.append(
         {
             "class": "versus-time",
             "name": "Versus Time",
-            "player_name": versus_time_row["player_name"].item(),
-            "player_id": versus_time_row["player_id"].item(),
+            "player_name": versus_time_row["handle"].item(),
+            "player_id": versus_time_row["pid"].item(),
             "value": f"{versus_time_row['versus_time'].item()/60/60:.0f} hours of local versus",
         }
     )
@@ -203,8 +193,8 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
         {
             "class": "practice-time",
             "name": "Head Trainer",
-            "player_name": practice_time_row["player_name"].item(),
-            "player_id": practice_time_row["player_id"].item(),
+            "player_name": practice_time_row["handle"].item(),
+            "player_id": practice_time_row["pid"].item(),
             "value": f"{practice_time_row['practice_time'].item()/60/60:.0f} hours of practice",
         }
     )
@@ -214,8 +204,8 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
         {
             "class": "arcade-time",
             "name": "Cabinet Critter",
-            "player_name": arcade_time_row["player_name"].item(),
-            "player_id": arcade_time_row["player_id"].item(),
+            "player_name": arcade_time_row["handle"].item(),
+            "player_id": arcade_time_row["pid"].item(),
             "value": f"{arcade_time_row['arcade_time'].item()/60/60:.0f} hours of arcade",
         }
     )
@@ -225,8 +215,8 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
         {
             "class": "wt-time",
             "name": "World (Tour) Warrior",
-            "player_name": wt_time_row["player_name"].item(),
-            "player_id": wt_time_row["player_id"].item(),
+            "player_name": wt_time_row["handle"].item(),
+            "player_id": wt_time_row["pid"].item(),
             "value": f"{wt_time_row['wt_time'].item()/60/60:.0f} hours of World Tour",
         }
     )
@@ -236,8 +226,8 @@ def generate_basic_awards(hs_df: pd.DataFrame) -> list[dict[str, str]]:
         {
             "class": "thumbs",
             "name": '"Nice Guy"',
-            "player_name": thumbs_row["player_name"].item(),
-            "player_id": thumbs_row["player_id"].item(),
+            "player_name": thumbs_row["handle"].item(),
+            "player_id": thumbs_row["pid"].item(),
             "value": f"{int(thumbs_row['thumbs'].item()):,} 👍",
         }
     )
