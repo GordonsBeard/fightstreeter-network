@@ -17,16 +17,28 @@
             </div>
         </div>
         <main class="col-md-10">
-            <div class="row mb-3">
-            {% if lp_fig %}
-                {{ lp_fig|safe }}
-            {% endif %}
+        <nav>
+            <div class="nav nav-tabs" id="graphTab" role="tablist">
+                <button class="nav-link active" id="old-tab" data-bs-toggle="tab" data-bs-target="#old-tab-pane" type="button" role="tab" aria-controls="old-tab-pane" aria-selected="true">Old</button>
+                <button class="nav-link" id="new-tab" data-bs-toggle="tab" data-bs-target="#new-tab-pane" type="button" role="tab" aria-controls="new-tab-pane" aria-selected="false">New</button>
             </div>
-            <div class="row mb-3">
-            {% if mr_fig %}
-                {{ mr_fig|safe }}
-            {% endif %}
+        </nav>
+        <div class="tab-content" id="graphTabContent">
+            <div class="tab-pane show active" id="old-tab-pane" role="tabpanel" aria-labelledby="old-tab" tabindex="0">
+                <div class="row mb-3">
+                {% if lp_fig %}
+                    {{ lp_fig|safe }}
+                {% endif %}
+                </div>
+                <div class="row mb-3">
+                {% if mr_fig %}
+                    {{ mr_fig|safe }}
+                {% endif %}
+                </div>
             </div>
+            <div class="tab-pane" id="new-tab-pane" role="tabpanel" aria-labelledby="new-tab" tabindex="0">
+            </div>
+        </div>
         </main>
     </div>
 </div>
