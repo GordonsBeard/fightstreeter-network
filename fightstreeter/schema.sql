@@ -1,19 +1,20 @@
 DROP TABLE IF EXISTS club_members;
+DROP TABLE IF EXISTS ranking;
 DROP TABLE IF EXISTS historic_stats;
 DROP TABLE IF EXISTS last_update;
-DROP TABLE IF EXISTS ranking;
 
 CREATE TABLE IF NOT EXISTS club_members (
     club_id TEXT NOT NULL,
     player_name TEXT NOT NULL,
     player_id TEXT NOT NULL,
-    joined_at TIMESTAMP,
+    joined_at TEXT,
     position INTEGER NOT NULL,
+    hidden INTEGER DEFAULT 0 NOT NULL,
     unique(club_id, player_id)
 );
 
 CREATE TABLE IF NOT EXISTS ranking (
-    date TIMESTAMP NOT NULL,
+    date TEXT NOT NULL,
     phase INTEGER NOT NULL,
     player_id TEXT NOT NULL,
     char_id TEXT NOT NULL,
@@ -23,7 +24,7 @@ CREATE TABLE IF NOT EXISTS ranking (
 );
 
 CREATE TABLE IF NOT EXISTS historic_stats (
-    date TIMESTAMP date_rec NOT NULL,
+    date TEXT NOT NULL,
     player_id TEXT NOT NULL,
     player_name TEXT NOT NULL,
 
@@ -48,7 +49,7 @@ CREATE TABLE IF NOT EXISTS historic_stats (
 
     total_kudos INTEGER,
     thumbs INTEGER,
-    last_played TIMESTAMP last_play_at NOT NULL,
+    last_played TEXT NOT NULL,
     profile_tagline TEXT,
     title_text TEXT,
     title_plate TEXT,
@@ -57,7 +58,7 @@ CREATE TABLE IF NOT EXISTS historic_stats (
 );
 
 CREATE TABLE IF NOT EXISTS last_update (
-    date TIMESTAMP PRIMARY KEY,
+    date TEXT PRIMARY KEY,
     download_complete INTEGER DEFAULT 0 NOT NULL,
     parsing_complete INTEGER DEFAULT 0 NOT NULL
 );

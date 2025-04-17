@@ -107,81 +107,6 @@ class HistoricStats:
     title_plate: str
 
 
-def create_tables(debug_flag: bool):
-    """creates the tables"""
-
-    logger.debug("Creating tables")
-
-    sql_statements = [
-        """CREATE TABLE IF NOT EXISTS club_members (
-            club_id TEXT NOT NULL,
-            player_name TEXT NOT NULL,
-            player_id TEXT NOT NULL,
-            joined_at TIMESTAMP,
-            position INTEGER NOT NULL,
-            unique(club_id, player_id));""",
-        """CREATE TABLE IF NOT EXISTS ranking (
-            date TIMESTAMP NOT NULL,
-            phase INTEGER NOT NULL,
-            player_id TEXT NOT NULL,
-            char_id TEXT NOT NULL,
-            lp INTEGER,
-            mr INTEGER,
-            unique(player_id, char_id, date));""",
-        """CREATE TABLE IF NOT EXISTS historic_stats (
-            date TIMESTAMP date_rec NOT NULL,
-            player_id TEXT NOT NULL,
-            player_name TEXT NOT NULL,
-
-            selected_char TEXT NOT NULL,
-            lp INTEGER,
-            mr INTEGER,
-
-            hub_matches INTEGER,
-            ranked_matches INTEGER,
-            casual_matches INTEGER,
-            custom_matches INTEGER,
-
-            hub_time INTEGER,
-            ranked_time INTEGER,
-            casual_time INTEGER,
-            custom_time INTEGER,
-            extreme_time INTEGER,
-            versus_time INTEGER,
-            practice_time INTEGER,
-            arcade_time INTEGER,
-            wt_time INTEGER,
-
-            total_kudos INTEGER,
-            thumbs INTEGER,
-            last_played TIMESTAMP last_play_at NOT NULL,
-            profile_tagline TEXT,
-            title_text TEXT,
-            title_plate TEXT,
-
-            unique(date, player_id));""",
-    ]
-
-    table_name: str = "instance/cfn-stats.db"
-
-    if debug_flag:
-        table_name = "cfn-stats-debug.db"
-        logger.debug("Running in debug mode, creating debug table.")
-
-    try:
-        with sqlite3.connect(table_name) as conn:
-            cursor = conn.cursor()
-            for statement in sql_statements:
-                cursor.execute(statement)
-
-            conn.commit()
-    except sqlite3.Error as e:
-        notify.send("Error in table creation.")
-        logger.error(e)
-
-    logger.debug("Tables successfully created. [SUCCESS]")
-
-
 def insert_rankings_into_db(record: RecordedLP, debug_flag: bool) -> None:
     """Takes the RecordedLP object and inserts it into the ranking table."""
 
@@ -566,9 +491,10 @@ if __name__ == "__main__":
         logger.setLevel(logging.DEBUG)
         logger.debug("***** ***** DEBUG ENABLED will not enter SQL to database.")
 
-    if "-new" in sys.argv[1:]:
-        logger.debug("**** CREATING NEW TABLES")
-        create_tables(debug_flag=DEBUG_FLAG)
+    # Handle table creation with flask --app fightstreeter init-db
+    # if "-new" in sys.argv[1:]:
+    #     logger.debug("**** CREATING NEW TABLES")
+    #     create_tables(debug_flag=DEBUG_FLAG)
 
     if "-club" in sys.argv[1:]:
         logger.debug("**** UPDATING CLUB INFO")
