@@ -461,8 +461,8 @@ def update_member_list(club_id, debug_flag: bool) -> None:
 
             for player_name, player_id, join_date, position in member_list:
                 cursor.execute(
-                    """INSERT INTO club_members VALUES (?, ?, ?, ?, ?);""",
-                    (club_id, player_name, player_id, join_date, position),
+                    """INSERT INTO club_members VALUES (?, ?, ?, ?, ?, ?);""",
+                    (club_id, player_name, player_id, join_date, position, 0),
                 )
 
             conn.commit()

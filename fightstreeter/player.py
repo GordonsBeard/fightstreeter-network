@@ -42,7 +42,7 @@ def homepage(player_id: str) -> str:
     )
 
     name = db.query_db(player_name_sql, (player_id,), one=True)
-    name = name["player_name"]
+    name = name["player_name"]  # type: ignore
 
     df["char_id"] = df["char_id"].replace(charid_map)
 
