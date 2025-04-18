@@ -34,7 +34,7 @@ def create_app(test_config=None):
 
         app.register_blueprint(roster.bp)
 
-    #     from . import player
+        from . import player
 
-    #     app.register_blueprint(player.bp)
+        app.register_blueprint(player.bp)
     return app

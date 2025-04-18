@@ -6,7 +6,7 @@ import click
 from flask import current_app, g
 
 
-def get_db():
+def get_db() -> sqlite3.Connection:
     """grabs a reused connection to the database"""
     if "db" not in g:
         g.db = sqlite3.connect(
@@ -44,11 +44,11 @@ def insert_db(query, args=()) -> bool:
     return success
 
 
-def latest_stats_date():
+def latest_stats_date() -> str:
     """Get's the date of the latest stats insert"""
     if "latest" not in g:
         row = query_db("SELECT MAX(date) as date FROM last_update;", one=True)
-        g.latest = row["date"]  # type: ignore
+        g.latest = row["date"] if row else "None"  # type: ignore
     return g.latest
 
 

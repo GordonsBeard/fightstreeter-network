@@ -26,7 +26,7 @@ def generate_member_list() -> list[Player]:
         ORDER BY hs.last_played DESC, hs.player_name;"""
 
     all_members = db.query_db(all_members_sql, (db.latest_stats_date(),))
-    all_members_list = [Player(**row) for row in all_members] if all_members else []
+    all_members_list = [Player(*row) for row in all_members] if all_members else []
 
     return all_members_list
 
@@ -34,7 +34,7 @@ def generate_member_list() -> list[Player]:
 @bp.get("/")
 @bp.output(Player.Schema(many=True))  # type: ignore # pylint: disable=no-member
 @bp.doc(summary="Get club members", description="Returns a list of every club member.")
-def get_club_roster():
+def get_club_roster() -> list[Player]:
     """Current club roster"""
     all_members_list = generate_member_list()
     return all_members_list
