@@ -21,22 +21,18 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    @app.get("/")
-    def index():
-        return {"message": "hello"}
-
     from fightstreetapi import db
 
     db.init_app(app)
 
-    # with app.app_context():
-    #     from . import leaderboards
+    with app.app_context():
+        #     from . import leaderboards
 
-    #     app.register_blueprint(leaderboards.bp)
+        #     app.register_blueprint(leaderboards.bp)
 
-    #     from . import roster
+        from . import roster
 
-    #     app.register_blueprint(roster.bp)
+        app.register_blueprint(roster.bp)
 
     #     from . import player
 
