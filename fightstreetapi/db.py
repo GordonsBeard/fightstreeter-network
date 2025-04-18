@@ -52,21 +52,16 @@ def latest_stats_date() -> str:
     return g.latest
 
 
-def init_db():
-    """DELETES and initializes new databases."""
-    db = get_db()
-    with current_app.open_resource("schema.sql") as f:
-        db.executescript(f.read().decode("utf8"))
-
-
-@click.command("init-db")
-def init_db_command():
-    """Clear the existing tables and their data and create new (empty) tables."""
-    init_db()
-    click.echo("Databases initialized.")
+def dates_with_data() -> list[str]:
+    """Returns a list of dates the site has data for"""
+    if "dates_with_data" not in g:
+        sql = """SELECT DISTINCT date FROM ranking ORDER BY date DESC;"""
+        results = query_db(sql)
+        dates: list[str] = [x[0] for x in results] if results else []
+        g.dates_with_data = dates
+    return g.dates_with_data
 
 
 def init_app(app):
     """init the database module"""
     app.teardown_appcontext(close_db)
-    app.cli.add_command(init_db_command)

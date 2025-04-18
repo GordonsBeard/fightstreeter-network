@@ -1,6 +1,10 @@
 """player stats"""
 
+from dataclasses import field
+
 from apiflask import APIBlueprint, abort
+from apiflask.validators import Length, OneOf
+from flask import json
 from marshmallow_dataclass import dataclass
 
 from constants import charid_map
@@ -11,9 +15,10 @@ bp = APIBlueprint("player", __name__, url_prefix="/player")
 
 
 @dataclass
-class PlayerProfile:  # pylint: disable=too-many-instance-attributes
+class PlayerHistoricStats:  # pylint: disable=too-many-instance-attributes
     """Player's profile schema"""
 
+    date: str
     player_name: str
     player_id: str
     date_joined: str
@@ -42,66 +47,93 @@ class PlayerProfile:  # pylint: disable=too-many-instance-attributes
 
 
 @dataclass
-class Character:
+class DateRangeRequest:
+    """Historic stats for a player between two given dates"""
+
+    date_start: str = field(
+        metadata={
+            "required": True,
+            "validate": OneOf(db.dates_with_data()),
+            "metadata": {"example": "2025-04-01"},
+        }
+    )
+    date_end: str = field(
+        metadata={
+            "required": True,
+            "validate": OneOf(db.dates_with_data()),
+            "metadata": {"example": "2025-04-17"},
+        }
+    )
+
+
+@dataclass
+class CharacterRanking:
     """Individual character LP/MR stats"""
 
+    date: str
     char_id: str
     lp: str
     mr: str
 
 
-@bp.get("/id/<string:req_player>")
-@bp.output(PlayerProfile.Schema)  # type: ignore # pylint: disable=maybe-no-member
-def player_all_characters(req_player, req_date=db.latest_stats_date()) -> PlayerProfile:
-    """Player overview/profile via player_id"""
+@bp.post("/overview/<string:player_id>")
+@bp.input(DateRangeRequest.Schema, location="json", arg_name="dates")  # type: ignore # pylint: disable=maybe-no-member
+@bp.output(PlayerHistoricStats.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
+def player_historicstats(player_id, dates) -> list[PlayerHistoricStats]:
+    """Player's historic stats between two dates"""
 
     # Support username or id, start with username
-    player_profile_sql: str = (
-        """SELECT hs.player_name, hs.player_id, joined_at date_joined, selected_char as selected_character,
+    historic_stats_daterange_sql: str = (
+        """SELECT date, hs.player_name, hs.player_id, joined_at date_joined, selected_char as selected_character,
                 lp as selected_lp, mr as selected_mr, hub_matches, ranked_matches, casual_matches,
                 custom_matches, hub_time, ranked_time, casual_time, custom_time, extreme_time,
                 versus_time, practice_time, arcade_time, wt_time, total_kudos, thumbs, last_played,
                 profile_tagline, title_text, title_plate
             FROM historic_stats hs
             INNER JOIN club_members cm ON cm.player_id = hs.player_id
-            WHERE hs.date = ? AND hs.player_id = ?"""
+            WHERE hs.date BETWEEN ? AND ? AND hs.player_id = ?"""
     )
 
-    result = db.query_db(player_profile_sql, (req_date, req_player), one=True)
+    results = db.query_db(
+        historic_stats_daterange_sql, (dates.date_start, dates.date_end, player_id)
+    )
 
-    if not result:
+    if not results:
         abort(404)
 
-    player_overview = PlayerProfile(*result)
-    player_overview.selected_character = charid_map[player_overview.selected_character]
+    player_overview = [PlayerHistoricStats(**result) for result in results]
+    for historicstats_entry in player_overview:
+        historicstats_entry.selected_character = charid_map[
+            historicstats_entry.selected_character
+        ]
 
     return player_overview
 
 
-@bp.get("/id/<string:req_player>/characters")
-@bp.output(Character.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
+@bp.post("/ranking/<string:player_id>")
+@bp.input(DateRangeRequest.Schema, location="json", arg_name="dates")  # type: ignore # pylint: disable=maybe-no-member
+@bp.output(CharacterRanking.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
 @bp.doc(
     summary="Player's characters' stats",
     description="Returns the LP/MR for every character played by a given user.",
 )
-def player_characters(req_player) -> list[Character]:
+def ranking_stats_range(player_id, dates) -> list[CharacterRanking]:
     """Stats on every character played by a given user"""
 
     # Support username or id, start with username
     player_characters_sql: str = (
-        """SELECT char_id, lp, mr
+        """SELECT date, char_id, lp, mr
             FROM ranking
-            WHERE player_id = ? AND date = ?;"""
+            WHERE date BETWEEN ? AND ? AND player_id = ?;"""
     )
 
-    result = db.query_db(player_characters_sql, (req_player, db.latest_stats_date()))
+    result = db.query_db(
+        player_characters_sql, (dates.date_start, dates.date_end, player_id)
+    )
 
     if not result:
         abort(404)
 
-    player_overview = [Character(**row) for row in result]
+    list_of_char_ranks = [CharacterRanking(**row) for row in result]
 
-    for char in player_overview:
-        char.char_id = charid_map[char.char_id]
-
-    return player_overview
+    return list_of_char_ranks

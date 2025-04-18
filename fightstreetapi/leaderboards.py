@@ -13,14 +13,6 @@ from . import db
 bp = APIBlueprint("leaderboards", __name__, url_prefix="/leaderboards")
 
 
-def get_list_of_dates() -> list[str]:
-    """Returns a list of dates the site has data for"""
-    sql = """SELECT DISTINCT date FROM ranking ORDER BY date DESC;"""
-    results = db.query_db(sql)
-    dates_with_data: list[str] = [x[0] for x in results] if results else []
-    return dates_with_data
-
-
 @dataclass
 class LeaderboardPlayer:
     """Individual player on a leaderboard."""
