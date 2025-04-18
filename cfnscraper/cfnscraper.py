@@ -48,7 +48,7 @@ class CFNStatsScraper:
         self,
         date: datetime,
         debug_flag: bool,
-        notify: str,
+        notify_channel: str,
         url_token: str,
         buckler_id: str,
         buckler_r_id: str,
@@ -57,7 +57,7 @@ class CFNStatsScraper:
     ) -> None:
         self.debug: bool = debug_flag
         self.date: datetime = date
-        self.notify: Notify = Notify(notify)
+        self.notify: Notify = Notify(notify_channel)
         self.url_token: str = url_token
         self.buckler_id: str = buckler_id
         self.buckler_r_id: str = buckler_r_id

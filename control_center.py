@@ -1,10 +1,12 @@
 """This file implements the cfnscraper and cfnparser functions so the backend can access their results."""
 
 import re
+import sqlite3
 import sys
 from datetime import datetime
 
-from cfnscraper.scrape import CFNStatsScraper, Subject
+from cfnparser.cfnparser import CFNStatsParser
+from cfnscraper.cfnscraper import CFNStatsScraper, Subject
 from constants import FUNNY_ANIMALS
 from instance import cfn_secrets
 from last_updated import log_last_update, start_last_update
@@ -22,6 +24,13 @@ def parse_cookie_file(cookies_file: str):
     return cookie_dict
 
 
+def init_db():
+    """DELETES and initializes new databases."""
+    db = sqlite3.connect("instance/cfn-stats.db", detect_types=sqlite3.PARSE_DECLTYPES)
+    with open("schema.sql", encoding="utf-8") as f:
+        db.executescript(f.read())
+
+
 if __name__ == "__main__":
     cookies = parse_cookie_file("instance/cookies.txt")
 
@@ -30,24 +39,16 @@ if __name__ == "__main__":
     BUCKLER_PRAISE_DATE: str = cookies["buckler_praise_date"]
 
     if len(sys.argv) == 1:
-        print("Mising arguments: -daily [-debug -all]")
-        print()
-        print(
-            "-debug:\t\tDownloads everything to /mock folder. (does nothing by itself)"
-        )
-        print(
-            "-daily:\t\tDownloads every club member's overview.json & matches for today."
-        )
-        print("-all:\tDownloads every club member's matches (all 10 pages).")
+        print("Mising arguments: -daily | -hist | -init [-debug -all]")
 
-    DEBUG = False
+    DEBUG_FLAG = False
 
     if "-debug" in sys.argv[1:]:
-        DEBUG = True
+        DEBUG_FLAG = True
 
     cfn_scraper = CFNStatsScraper(
         datetime.now(),
-        DEBUG,
+        DEBUG_FLAG,
         cfn_secrets.NOTIFY_CHANNEL,
         cfn_secrets.URL_TOKEN,
         BUCKLER_ID,
@@ -56,12 +57,18 @@ if __name__ == "__main__":
         cfn_secrets.DEFAULT_PLAYER_ID,
     )
 
-    if "-daily" not in sys.argv[1:]:
-        sys.exit("Missing -daily, script will do nothing. Exiting.")
+    cfn_parser = CFNStatsParser(DEBUG_FLAG, cfn_secrets.NOTIFY_CHANNEL)
+
+    if "-init" in sys.argv[1:]:
+        init_db()
+        sys.exit("Databases initialized.")
 
     if "-daily" in sys.argv[1:]:
+        # Start Scraping
         start_last_update(date=cfn_scraper.date)
-        cfn_scraper.sync_club_info(club_id=cfn_secrets.DEFAULT_CLUB_ID)
+        # club
+        cfn_scraper.sync_club_info(cfn_secrets.DEFAULT_CLUB_ID)
+        # players
         for player in FUNNY_ANIMALS:
             cfn_scraper.sync_player_overview(player_id=player)
             cfn_scraper.sync_player_avatar(player)
@@ -85,7 +92,22 @@ if __name__ == "__main__":
                         subject_type=match_type,
                         all_matches=False,
                     )
-        cfn_scraper.send_push_alert(
-            f"CFN stats downloaded for {datetime.today().date().strftime('%b %d %Y')}"
-        )
         log_last_update(date=cfn_scraper.date, download_complete=True)
+
+        # Start Parsing
+        cfn_parser.update_stats_for_date(datetime.now())
+        cfn_parser.update_member_list(cfn_secrets.DEFAULT_CLUB_ID)
+        cfn_parser.send_push_alert(
+            f"[OK] FSN Update {datetime.today().date().strftime('%b %d %Y')}"
+        )
+        log_last_update(date=cfn_scraper.date, parsing_complete=True)
+        sys.exit("Daily run completed.")
+    elif "-hist" in sys.argv[1:]:
+        historical_dates = cfn_parser.historical_dates
+        for hist_date in historical_dates:
+            start_last_update(hist_date)
+            cfn_parser.update_stats_for_date(hist_date)
+            log_last_update(
+                date=hist_date, parsing_complete=True, download_complete=True
+            )
+        sys.exit("Historical backup completed.")

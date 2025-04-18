@@ -43,7 +43,12 @@ def log_last_update(date, download_complete=False, parsing_complete=False) -> No
             cursor = conn.cursor()
             cursor.execute(LAST_UPDATE_TABLE_SQL)
 
-            if download_complete:
+            if download_complete and parsing_complete:
+                cursor.execute(
+                    """UPDATE last_update SET download_complete = 1, parsing_complete = 1 WHERE date = ?""",
+                    (date.strftime("%Y-%m-%d"),),
+                )
+            elif download_complete:
                 cursor.execute(
                     """UPDATE last_update SET download_complete = 1 WHERE date = ?""",
                     (date.strftime("%Y-%m-%d"),),

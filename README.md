@@ -1,28 +1,26 @@
-# cfn stats grabber
+# fightstreeter-network
 
-this is multiple projects:
-- Scraper
-    - ONLY downloads the raw .json files
-- Parser/Inserter (load the cache)
-    - reads the json
-    - puts into database
-- Website (reads the database)
+This repo represents multiple projects coming together like a turduken of sorts.
 
-these scripts download the cfn street fighter 6 data in .json format. later it might not
-save the entire thing and just keep the important bits.
+- cfnscraper
+    - Utility program that handles querying and downloading the JSON response from CFN's website.
+    - All .json files are downloaded and stored in their raw format.
+- cfnparser
+    - Utility program that reads the .json files and builds a sqlite database.
+- fightstreetapi
+    - Flask backend serving up an API of compiled stats.
+- fighstreetreact
+    - React frontend to display contents of API.
 
-cfn only stores the last 100 matches so if you fight a lot: those matches are known only
-to you and the aether.
+Limitations:
+- Currently saving the date as no more granular than just the day. Might move to timestamps later, not worth it really.
+- CFN only shows 100 matches at a time. If you fight more than this, cfnscraper will miss these.
+- cfnscraper can only get Club members if you are the Club owner.
 
 this readme is for myself (older, more forgetful) or someone else completely (you, attractive)
 
 ## run the daily stats
 
-1. get the *cfn-secrets.py* tokens filled out
-2. python **./scraper.py -daily -club -matches** (gets the .json downloaded for today)
-3. python **./parseinsert.py -daily -club** (inserts the info to the database)
-
-## notes that complicate it
-
-* if you're not the leader of the club you can't get the memberlist
-* no automation for getting the secrets
+1. get the *instance/cfn-secrets.py* tokens filled out
+2. update *instance/cookies.txt* with latest CFN login cookies file
+3. **./control_center.py -daily [-debug -all]** (this runs the scraper and parser)
