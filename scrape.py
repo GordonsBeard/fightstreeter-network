@@ -9,10 +9,10 @@ from enum import Enum
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import cfn_secrets
 import requests
 from notify_run import Notify  # type: ignore
 
-import cfn_secrets
 import cookieread
 from constants import FUNNY_ANIMALS
 from last_updated import log_last_update, start_last_update
@@ -315,7 +315,7 @@ class CFNStatsScraper:
 
         response: requests.Response = requests.get(
             self._get_req_url(subject),
-            timeout=5,
+            timeout=10,
             headers=headers,
             cookies=cookies,
         )
