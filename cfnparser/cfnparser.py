@@ -405,7 +405,8 @@ class CFNStatsParser:
         """Updates the club_members database with people loaded from FunnyAnimals"""
         logger.debug("**** UPDATING CLUB INFO")
         club_data_location = Path(
-            f"cfn_stats/{str(self.now_datetime.year)}/{str(self.now_datetime.month)}/{str(self.now_datetime.day)}/{club_id}/{club_id}.json"
+            f"cfn_stats/{str(self.now_datetime.year)}/{str(self.now_datetime.month)}"
+            f"/{str(self.now_datetime.day)}/{club_id}/{club_id}.json"
         )
 
         # Initialize the club members and put Shay first because he's not in the club
