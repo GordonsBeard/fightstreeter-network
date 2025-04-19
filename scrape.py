@@ -281,15 +281,6 @@ class CFNStatsScraper:
             logger.debug("Cached data found.")
             return cached_data
 
-        if self.date.date() < datetime.today().date():
-            logger.error(
-                "[ERROR] Cannot request new data from a time before today! Halting."
-            )
-            self.send_push_alert(
-                "Cannot request new data from a time before today! Halting."
-            )
-            sys.exit()
-
         cookies: dict[str, str] = {
             "buckler_id": self._buckler_id,
             "buckler_r_id": self._buckler_r_id,
@@ -670,6 +661,6 @@ if __name__ == "__main__":
                             all_matches=False,
                         )
         cfn_scraper.send_push_alert(
-            f"CFN stats downloaded for {datetime.today().date().strftime('%b %d %Y')}"
+            f"CFN stats downloaded for {cfn_scraper.date.strftime('%b %d %Y')}"
         )
         log_last_update(date=cfn_scraper.date, download_complete=True)
