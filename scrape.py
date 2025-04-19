@@ -471,13 +471,9 @@ class CFNStatsScraper:
                     yesterday_count: int = 0
 
                     for match in matches:
-                        today: datetime = datetime.now().replace(
-                            hour=0,
-                            minute=0,
-                            second=0,
-                            microsecond=0,
-                            tzinfo=ZoneInfo("America/Los_Angeles"),
-                        )
+                        today: datetime = datetime.now(
+                            ZoneInfo("America/Los_Angeles")
+                        ).replace(hour=0, minute=0, second=0, microsecond=0)
                         match_time = datetime.fromtimestamp(
                             match["uploaded_at"], tz=ZoneInfo("UTC")
                         )
@@ -637,7 +633,9 @@ if __name__ == "__main__":
         logger.setLevel(logging.DEBUG)
         DEBUG = True
 
-    cfn_scraper = CFNStatsScraper(datetime.now(), debug_flag=DEBUG)
+    cfn_scraper = CFNStatsScraper(
+        datetime.now(ZoneInfo("America/Los_Angeles")), debug_flag=DEBUG
+    )
 
     if "-club" not in sys.argv[1:] and "-daily" not in sys.argv[1:]:
         sys.exit("Missing -daily or -club, script will do nothing.")
