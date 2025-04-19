@@ -1,4 +1,16 @@
-"""database handling"""
+"""
+Handles common database operations and stores reusable instances.
+
+club_members:   this holds the club members and when they joined, user profile stuff
+
+historic_stats: a daily snapshot of the "summary" numbers on a user's CFN profile.
+                Time spent in versus/training/extreme, how many total battle hub matches, etc.
+
+last_update:    tracks when the update was attempted/completed, primary key rolodex?
+
+ranking:        a daily snapshot of all of a player's characters LP and MR. This only
+                shows up for the active phase.
+"""
 
 import sqlite3
 
