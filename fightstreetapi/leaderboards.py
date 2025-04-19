@@ -21,7 +21,6 @@ boards = ["mr-all", "lp-all"]
 class LeaderboardPlayer:
     """Individual player on a leaderboard."""
 
-    rank: int
     player_name: str
     player_id: str
     character: str
@@ -79,8 +78,7 @@ def get_leaderboard(col_name: str, date_req: str) -> list[LeaderboardPlayer]:
     )
 
     latest_mr_scores: str = (
-        f"""SELECT ROW_NUMBER () OVER ( ORDER BY r.mr DESC) rank,
-            r.player_id, cm.player_name, r.char_id as character, {col_name} as value
+        f"""SELECT r.player_id, cm.player_name, r.char_id as character, {col_name} as value
             FROM ranking r
             INNER JOIN club_members cm ON cm.player_id = r.player_id
             WHERE date = ?
@@ -102,11 +100,11 @@ def get_leaderboard(col_name: str, date_req: str) -> list[LeaderboardPlayer]:
 
 
 @bp.get("/")
-@bp.input(LeaderboardRequest.Schema, location="query")
-@bp.output(Leaderboard.Schema)
+@bp.input(LeaderboardRequest.Schema, location="query")  # type: ignore #pylint: disable=maybe-no-member
+@bp.output(Leaderboard.Schema)  # type: ignore #pylint: disable=maybe-no-member
 @bp.doc(
-    summary="MR Leaderboard (all)",
-    description="Returns the MR obtained for every player's character(s). Sorted high to low.",
+    summary="Retrieve leaderboards",
+    description="Returns the requested leaderboard. Default sort high mr/lp to low.",
 )
 def mr_leaderboard(query_data: LeaderboardRequest) -> Leaderboard:
     """Displays the MR leaderboard."""
