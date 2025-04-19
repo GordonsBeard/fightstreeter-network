@@ -3,8 +3,7 @@
 from dataclasses import field
 
 from apiflask import APIBlueprint, abort
-from apiflask.validators import Length, OneOf
-from flask import json
+from apiflask.validators import OneOf
 from marshmallow_dataclass import dataclass
 
 from constants import charid_map
