@@ -8,7 +8,7 @@ from marshmallow_dataclass import dataclass
 
 from constants import charid_map
 
-from . import db
+from .db import query_db
 
 bp = APIBlueprint("player", __name__, url_prefix="/player")
 
@@ -49,11 +49,10 @@ class PlayerHistoricStats:  # pylint: disable=too-many-instance-attributes
 class DateRangeRequest:
     """Historic stats for a player between two given dates"""
 
-    player_id: str = field(
+    player_id: int = field(
         metadata={
             "required": True,
-            "validate": Length(equal=10),
-            "metadata": {"example": "3425126856"},
+            "metadata": {"example": 3425126856},
         }
     )
     date_start: str = field(
@@ -99,6 +98,9 @@ class CharacterRanking:
 def player_overview_snapshot(query_data) -> list[PlayerHistoricStats]:
     """Player's historic_stats snapshot between two dates."""
 
+    if not query_data.player_id:
+        abort(404)
+
     range_sql = (
         """(hs.date BETWEEN ? AND ?)"""
         if query_data.fetch_range
@@ -117,7 +119,7 @@ def player_overview_snapshot(query_data) -> list[PlayerHistoricStats]:
             WHERE hs.player_id = ? AND {range_sql}"""
     )
 
-    results = db.query_db(
+    results = query_db(
         historic_stats_daterange_sql,
         (query_data.player_id, query_data.date_start, query_data.date_end),
     )
@@ -158,7 +160,7 @@ def player_ranking_snapshot(query_data) -> list[CharacterRanking]:
         )
     )
 
-    result = db.query_db(
+    result = query_db(
         player_characters_sql,
         (query_data.date_start, query_data.date_end, query_data.player_id),
     )
