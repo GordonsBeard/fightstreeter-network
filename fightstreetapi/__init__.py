@@ -37,4 +37,8 @@ def create_app(test_config=None):
         from . import player
 
         app.register_blueprint(player.bp)
+
+        from . import punchcard
+
+        app.register_blueprint(punchcard.bp)
     return app
