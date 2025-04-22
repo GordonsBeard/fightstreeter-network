@@ -49,10 +49,11 @@ class PlayerHistoricStats:  # pylint: disable=too-many-instance-attributes
 class DateRangeRequest:
     """Historic stats for a player between two given dates"""
 
-    player_id: int = field(
+    player_id: str = field(
         metadata={
             "required": True,
-            "metadata": {"example": 3425126856},
+            "validate": Length(min=10, max=10),
+            "metadata": {"example": "3425126856"},
         }
     )
     date_start: str = field(
@@ -71,7 +72,7 @@ class DateRangeRequest:
 
     fetch_range: bool = field(
         metadata={
-            "required": False,
+            "required": True,
             "validate": OneOf([True, False]),
             "metadata": {"example": True},
         }
@@ -88,18 +89,13 @@ class CharacterRanking:
     mr: int
 
 
-@bp.post("/overview")
-@bp.input(DateRangeRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
-@bp.output(PlayerHistoricStats.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
-@bp.doc(
-    summary="Player's overview snapshot",
-    description="Returns the historic_stats row containing the summary of stats for the player for each given date.",
-)
-def player_overview_snapshot(query_data) -> list[PlayerHistoricStats]:
-    """Player's historic_stats snapshot between two dates."""
-
-    if not query_data.player_id:
-        abort(404)
+def player_overview_snapshot(query_data: DateRangeRequest) -> list[PlayerHistoricStats]:
+    """Internal call to get some historic_stats data between two dates"""
+    if query_data.date_end < query_data.date_start:
+        query_data.date_end, query_data.date_start = (
+            query_data.date_start,
+            query_data.date_end,
+        )
 
     range_sql = (
         """(hs.date BETWEEN ? AND ?)"""
@@ -136,15 +132,13 @@ def player_overview_snapshot(query_data) -> list[PlayerHistoricStats]:
     return player_overview
 
 
-@bp.post("/ranking")
-@bp.input(DateRangeRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
-@bp.output(CharacterRanking.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
-@bp.doc(
-    summary="Player's ranking snapshot",
-    description="Returns the LP/MR for every character played by a given user for the given date.",
-)
 def player_ranking_snapshot(query_data) -> list[CharacterRanking]:
-    """Stats on every character played by a given user"""
+    """Internal call to get ranking information every character played by a user this phase."""
+    if query_data.date_end < query_data.date_start:
+        query_data.date_end, query_data.date_start = (
+            query_data.date_start,
+            query_data.date_end,
+        )
 
     player_characters_sql: str = (
         (
@@ -174,3 +168,35 @@ def player_ranking_snapshot(query_data) -> list[CharacterRanking]:
         character_rank.char_id = charid_map[character_rank.char_id]
 
     return list_of_char_ranks
+
+
+@bp.post("/overview")
+@bp.input(DateRangeRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
+@bp.output(PlayerHistoricStats.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
+@bp.doc(
+    summary="Player's overview snapshot",
+    description="Returns the historic_stats row containing the summary of stats for the player for each given date.",
+)
+def player_overview_snapshot_route(
+    query_data: DateRangeRequest,
+) -> list[PlayerHistoricStats]:
+    """Player's historic_stats snapshot between two dates."""
+
+    player_overview = player_overview_snapshot(query_data)
+
+    return player_overview
+
+
+@bp.post("/ranking")
+@bp.input(DateRangeRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
+@bp.output(CharacterRanking.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
+@bp.doc(
+    summary="Player's ranking snapshot",
+    description="Returns the LP/MR for every character played by a given user for the given date.",
+)
+def player_ranking_snapshot_route(query_data) -> list[CharacterRanking]:
+    """MR/LP stats on every character played by a given user"""
+
+    player_rankings = player_ranking_snapshot(query_data)
+
+    return player_rankings
