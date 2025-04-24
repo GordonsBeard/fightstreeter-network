@@ -124,34 +124,37 @@ def get_kudos_class(kudos) -> str:
 
 
 FUNNY_ANIMALS: list[str] = [
-    "1005019466",
-    "1005115021",
-    "1074687961",
-    "1462060153",
-    "1774348616",
-    "1818343673",
-    "1980173119",  # izzy
-    "1994931079",
-    "2172475021",  # owlyoop
-    "2220983103",  # inttena/zain
-    "2251667984",  # geight
-    "2312128654",
-    "2380532183",
-    "2531364579",  # Sugar Meowth
-    "2703886514",  # crud
-    "2881725645",
-    "3022660117",  # shay
-    "3215587216",
-    "3240817600",  # Array
-    "3425126856",  # scrub
-    "3444486243",
-    "3452142911",
-    "3469051697",
-    "3585459087",
-    "3712336197",
-    "3781805743",  # auxy
-    "4010969238",
-    "4249556471",
+    "1005019466",  # ManiFromStreets / Electivire
+    "1005115021",  # Fotts           / Spearow
+    "1074687961",  # giggles         / Wugtrio
+    "1338183606",  # Elkpoint (1)    / Beheeyem
+    "1462060153",  # gum b           / Bayleef
+    "1774348616",  # TheREALChuckE   / Shelmet
+    "1818343673",  # Brambleclaw     / Gogoat
+    "1980173119",  # izzy            / Seaking
+    "1994931079",  # Aubirb          / Slowpoke
+    "2172475021",  # owlyoop         / Spearow
+    "2220983103",  # inttena         / Exeggutor
+    "2251667984",  # Geight          / Great Tusk
+    "2273908581",  # Otterfate       / Swanna
+    "2312128654",  # Chiffy          / Braixen
+    "2380532183",  # Ryekoh          / Marill
+    "2531364579",  # Sugar Meowth    / Reuniclus
+    "2703886514",  # Crud            / Simisear
+    "2881725645",  # cutefenns       / Landorus
+    "3022660117",  # Shaymoo         / Seadra
+    "3215587216",  # Buizle          / Teddiursa
+    "3240817600",  # Array           / Klang
+    "3425126856",  # Scrub           / Hatenna
+    "3444486243",  # Sham            / Raikou
+    "3452142911",  # Trozte          / Skeledirge
+    "3469051697",  # WoofBarkArf     / Tyrantrum
+    "3585459087",  # Chibisaur       / Dewgong
+    "3712336197",  # Nev4da          / Umbreon
+    "3781805743",  # Auxy            / Ribombee
+    "3845887643",  # Elkpoint (2)    / Reshiram
+    "4010969238",  # Akvo            / Smoochum
+    "4249556471",  # Vivace          / Glaceon
 ]
 
 phase_dates = {
