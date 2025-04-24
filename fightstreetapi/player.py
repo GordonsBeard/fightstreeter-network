@@ -84,6 +84,8 @@ class CharacterRanking:
     """Individual character LP/MR stats"""
 
     date: str
+    phase: int
+    player_id: str
     char_id: str
     lp: int
     mr: int
@@ -142,13 +144,13 @@ def player_ranking_snapshot(query_data) -> list[CharacterRanking]:
 
     player_characters_sql: str = (
         (
-            """SELECT date, char_id, lp, mr
+            """SELECT date, phase, player_id, char_id, lp, mr
             FROM ranking
             WHERE date BETWEEN ? AND ? AND player_id = ?;"""
         )
         if query_data.fetch_range
         else (
-            """SELECT date, char_id, lp, mr
+            """SELECT date, phase, char_id, lp, mr
             FROM ranking
             WHERE (date = ? OR date = ?) AND player_id = ?;"""
         )
@@ -170,7 +172,7 @@ def player_ranking_snapshot(query_data) -> list[CharacterRanking]:
     return list_of_char_ranks
 
 
-@bp.post("/overview")
+@bp.get("/overview")
 @bp.input(DateRangeRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
 @bp.output(PlayerHistoricStats.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
 @bp.doc(
@@ -187,7 +189,7 @@ def player_overview_snapshot_route(
     return player_overview
 
 
-@bp.post("/ranking")
+@bp.get("/ranking")
 @bp.input(DateRangeRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
 @bp.output(CharacterRanking.Schema(many=True))  # type: ignore # pylint: disable=maybe-no-member
 @bp.doc(
