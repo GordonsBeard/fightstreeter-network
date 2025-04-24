@@ -9,6 +9,7 @@ from marshmallow_dataclass import dataclass
 from constants import charid_map
 
 from .db import dates_with_data, query_db
+from .player import CharacterRanking
 
 bp = APIBlueprint("punchcard", __name__, url_prefix="/punchcard")
 
@@ -59,9 +60,10 @@ class PunchCard:
     wt_time: int
     kudos_gained: int
     thumbs_gained: int
+    ranked_changes: dict
 
 
-@bp.post("/")
+@bp.get("/")
 @bp.input(PunchCardRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
 @bp.output(PunchCard.Schema)  # type: ignore # pylint: disable=maybe-no-member
 @bp.doc(
@@ -97,55 +99,91 @@ def generate_punchcard_route(query_data: PunchCardRequest) -> PunchCard:
         WHERE hs.player_id = ?
         AND date <= ? ORDER BY date DESC LIMIT 2;"""
 
-    results = query_db(punchard_hs_req_sql, (query_data.player_id, query_data.date))
+    hs_results = query_db(punchard_hs_req_sql, (query_data.player_id, query_data.date))
 
-    if not results:
+    ranking_req_sql = """SELECT * FROM ranking
+        WHERE date IN (SELECT DISTINCT date FROM ranking WHERE date <= ? ORDER BY date DESC LIMIT 2)
+            AND player_id = ?
+        ORDER BY date DESC;
+        """
+
+    ranking_results = query_db(ranking_req_sql, (query_data.date, query_data.player_id))
+
+    if not hs_results or not ranking_results or len(hs_results) != 2:
         abort(404)
 
-    if len(results) != 2:
-        abort(404)
-
-    today, yesterday = results[0], results[1]
+    hs_today, hs_yesterday = hs_results[0], hs_results[1]
     yesterday_total_matches = (
-        (today["hub_matches"] - yesterday["hub_matches"])
-        + (today["ranked_matches"] - yesterday["ranked_matches"])
-        + (today["casual_matches"] - yesterday["casual_matches"])
-        + (today["custom_matches"] - yesterday["custom_matches"])
+        (hs_today["hub_matches"] - hs_yesterday["hub_matches"])
+        + (hs_today["ranked_matches"] - hs_yesterday["ranked_matches"])
+        + (hs_today["casual_matches"] - hs_yesterday["casual_matches"])
+        + (hs_today["custom_matches"] - hs_yesterday["custom_matches"])
     )
     yesterday_total_time = (
-        (today["hub_time"] - yesterday["hub_time"])
-        + (today["ranked_time"] - yesterday["ranked_time"])
-        + (today["casual_time"] - yesterday["casual_time"])
-        + (today["extreme_time"] - yesterday["extreme_time"])
-        + (today["versus_time"] - yesterday["versus_time"])
-        + (today["practice_time"] - yesterday["practice_time"])
-        + (today["arcade_time"] - yesterday["arcade_time"])
-        + (today["wt_time"] - yesterday["wt_time"])
+        (hs_today["hub_time"] - hs_yesterday["hub_time"])
+        + (hs_today["ranked_time"] - hs_yesterday["ranked_time"])
+        + (hs_today["casual_time"] - hs_yesterday["casual_time"])
+        + (hs_today["extreme_time"] - hs_yesterday["extreme_time"])
+        + (hs_today["versus_time"] - hs_yesterday["versus_time"])
+        + (hs_today["practice_time"] - hs_yesterday["practice_time"])
+        + (hs_today["arcade_time"] - hs_yesterday["arcade_time"])
+        + (hs_today["wt_time"] - hs_yesterday["wt_time"])
     )
 
+    list_of_ranks: list[CharacterRanking] = [
+        CharacterRanking(**row) for row in ranking_results
+    ]
+
+    yesterday_date, today_date = {row.date for row in list_of_ranks}
+    char_ids = {char.char_id for char in list_of_ranks}
+
+    yesterday_ranks = {}
+    today_ranks = {}
+    char_ranks = {}
+
+    for rank in list_of_ranks:
+        if rank.date == yesterday_date:
+            if rank.char_id not in yesterday_ranks:
+                yesterday_ranks[rank.char_id] = {"lp": rank.lp, "mr": rank.mr}
+        if rank.date == today_date:
+            if rank.char_id not in today_ranks:
+                today_ranks[rank.char_id] = {"lp": rank.lp, "mr": rank.mr}
+
+    for character_id in char_ids:
+        char_name = charid_map[character_id]
+        if char_name not in char_ranks:
+            char_ranks[char_name] = {"lp": 0, "mr": 0}
+        char_ranks[char_name]["lp"] = (
+            today_ranks[character_id]["lp"] - yesterday_ranks[character_id]["lp"]
+        )
+        char_ranks[char_name]["mr"] = (
+            today_ranks[character_id]["mr"] - yesterday_ranks[character_id]["mr"]
+        )
+
     punchcard = PunchCard(
-        date=today["date"],
-        prev_date=yesterday["date"],
+        date=hs_today["date"],
+        prev_date=hs_yesterday["date"],
         player_id=query_data.player_id,
-        player_name=today["player_name"],
-        selected_char=charid_map[today["selected_char"]],
+        player_name=hs_today["player_name"],
+        selected_char=charid_map[hs_today["selected_char"]],
         total_matches=yesterday_total_matches,
-        hub_matches=today["hub_matches"] - yesterday["hub_matches"],
-        ranked_matches=today["ranked_matches"] - yesterday["ranked_matches"],
-        casual_matches=today["casual_matches"] - yesterday["casual_matches"],
-        custom_matches=today["custom_matches"] - yesterday["custom_matches"],
+        hub_matches=hs_today["hub_matches"] - hs_yesterday["hub_matches"],
+        ranked_matches=hs_today["ranked_matches"] - hs_yesterday["ranked_matches"],
+        casual_matches=hs_today["casual_matches"] - hs_yesterday["casual_matches"],
+        custom_matches=hs_today["custom_matches"] - hs_yesterday["custom_matches"],
         total_time=yesterday_total_time,
-        hub_time=today["hub_time"] - yesterday["hub_time"],
-        ranked_time=today["ranked_time"] - yesterday["ranked_time"],
-        casual_time=today["casual_time"] - yesterday["casual_time"],
-        extreme_time=today["extreme_time"] - yesterday["extreme_time"],
-        custom_time=today["custom_time"] - yesterday["custom_time"],
-        versus_time=today["versus_time"] - yesterday["versus_time"],
-        practice_time=today["practice_time"] - yesterday["practice_time"],
-        arcade_time=today["arcade_time"] - yesterday["arcade_time"],
-        wt_time=today["wt_time"] - yesterday["wt_time"],
-        kudos_gained=today["total_kudos"] - yesterday["total_kudos"],
-        thumbs_gained=today["thumbs"] - yesterday["thumbs"],
+        hub_time=hs_today["hub_time"] - hs_yesterday["hub_time"],
+        ranked_time=hs_today["ranked_time"] - hs_yesterday["ranked_time"],
+        casual_time=hs_today["casual_time"] - hs_yesterday["casual_time"],
+        extreme_time=hs_today["extreme_time"] - hs_yesterday["extreme_time"],
+        custom_time=hs_today["custom_time"] - hs_yesterday["custom_time"],
+        versus_time=hs_today["versus_time"] - hs_yesterday["versus_time"],
+        practice_time=hs_today["practice_time"] - hs_yesterday["practice_time"],
+        arcade_time=hs_today["arcade_time"] - hs_yesterday["arcade_time"],
+        wt_time=hs_today["wt_time"] - hs_yesterday["wt_time"],
+        kudos_gained=hs_today["total_kudos"] - hs_yesterday["total_kudos"],
+        thumbs_gained=hs_today["thumbs"] - hs_yesterday["thumbs"],
+        ranked_changes=char_ranks,
     )
 
     return punchcard
