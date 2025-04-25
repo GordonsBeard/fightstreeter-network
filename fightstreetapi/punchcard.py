@@ -4,6 +4,7 @@ from dataclasses import field
 
 from apiflask import APIBlueprint, abort
 from apiflask.validators import Length, OneOf
+from flask_cors import CORS
 from marshmallow_dataclass import dataclass
 
 from constants import charid_map
@@ -12,6 +13,7 @@ from .db import dates_with_data, query_db
 from .player import CharacterRanking
 
 bp = APIBlueprint("punchcard", __name__, url_prefix="/punchcard")
+CORS(bp)
 
 
 @dataclass

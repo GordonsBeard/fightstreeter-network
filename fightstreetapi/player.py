@@ -4,6 +4,7 @@ from dataclasses import field
 
 from apiflask import APIBlueprint, abort
 from apiflask.validators import Length, OneOf
+from flask_cors import CORS
 from marshmallow_dataclass import dataclass
 
 from constants import charid_map
@@ -11,6 +12,7 @@ from constants import charid_map
 from .db import query_db
 
 bp = APIBlueprint("player", __name__, url_prefix="/player")
+CORS(bp)
 
 
 @dataclass

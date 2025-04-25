@@ -1,11 +1,13 @@
 """fightstreetapi - backend for fightstreeter.com"""
 
 from apiflask import APIBlueprint
+from flask_cors import CORS
 from marshmallow_dataclass import dataclass
 
 from . import db
 
 bp = APIBlueprint("roster", __name__, url_prefix="/roster")
+CORS(bp, origins=["localhost", ".localhost"])
 
 
 @dataclass

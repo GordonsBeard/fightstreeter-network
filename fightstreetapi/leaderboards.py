@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from apiflask import APIBlueprint
 from apiflask.validators import OneOf
+from flask_cors import CORS
 from marshmallow_dataclass import dataclass
 
 from constants import charid_map
@@ -13,6 +14,7 @@ from constants import charid_map
 from . import db
 
 bp = APIBlueprint("leaderboards", __name__, url_prefix="/leaderboards")
+CORS(bp, origins="localhost")
 
 boards = ["mr-all", "lp-all"]
 

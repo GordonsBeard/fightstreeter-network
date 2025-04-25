@@ -4,12 +4,14 @@
 import os
 
 from apiflask import APIFlask
+from flask_cors import CORS
 
 
 def create_app(test_config=None):
     """Create and configure the flask app"""
     app = APIFlask(__name__, instance_relative_config=True)
     app.config.from_mapping(DATABASE=os.path.join(app.instance_path, "cfn-stats.db"))
+    CORS(app)
 
     if not test_config:
         app.config.from_pyfile("config.py", silent=True)
