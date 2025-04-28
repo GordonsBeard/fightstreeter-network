@@ -1,29 +1,22 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { RouterProvider } from "react-router-dom";
+import { router } from "./routes/router.tsx";
+import Header from './components/ui/Header.tsx';
+import 'bootstrap/dist/css/bootstrap.css';
+import { Suspense } from "react";
 
-function App() {
-  const [users, setUsers] = useState([])
-
-  const fetchAPI = async () => {
-    const response = await axios.get("http://localhost:5000/roster/")
-    setUsers(response.data);
-  };
-
-  useEffect(() => {
-    fetchAPI();
-  }, []);
-
-  return (
-    <>
-        <ul>
-          {
-            users.map((user, index) => (
-              <li key={index}>{user.player_name}</li>
-            ))
-          }
-        </ul>
-    </>
-  )
+export default function App() {
+    return (
+        <>
+            <Header />
+            <div className="container-fluid">
+                <div className="row">
+                    <main className="col-md-12">
+                        <Suspense fallback={<div className="container">Loading...</div>}>
+                            <RouterProvider router={router} />
+                        </Suspense>
+                    </main>
+                </div>
+            </div>
+        </>
+    );
 }
-
-export default App
