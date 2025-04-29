@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import PlayerSchema from '../schemas/PlayerSchema';
 import axios from 'axios';
+import PlayerCard from './ui/PlayerCard';
 
 
 function PlayerList() {
     const [users, setUsers] = useState<[PlayerSchema]>([{
-        last_played: "000", player_id: "000", player_name: "None"
+        last_played: "000", player_id: "000", player_name: "None", selected_char: "Vega"
     }]);
 
     const fetchClubRoster = async () => {
@@ -21,11 +22,18 @@ function PlayerList() {
 
     return (
         <>
-            {
-                users.map((user: PlayerSchema) => (
-                    <a key={user.player_id}>{user.player_name}</a>
-                ))
-            }
+            <div className="row row-cols-2 row-cols-md-4 g-3">
+                {
+                    users.map((user: PlayerSchema) => (
+                        <PlayerCard
+                            key={user.player_id}
+                            player_id={user.player_id}
+                            player_name={user.player_name}
+                            last_played={user.last_played}
+                            selected_char={user.selected_char} />
+                    ))
+                }
+            </div>
         </>
     )
 }

@@ -3,7 +3,7 @@ import { FC } from "react";
 const Header: FC = () => {
     return (
         <>
-            <nav className="navbar navbar-expand-sm bg-body-tertiary mb-3">
+            <nav className="navbar navbar-expand-sm bg-body-tertiary">
                 <div className="container-fluid">
                     <span className="navbar-brand">FIGHT STREETER NETWORK</span>
                     <button className="navbar-toggler"

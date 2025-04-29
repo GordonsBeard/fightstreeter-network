@@ -4,6 +4,8 @@ from apiflask import APIBlueprint
 from flask_cors import CORS
 from marshmallow_dataclass import dataclass
 
+from constants import charid_map
+
 from . import db
 
 bp = APIBlueprint("roster", __name__, url_prefix="/roster")
@@ -30,6 +32,9 @@ def generate_member_list() -> list[Player]:
 
     all_members = db.query_db(all_members_sql, (db.latest_stats_date(),))
     all_members_list = [Player(*row) for row in all_members] if all_members else []
+
+    for player in all_members_list:
+        player.selected_char = charid_map[player.selected_char]
 
     return all_members_list
 
