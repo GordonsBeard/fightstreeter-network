@@ -5,7 +5,7 @@ const PlayerCard = ({ player_id, player_name, last_played, selected_char }: Play
     return (
         <div className="col">
             <div className="card" key={player_id}>
-                <CharIcon selected_char={selected_char} />
+                <CharIcon selected_char={selected_char} style={{ objectFit: "cover", height: 65 }} />
                 <div className="card-footer text-body-secondary">
                     <a href={"/player/" + player_id} className="stretched-link">{player_name}</a>
                 </div>

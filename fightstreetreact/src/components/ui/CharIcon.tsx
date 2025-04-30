@@ -23,6 +23,7 @@ import card_ryu from "../../assets/img/card/card_ryu.jpg"
 import card_terry from "../../assets/img/card/card_terry.jpg"
 import card_vega from "../../assets/img/card/card_vega.jpg"
 import card_zangief from "../../assets/img/card/card_zangief.jpg"
+import card_random from "../../assets/img/card/card_random.jpg"
 
 const char_cards: Map<string, string> = new Map([
     ["A.K.I.", card_aki],
@@ -50,17 +51,19 @@ const char_cards: Map<string, string> = new Map([
     ["Terry", card_terry],
     ["M. Bison", card_vega],
     ["Zangief", card_zangief],
-
+    ["Random", card_random],
 ]);
 
 interface Props {
-    selected_char: string;
+    selected_char?: string;
+    style: React.CSSProperties;
 }
 
-const CharIcon = ({ selected_char }: Props) => {
+const CharIcon = ({ selected_char, style }: Props) => {
+    const characterName = selected_char ? selected_char : "Random";
     return (
-        <img src={char_cards.get(selected_char)}
-            style={{ objectFit: "cover", height: 100 }}
+        <img src={char_cards.get(characterName)}
+            style={style}
             className="rounded-start" />
     )
 }
