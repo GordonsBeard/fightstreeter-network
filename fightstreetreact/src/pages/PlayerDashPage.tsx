@@ -21,7 +21,10 @@ const PlayerDashPage = () => {
     return (
         <>
             <h3>{overview?.player_name}</h3>
-            <p>Currently character: </p>
+            <p>ID#: {overview?.player_id}</p>
+            <p>{overview?.profile_tagline}</p>
+            <p>Currently character: {overview?.selected_character}</p>
+            <p>{overview?.title_text}</p>
             <table className="table">
                 <thead>
                     <tr>
@@ -32,43 +35,58 @@ const PlayerDashPage = () => {
                 <tbody>
                     <tr>
                         <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <td>{(overview?.arcade_time! / 3600).toFixed(2).toLocaleString()} Hours</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">Casual Matches</th>
+                        <td>{overview?.casual_matches.toLocaleString()}</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">Casual Time</th>
+                        <td>{(overview?.casual_time! / 3600).toFixed(2).toLocaleString()} Hours</td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Custom Time</th>
+                        <td>{(overview?.custom_time! / 3600).toFixed(2).toLocaleString()} Hours</td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Extreme Time</th>
+                        <td>{(overview?.extreme_time! / 3600).toFixed(2).toLocaleString()} Hours</td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">Hub Matches</th>
+                        <td>{overview?.hub_matches.toLocaleString()}</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">Practice Time</th>
+                        <td>{(overview?.practice_time! / 3600).toFixed(2).toLocaleString()}</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">Ranked Matches</th>
+                        <td>{overview?.ranked_matches.toLocaleString()}</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">Ranked Time</th>
+                        <td>{(overview?.ranked_time! / 3600).toFixed(2).toLocaleString()}</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">Likes</th>
+                        <td>{overview?.thumbs.toLocaleString()} 👍</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">Total Kudos</th>
+                        <td>{overview?.total_kudos.toLocaleString()}</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">Versus Time</th>
+                        <td>{(overview?.versus_time! / 3600).toFixed(2).toLocaleString()}</td>
                     </tr>
                     <tr>
-                        <th scope="row">Arcade Time</th>
-                        <td>50 hours</td>
+                        <th scope="row">World Tour Time</th>
+                        <td>{(overview?.wt_time! / 3600).toFixed(2).toLocaleString()}</td>
                     </tr>
                 </tbody>
             </table>
