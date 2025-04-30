@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import PlayerSchema from '../schemas/PlayerSchema';
 import axios from 'axios';
-import PlayerCard from './ui/PlayerCard';
+import PlayerCard from './PlayerCard';
 
 
 function PlayerList() {
@@ -15,10 +15,9 @@ function PlayerList() {
         setUsers(users);
     };
 
-
     useEffect(() => {
         fetchClubRoster()
-    }, [])
+    }, []);
 
     return (
         <>
@@ -32,7 +31,7 @@ function PlayerList() {
                             last_played={user.last_played}
                             selected_char={user.selected_char} />
                     ))
-                }
+                };
             </div>
         </>
     )
