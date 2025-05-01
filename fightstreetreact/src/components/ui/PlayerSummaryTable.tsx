@@ -12,23 +12,35 @@ function addCommas(stat: number | undefined): string {
 
 function PlayerSummaryTable(overview: HistoricStatsSchema) {
     return (
-        <div className="p-2">
-            <h3>Totals</h3>
+        <>
+            <div style={{ gridTemplateColumns: "1fr 1fr 1fr" }} className="d-grid gap-2 text-center mb-3 pt-3">
+                <div className="card d-flex align-middle">
+                    <div className="card-body">
+                        <h6 className="card-title">Casual</h6>
+                        <h6 className="card-subtitle text-body-secondary">
+                            {addCommas(overview.casual_matches)}
+                        </h6>
+                    </div>
+                </div>
+                <div className="card">
+                    <div className="card-body">
+                        <h6 className="card-title">Hub</h6>
+                        <h6 className="card-subtitle text-body-secondary">
+                            {addCommas(overview.hub_matches)}
+                        </h6>
+                    </div>
+                </div>
+                <div className="card">
+                    <div className="card-body">
+                        <h6 className="card-title">Ranked</h6>
+                        <h6 className="card-subtitle text-body-secondary">
+                            {addCommas(overview.ranked_matches)}
+                        </h6>
+                    </div>
+                </div>
+            </div>
             <table className="table table-sm">
                 <tbody>
-                    <tr>
-                        <th scope="row">Casual Matches</th>
-                        <td>{addCommas(overview.casual_matches)}</td>
-                    </tr>
-
-                    <tr>
-                        <th scope="row">Hub Matches</th>
-                        <td>{addCommas(overview.hub_matches)}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Ranked Matches</th>
-                        <td>{addCommas(overview.ranked_matches)}</td>
-                    </tr>
                     <tr>
                         <th scope="row">Likes</th>
                         <td>{addCommas(overview.thumbs)} 👍</td>
@@ -39,8 +51,7 @@ function PlayerSummaryTable(overview: HistoricStatsSchema) {
                     </tr>
                 </tbody>
             </table>
-
-            <h3>Time Played</h3>
+            <h4 className="text-center m-3">Time Played</h4>
             <table className="table table-sm">
                 <tbody>
                     <tr>
@@ -78,7 +89,7 @@ function PlayerSummaryTable(overview: HistoricStatsSchema) {
 
                 </tbody>
             </table>
-        </div>
+        </>
     )
 }
 

@@ -20,6 +20,13 @@ boards = ["mr-all", "lp-all"]
 
 
 @dataclass
+class ValidDates:
+    """The dates in which we actually have data in the db."""
+
+    dates: list[str]
+
+
+@dataclass
 class LeaderboardPlayer:
     """Individual player on a leaderboard."""
 
@@ -99,6 +106,17 @@ def get_leaderboard(col_name: str, date_req: str) -> list[LeaderboardPlayer]:
         result.character = charid_map[result.character]
 
     return player_list
+
+
+@bp.get("/dates")
+@bp.output(ValidDates.Schema)  # type: ignore #pylint: disable=maybe-no-member
+@bp.doc(
+    summary="Dates with valid data",
+    description="Returns a list of dates for days we have valid data. Wait who's 'we'?",
+)
+def valid_dates() -> ValidDates:
+    """Returns list of dates that have valid data"""
+    return ValidDates(db.dates_with_data())
 
 
 @bp.get("/")

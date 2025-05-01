@@ -9,13 +9,11 @@ export default function App() {
         <>
             <Header />
             <div className="container-fluid">
-                <div className="row">
-                    <main className="col-md-12">
-                        <Suspense fallback={<div className="container">Loading...</div>}>
-                            <RouterProvider router={router} />
-                        </Suspense>
-                    </main>
-                </div>
+                <main className="col-md-12">
+                    <Suspense fallback={<div className="container">Loading...</div>}>
+                        <RouterProvider router={router} />
+                    </Suspense>
+                </main>
             </div>
         </>
     );

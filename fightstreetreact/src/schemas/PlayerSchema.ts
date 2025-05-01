@@ -1,4 +1,4 @@
-export interface PlayerSchema {
+interface PlayerSchema {
     player_name: string;
     player_id: string;
     last_played: string;

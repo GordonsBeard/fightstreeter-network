@@ -6,7 +6,7 @@ import PlayerCard from './PlayerCard';
 
 function PlayerList() {
     const [users, setUsers] = useState<[PlayerSchema]>([{
-        last_played: "000", player_id: "000", player_name: "None", selected_char: "Vega"
+        last_played: "000", player_id: "000", player_name: "None", selected_char: "Random"
     }]);
 
     const fetchClubRoster = async () => {
