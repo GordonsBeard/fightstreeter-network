@@ -111,7 +111,7 @@ def generate_punchcard_route(query_data: PunchCardRequest) -> PunchCard:
 
     ranking_results = query_db(ranking_req_sql, (query_data.date, query_data.player_id))
 
-    if not hs_results or not ranking_results or len(hs_results) != 2:
+    if not hs_results or len(hs_results) != 2:
         abort(404)
 
     hs_today, hs_yesterday = hs_results[0], hs_results[1]
