@@ -132,11 +132,11 @@ def generate_punchcard_route(query_data: PunchCardRequest) -> PunchCard:
         + (hs_today["wt_time"] - hs_yesterday["wt_time"])
     )
 
+    char_ranks = {}
+
     list_of_ranks: list[CharacterRanking] = [
         CharacterRanking(**row) for row in ranking_results
     ]
-
-    char_ranks = {}
 
     if len({row.date for row in list_of_ranks}) > 1:
         yesterday_ranks = {}
@@ -155,11 +155,18 @@ def generate_punchcard_route(query_data: PunchCardRequest) -> PunchCard:
             if rank.date == today_date:
                 if rank.char_id not in today_ranks:
                     today_ranks[rank.char_id] = {"lp": rank.lp, "mr": rank.mr}
+                    if rank.char_id not in yesterday_ranks:
+                        yesterday_ranks[rank.char_id] = {"lp": 0, "mr": 0}
 
         for character_id in char_ids:
             char_name = charid_map[character_id]
+
+            if char_name not in yesterday_ranks:
+                yesterday_ranks[char_name] = {"lp": 0, "mr": 0}
+
             if char_name not in char_ranks:
                 char_ranks[char_name] = {"lp": 0, "mr": 0}
+
             char_ranks[char_name]["lp"] = (
                 today_ranks[character_id]["lp"] - yesterday_ranks[character_id]["lp"]
             )

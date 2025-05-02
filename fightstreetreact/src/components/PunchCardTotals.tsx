@@ -18,9 +18,6 @@ function PunchCardTotals(punchCard: PunchCardSchema) {
                 {punchCard.extreme_time > 1 && <li className="list-group-item">Extreme Time: <strong>{convertToHours(punchCard.extreme_time)}</strong></li>}
                 {punchCard.wt_time > 1 && <li className="list-group-item">World Tour Time: <strong>{convertToHours(punchCard.wt_time)}</strong></li>}
             </ul>
-            <div className="card-body border-bottom">
-                <h3 className="card-title text-center"><i className="bi bi-joystick"></i> HUB CRITTER</h3>
-            </div>
         </>
     )
 }
