@@ -133,18 +133,22 @@ def generate_punchcard_route(query_data: PunchCardRequest) -> PunchCard:
     )
 
     char_ranks = {}
+    list_of_ranks = []
 
-    list_of_ranks: list[CharacterRanking] = [
-        CharacterRanking(**row) for row in ranking_results
-    ]
+    if ranking_results:
+        list_of_ranks: list[CharacterRanking] = [
+            CharacterRanking(**row) for row in ranking_results
+        ]
 
-    if len({row.date for row in list_of_ranks}) > 1:
+    if list_of_ranks and len({row.date for row in list_of_ranks}) > 1:
         yesterday_ranks = {}
         today_ranks = {}
         ## Edgecase:
         ## If you have played the last day of Phase n but have not played during Phase n+1
         ## then the below line is going to fail as there is only one day you will get ranks
         ## from the characters you have played this PHASE.
+
+        ## need to check for new phases
         yesterday_date, today_date = {row.date for row in list_of_ranks}
         char_ids = {char.char_id for char in list_of_ranks}
 
@@ -163,6 +167,9 @@ def generate_punchcard_route(query_data: PunchCardRequest) -> PunchCard:
 
             if char_name not in yesterday_ranks:
                 yesterday_ranks[char_name] = {"lp": 0, "mr": 0}
+
+            if char_name not in today_ranks:
+                today_ranks[character_id] = {"lp": 0, "mr": 0}
 
             if char_name not in char_ranks:
                 char_ranks[char_name] = {"lp": 0, "mr": 0}
