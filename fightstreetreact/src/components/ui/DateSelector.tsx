@@ -1,8 +1,14 @@
 import { useContext } from 'react'
 import { DatesContext } from '../../schemas/ValidDatesContext';
 
-function DateSelector() {
+interface Props {
+    dateValue: string;
+    handleDateChange: (value: string) => void;
+}
+
+function DateSelector({ handleDateChange }: Props) {
     const validDates = useContext(DatesContext);
+    const punchCardDates = validDates.dates
 
     return (
         <div className="p-1 m-2 d-flex justify-content-around align-items-center">
@@ -14,9 +20,9 @@ function DateSelector() {
                     Previous
                 </a>
             </div>
-            <select className="form-select m-2" aria-label="Date selector">
-                {
-                    validDates.dates.map((date: string) => (
+            <select className="form-select m-2" aria-label="Date selector" onChange={e => handleDateChange(e.currentTarget.value)}>
+                {validDates &&
+                    punchCardDates.map((date: string) => (
                         <option value={date} key={date}>{date}</option>
                     ))
                 };

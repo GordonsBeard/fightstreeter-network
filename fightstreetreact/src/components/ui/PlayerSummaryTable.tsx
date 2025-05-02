@@ -1,14 +1,5 @@
 import HistoricStatsSchema from '../../schemas/HistoricStatsSchema'
-
-function convertToHours(stat: number | undefined): string {
-    const realValue = stat ? stat : 0;
-    return (realValue / 3600).toFixed(2).toLocaleString() + " Hours";
-}
-
-function addCommas(stat: number | undefined): string {
-    const realValue = stat ? stat : 0;
-    return realValue.toLocaleString();
-}
+import { addCommas, convertToHours } from '../../utils';
 
 function PlayerSummaryTable(overview: HistoricStatsSchema) {
     return (
@@ -43,7 +34,7 @@ function PlayerSummaryTable(overview: HistoricStatsSchema) {
                 <tbody>
                     <tr>
                         <th scope="row">Likes</th>
-                        <td>{addCommas(overview.thumbs)} 👍</td>
+                        <td>{addCommas(overview.thumbs)} <i className="bi bi-hand-thumbs-up"></i></td>
                     </tr>
                     <tr>
                         <th scope="row">Total Kudos</th>
@@ -65,6 +56,10 @@ function PlayerSummaryTable(overview: HistoricStatsSchema) {
                     <tr>
                         <th scope="row">Custom Time</th>
                         <td>{convertToHours(overview.custom_time)}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Hub Time</th>
+                        <td>{convertToHours(overview.hub_time)}</td>
                     </tr>
                     <tr>
                         <th scope="row">Extreme Time</th>

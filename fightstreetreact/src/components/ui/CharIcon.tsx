@@ -1,4 +1,4 @@
-import characterCardImage from "../../utils";
+import { characterCardImage } from "../../utils";
 
 interface Props {
     selected_char: string;

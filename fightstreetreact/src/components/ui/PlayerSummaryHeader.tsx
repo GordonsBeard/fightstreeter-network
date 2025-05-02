@@ -1,6 +1,5 @@
 import HistoricStatsSchema from '../../schemas/HistoricStatsSchema'
-import characterCardImage from '../../utils'
-import CharIcon from './CharIcon'
+import { characterCardImage } from '../../utils'
 
 function PlayerSummaryHeader(overview: HistoricStatsSchema) {
     return (
@@ -12,9 +11,7 @@ function PlayerSummaryHeader(overview: HistoricStatsSchema) {
                 </div>
             </div>
 
-            <p>{overview.profile_tagline}</p>
-            <p>Current character: {overview.selected_character}</p>
-            <p>{overview.title_text}</p>
+            <p className="text-center">{overview.profile_tagline}</p>
         </>
     )
 }

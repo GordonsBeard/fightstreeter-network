@@ -31,7 +31,7 @@ function PlayerList() {
                             last_played={user.last_played}
                             selected_char={user.selected_char} />
                     ))
-                };
+                }
             </div>
         </>
     )

@@ -19,7 +19,7 @@ export const ROUTES = [
         element: <LeaderBoardsPage />,
     },
     {
-        path: "/player",
+        path: "/player/:playerId",
         element: <PlayerDashPage />,
     },
     {

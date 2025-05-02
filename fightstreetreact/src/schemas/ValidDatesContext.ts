@@ -1,12 +1,12 @@
 import { createContext } from "react";
-import ValidDates from "./ValidDates";
+import ValidDatesSchema from "./ValidDatesSchema";
 import axios from "axios";
 
 
 async function fetchDateSelector() {
-    const response = await axios.get<ValidDates>("http://localhost:5000/leaderboards/dates");
+    const response = await axios.get<ValidDatesSchema>("http://localhost:5000/leaderboards/dates");
     const dates = response.data;
     return dates;
 }
 
-export const DatesContext = createContext<ValidDates>(await fetchDateSelector());
+export const DatesContext = createContext<ValidDatesSchema>(await fetchDateSelector());

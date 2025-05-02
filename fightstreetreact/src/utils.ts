@@ -25,7 +25,7 @@ import card_vega from "./assets/img/card/card_vega.jpg"
 import card_zangief from "./assets/img/card/card_zangief.jpg"
 import card_random from "./assets/img/card/card_random.jpg"
 
-const characterCardImage: Map<string, string> = new Map([
+export const characterCardImage: Map<string, string> = new Map([
     ["A.K.I.", card_aki],
     ["Blanka", card_blanka],
     ["Cammy", card_cammy],
@@ -54,4 +54,16 @@ const characterCardImage: Map<string, string> = new Map([
     ["Random", card_random],
 ]);
 
-export default characterCardImage
+export function addCommas(stat: number | undefined): string {
+    const realValue = stat ? stat : 0;
+    return realValue.toLocaleString();
+}
+
+export function convertToHours(stat: number | undefined): string {
+    const realValue = stat ? stat : 0;
+    return (realValue / 3600).toFixed(2).toLocaleString() + " Hours";
+}
+
+export function punchCardNumber(date: string, player_id: string): string {
+    return `#FSN-${date.replace("-", "").slice(2, 4)}${date.replace("-", "").slice(4, 6)}${date.replace("-", "").slice(7, 9)}-${player_id.slice(-5)}`
+}

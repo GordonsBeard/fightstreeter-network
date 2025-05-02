@@ -19,7 +19,6 @@ const Header: FC = () => {
                         <div className="navbar-nav">
                             <a className="nav-link" href="/roster">Club Roster</a>
                             <a className="nav-link" href="/leaderboards">Leaderboards</a>
-                            <a className="nav-link" href="/player">Player</a>
                         </div>
                     </div>
                 </div>
