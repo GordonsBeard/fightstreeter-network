@@ -62,7 +62,7 @@ class PunchCard:
     wt_time: int
     kudos_gained: int
     thumbs_gained: int
-    ranked_changes: dict
+    ranked_changes: dict | None
 
 
 @bp.get("/")
@@ -136,31 +136,36 @@ def generate_punchcard_route(query_data: PunchCardRequest) -> PunchCard:
         CharacterRanking(**row) for row in ranking_results
     ]
 
-    yesterday_date, today_date = {row.date for row in list_of_ranks}
-    char_ids = {char.char_id for char in list_of_ranks}
-
-    yesterday_ranks = {}
-    today_ranks = {}
     char_ranks = {}
 
-    for rank in list_of_ranks:
-        if rank.date == yesterday_date:
-            if rank.char_id not in yesterday_ranks:
-                yesterday_ranks[rank.char_id] = {"lp": rank.lp, "mr": rank.mr}
-        if rank.date == today_date:
-            if rank.char_id not in today_ranks:
-                today_ranks[rank.char_id] = {"lp": rank.lp, "mr": rank.mr}
+    if len({row.date for row in list_of_ranks}) > 1:
+        yesterday_ranks = {}
+        today_ranks = {}
+        ## Edgecase:
+        ## If you have played the last day of Phase n but have not played during Phase n+1
+        ## then the below line is going to fail as there is only one day you will get ranks
+        ## from the characters you have played this PHASE.
+        yesterday_date, today_date = {row.date for row in list_of_ranks}
+        char_ids = {char.char_id for char in list_of_ranks}
 
-    for character_id in char_ids:
-        char_name = charid_map[character_id]
-        if char_name not in char_ranks:
-            char_ranks[char_name] = {"lp": 0, "mr": 0}
-        char_ranks[char_name]["lp"] = (
-            today_ranks[character_id]["lp"] - yesterday_ranks[character_id]["lp"]
-        )
-        char_ranks[char_name]["mr"] = (
-            today_ranks[character_id]["mr"] - yesterday_ranks[character_id]["mr"]
-        )
+        for rank in list_of_ranks:
+            if rank.date == yesterday_date:
+                if rank.char_id not in yesterday_ranks:
+                    yesterday_ranks[rank.char_id] = {"lp": rank.lp, "mr": rank.mr}
+            if rank.date == today_date:
+                if rank.char_id not in today_ranks:
+                    today_ranks[rank.char_id] = {"lp": rank.lp, "mr": rank.mr}
+
+        for character_id in char_ids:
+            char_name = charid_map[character_id]
+            if char_name not in char_ranks:
+                char_ranks[char_name] = {"lp": 0, "mr": 0}
+            char_ranks[char_name]["lp"] = (
+                today_ranks[character_id]["lp"] - yesterday_ranks[character_id]["lp"]
+            )
+            char_ranks[char_name]["mr"] = (
+                today_ranks[character_id]["mr"] - yesterday_ranks[character_id]["mr"]
+            )
 
     punchcard = PunchCard(
         date=hs_today["date"],
