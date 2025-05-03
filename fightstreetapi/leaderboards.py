@@ -27,6 +27,13 @@ class ValidDates:
 
 
 @dataclass
+class ValidPhases:
+    """The phases that have data."""
+
+    phases: list[int]
+
+
+@dataclass
 class LeaderboardPlayer:
     """Individual player on a leaderboard."""
 
@@ -117,6 +124,19 @@ def get_leaderboard(col_name: str, date_req: str) -> list[LeaderboardPlayer]:
 def valid_dates() -> ValidDates:
     """Returns list of dates that have valid data"""
     return ValidDates(db.dates_with_data())
+
+
+@bp.get("/phases")
+@bp.output(ValidPhases.Schema)  # type: ignore #pylint: disable=maybe-no-member
+@bp.doc(
+    summary="Phases with valid data",
+    description="Returns a list of phases with valid data.",
+)
+def valid_phases() -> ValidPhases:
+    """Returns list of dates that have valid data"""
+    phase_sql = """SELECT DISTINCT phase FROM ranking ORDER BY phase DESC;"""
+    results = db.query_db(phase_sql)
+    return ValidPhases([int(*row) for row in results] if results else [])
 
 
 @bp.get("/")
