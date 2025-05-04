@@ -24,8 +24,7 @@ function DateSelector({ handleDateChange }: Props) {
                 {validDates &&
                     punchCardDates.map((date: string) => (
                         <option value={date} key={date}>{date}</option>
-                    ))
-                };
+                    ))};
             </select>
             <div>
                 <a className="icon-link" href="#">

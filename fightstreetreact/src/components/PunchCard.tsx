@@ -28,6 +28,10 @@ function PunchCard(punchCard: PunchCardSchema) {
                 <PunchCardStamp {...punchCard} />
                 <PunchCardFooter {...punchCard} />
             </div >
+            <div className="row p-3">
+                <p className="text-secondary small">Your PunchCard represents everything you've done on CFN for the period logged. These include Ranked, Hub, Casual, and custom matches. Offline activities such as versus time and extreme time are also tracked.</p>
+                <p className="text-secondary small">FSN PunchCards are generated around 12pm PST.</p>
+            </div>
         </>
     )
 }

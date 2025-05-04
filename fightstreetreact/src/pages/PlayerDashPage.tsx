@@ -8,23 +8,27 @@ import PunchCard from "../components/PunchCard";
 import { DatesContext } from '../schemas/ValidDatesContext';
 import DateSelector from "../components/ui/DateSelector";
 import PunchCardSchema from "../schemas/PunchCardSchema";
+import PlayerCharts from "../components/PlayerCharts";
+import { PhasesContext } from "../schemas/ValidPhasesContext";
 
 const PlayerDashPage = () => {
     const { playerId } = useParams();
     const validDates = useContext(DatesContext);
+    const validPhases = useContext(PhasesContext);
     const latestDate = validDates.dates[0];
-    const [overview, setOverview] = useState<HistoricStatsSchema | null>(null)
+    const [overview, setOverview] = useState<HistoricStatsSchema | null>(null);
     const [punchCard, setPunchCard] = useState<PunchCardSchema | null>(null);
     const [punchCardDate, setPunchCardDate] = useState('');
+    const [graphPhase, setGraphPhase] = useState<number | null>(null);
 
     useEffect(() => {
         async function fetchPlayerOverview() {
-            const response = await axios.get<[HistoricStatsSchema]>(`http://localhost:5000/player/overview?player_id=${playerId}&date_start=${latestDate}&date_end=${latestDate}&fetch_range=false`)
+            const response = await axios.get<[HistoricStatsSchema]>(`http://localhost:5000/player/overview?player_id=${playerId}&date_start=${latestDate}&date_end=${latestDate}&phase=0&fetch_range=false`)
             const playerOverview = response.data;
             const todaysOverview = playerOverview[0];
             setOverview(todaysOverview);
         }
-        fetchPlayerOverview()
+        fetchPlayerOverview();
         setPunchCardDate(validDates.dates[0])
 
     }, [playerId, latestDate, validDates]);
@@ -43,11 +47,25 @@ const PlayerDashPage = () => {
         fetchPunchCard()
     }, [playerId, punchCardDate])
 
+    useEffect(() => {
+        async function fetchPhaseGraph() {
+            if (!graphPhase) {
+                setGraphPhase(validPhases.phases[0]);
+                return;
+            }
+        }
+        fetchPhaseGraph()
+    }, [graphPhase, validPhases.phases])
+
     const handleDateChange = (value: string) => {
         setPunchCardDate(value);
     }
 
-    if (!overview) {
+    const handlePhaseChange = (phase: string) => {
+        setGraphPhase(parseInt(phase));
+    }
+
+    if (!overview || !playerId || !graphPhase) {
         return null;
     }
 
@@ -78,12 +96,14 @@ const PlayerDashPage = () => {
                             <PunchCard {...punchCard} />}
                     </div>
                     <div className="tab-pane" id="graphs-tab-pane" role="tabpanel" aria-labelledby="graphs-tab" tabIndex={0}>
+                        <select className="form-select m-2" aria-label="Phase selector" onChange={(evt) => { handlePhaseChange(evt.currentTarget.value) }} value={graphPhase}>
+                            {validPhases.phases.map((phase: number) => (
+                                <option value={phase} key={phase}>Phase {phase}</option>
+                            ))};
+                        </select>
+                        <PlayerCharts player_id={playerId} player_name={overview.player_name} phase={graphPhase} />
                     </div>
                 </div>
-            </div>
-            <div className="row p-3">
-                <p className="text-secondary small">Your PunchCard represents everything you've done on CFN for the period logged. These include Ranked, Hub, Casual, and custom matches. Offline activities such as versus time and extreme time are also tracked.</p>
-                <p className="text-secondary small">FSN PunchCards are generated around 12pm PST.</p>
             </div>
         </>
     )

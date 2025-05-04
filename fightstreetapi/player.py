@@ -1,13 +1,15 @@
 """player stats"""
 
+import random
 from dataclasses import field
+from datetime import datetime, timedelta
 
 from apiflask import APIBlueprint, abort
 from apiflask.validators import Length, OneOf
 from flask_cors import CORS
 from marshmallow_dataclass import dataclass
 
-from constants import charid_map
+from constants import charid_map, phase_dates
 
 from .db import query_db
 
@@ -60,15 +62,22 @@ class DateRangeRequest:
     )
     date_start: str = field(
         metadata={
-            "required": True,
+            "required": False,
             "metadata": {"example": "2025-04-01"},
         }
     )
 
     date_end: str = field(
         metadata={
-            "required": True,
+            "required": False,
             "metadata": {"example": "2025-04-17"},
+        }
+    )
+
+    phase: int = field(
+        metadata={
+            "required": False,
+            "metadata": {"example": 6},
         }
     )
 
@@ -138,30 +147,45 @@ def player_overview_snapshot(query_data: DateRangeRequest) -> list[PlayerHistori
 
 def player_ranking_snapshot(query_data) -> list[CharacterRanking]:
     """Internal call to get ranking information every character played by a user this phase."""
-    if query_data.date_end < query_data.date_start:
-        query_data.date_end, query_data.date_start = (
-            query_data.date_start,
-            query_data.date_end,
-        )
+    if not query_data.date_end and not query_data.date_start and not query_data.phase:
+        abort(404)
 
-    player_characters_sql: str = (
-        (
+    if query_data.phase:
+        player_characters_sql: str = (
             """SELECT date, phase, player_id, char_id, lp, mr
             FROM ranking
-            WHERE date BETWEEN ? AND ? AND player_id = ?;"""
+            WHERE phase = ? AND player_id = ?
+            ORDER BY date ASC;"""
         )
-        if query_data.fetch_range
-        else (
-            """SELECT date, phase, char_id, lp, mr
-            FROM ranking
-            WHERE (date = ? OR date = ?) AND player_id = ?;"""
+        result = query_db(
+            player_characters_sql,
+            (query_data.phase, query_data.player_id),
         )
-    )
+    else:
+        if query_data.date_end < query_data.date_start:
+            query_data.date_end, query_data.date_start = (
+                query_data.date_start,
+                query_data.date_end,
+            )
 
-    result = query_db(
-        player_characters_sql,
-        (query_data.date_start, query_data.date_end, query_data.player_id),
-    )
+        player_characters_sql: str = (
+            (
+                """SELECT date, phase, player_id, char_id, lp, mr
+                FROM ranking
+                WHERE date BETWEEN ? AND ? AND player_id = ?;"""
+            )
+            if query_data.fetch_range
+            else (
+                """SELECT date, phase, char_id, lp, mr
+                FROM ranking
+                WHERE (date = ? OR date = ?) AND player_id = ?;"""
+            )
+        )
+
+        result = query_db(
+            player_characters_sql,
+            (query_data.date_start, query_data.date_end, query_data.player_id),
+        )
 
     if not result:
         abort(404)
@@ -204,3 +228,45 @@ def player_ranking_snapshot_route(query_data) -> list[CharacterRanking]:
     player_rankings = player_ranking_snapshot(query_data)
 
     return player_rankings
+
+
+@dataclass
+class CharGraphs:
+    all_dates: list[str]
+    characters: dict[str, dict[str, list[str]]]
+
+
+@bp.get("/ranking/graph")
+@bp.input(DateRangeRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
+@bp.output(CharGraphs.Schema)  # type: ignore # pylint: disable=maybe-no-member
+@bp.doc(
+    summary="Player's ranking graph",
+    description="Returns a list of player rank dictionaries for building a plotly graph for a phase.",
+)
+def player_ranking_graph(query_data: DateRangeRequest):
+    """Building MR/LP data for plotly graph in phython instead of on client"""
+    if not query_data.phase or query_data.phase < 2:
+        abort(404)
+
+    phase = query_data.phase
+    phase_start_date = datetime.strptime(phase_dates[phase][0], "%Y-%m-%d")
+    phase_end_date = datetime.strptime(phase_dates[phase][1], "%Y-%m-%d")
+    date_range = []
+    while phase_start_date <= phase_end_date:
+        date_range.append(phase_start_date.strftime("%Y-%m-%d"))
+        phase_start_date += timedelta(days=1)
+
+    player_rankings = player_ranking_snapshot(query_data)
+
+    characters = {}
+
+    for ranking in player_rankings:
+        if ranking.char_id not in characters:
+            characters[ranking.char_id] = {"dates": [], "lp": [], "mr": []}
+        characters[ranking.char_id]["dates"].append(ranking.date)
+        characters[ranking.char_id]["lp"].append(ranking.lp)
+        characters[ranking.char_id]["mr"].append(ranking.mr)
+
+    character_graphs = CharGraphs(date_range, characters)
+
+    return character_graphs
