@@ -1,6 +1,8 @@
 """player stats"""
 
 import random
+import pandas as pd
+import plotly.graph_objects as go
 from dataclasses import field
 from datetime import datetime, timedelta
 
@@ -238,7 +240,6 @@ class CharGraphs:
 
 @bp.get("/ranking/graph")
 @bp.input(DateRangeRequest.Schema, location="query")  # type: ignore # pylint: disable=maybe-no-member
-@bp.output(CharGraphs.Schema)  # type: ignore # pylint: disable=maybe-no-member
 @bp.doc(
     summary="Player's ranking graph",
     description="Returns a list of player rank dictionaries for building a plotly graph for a phase.",
@@ -265,8 +266,26 @@ def player_ranking_graph(query_data: DateRangeRequest):
             characters[ranking.char_id] = {"dates": [], "lp": [], "mr": []}
         characters[ranking.char_id]["dates"].append(ranking.date)
         characters[ranking.char_id]["lp"].append(ranking.lp)
-        characters[ranking.char_id]["mr"].append(ranking.mr)
+        characters[ranking.char_id]["mr"].append(ranking.mr if ranking.mr > 0 else None)
 
     character_graphs = CharGraphs(date_range, characters)
 
-    return character_graphs
+    dates = character_graphs.all_dates
+
+    lp_fig = go.Figure()
+    mr_fig = go.Figure()
+
+    for char in character_graphs.characters:
+        character_lp = character_graphs.characters[char]["lp"]
+        character_mr = character_graphs.characters[char]["mr"]
+        lp_fig.add_trace(go.Scatter(x=dates, y=character_lp, name=char, line=dict(width=4), showlegend=True))
+        mr_fig.add_trace(go.Scatter(x=dates, y=character_mr, name=char, line=dict(width=4), showlegend=True))
+
+
+    for fig in (lp_fig, mr_fig):
+        fig.update_layout(template="plotly_dark", yaxis_tickformat=".0f")
+
+    lp_graph = lp_fig.to_plotly_json()
+    mr_graph = mr_fig.to_plotly_json()
+
+    return {"lp": lp_graph, "mr": mr_graph}
