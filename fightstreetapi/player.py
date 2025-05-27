@@ -283,7 +283,11 @@ def player_ranking_graph(query_data: DateRangeRequest):
 
 
     for fig in (lp_fig, mr_fig):
-        fig.update_layout(template="plotly_dark", yaxis_tickformat=".0f")
+        fig.update_layout(
+            template="plotly_dark", 
+            yaxis_tickformat=".0f",
+            
+        )
 
     lp_graph = lp_fig.to_plotly_json()
     mr_graph = mr_fig.to_plotly_json()

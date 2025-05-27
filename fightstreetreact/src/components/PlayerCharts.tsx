@@ -13,20 +13,27 @@ function PlayerCharts({ player_id, player_name, phase }: Props) {
 
     useEffect(() => {
         async function fetchPlayerGraph() {
-            const response = await axios.get(`http://localhost:5000/player/ranking/graph?player_id=${player_id}&date_start=X&date_end=X&phase=${phase}&fetch_range=true`);
+            const response = await axios.get(`http://localhost:5000/player/ranking/graph?player_id=${player_id}&date_start=X&date_end=X&phase=${phase}&fetch_range=true`, { validateStatus: function (status) { return status < 500; } });
             const rankings = response.data;
             setPlayerGraph(rankings);
         }
         fetchPlayerGraph();
     }, [player_id, phase])
 
-    if (!playerGraph) {
-        return null;
+    if (!playerGraph || !playerGraph["lp"]) {
+        return (
+            <>
+                <div className="row">
+                    <p>No data for this phase!</p>
+                </div>
+            </>
+        )
     }
 
     return (
         <>
-            <div className="row">
+            <div className="row pb-6" >
+                <h3>League Points</h3>
                 <Plot
                     data={playerGraph["lp"].data}
                     layout={playerGraph["lp"].layout}
@@ -36,13 +43,15 @@ function PlayerCharts({ player_id, player_name, phase }: Props) {
                 />
             </div>
             <div className="row">
-                <Plot
-                    data={playerGraph["mr"].data}
-                    layout={playerGraph["mr"].layout}
-                    config={{ responsive: true }}
-                    useResizeHandler={true}
-                    className="col"
-                />
+                <h3>Master Rate</h3>
+                {playerGraph["mr"] &&
+                    <Plot
+                        data={playerGraph["mr"].data}
+                        layout={playerGraph["mr"].layout}
+                        config={{ responsive: true }}
+                        useResizeHandler={true}
+                        className="col"
+                    />}
             </div>
         </>
     )
